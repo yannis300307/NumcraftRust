@@ -1,0 +1,30 @@
+{
+    "name": "@types/w3c-web-usb",
+    "version": "1.0.6",
+    "description": "TypeScript definitions for W3C Web USB API",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/w3c-web-usb",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Lars Knudsen",
+            "url": "https://github.com/larsgk",
+            "githubUsername": "larsgk"
+        },
+        {
+            "name": "Rob Moran",
+            "url": "https://github.com/thegecko",
+            "githubUsername": "thegecko"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/w3c-web-usb"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "typesPublisherContentHash": "2649924b479412d70bc40bcbee4fbebbbc4cdf19f259cee2c3c45f0a7445a048",
+    "typeScriptVersion": "3.9"
+}
