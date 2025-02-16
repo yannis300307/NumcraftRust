@@ -1,10 +1,27 @@
-mod window;
-use window::Window;
+#![no_std]
+#![no_main]
 
-fn main() {
-    let mut window = Window::new("Numcraft", 512, 512);
+pub mod eadk;
+mod game;
+mod camera;
+mod renderer;
+use game::Game;
 
-    while !window.should_close() {
-        window.update();
-    }
+#[used]
+#[link_section = ".rodata.eadk_app_name"]
+pub static EADK_APP_NAME: [u8; 10] = *b"HelloRust\0";
+
+#[used]
+#[link_section = ".rodata.eadk_api_level"]
+pub static EADK_APP_API_LEVEL: u32 = 0;
+
+#[used]
+#[link_section = ".rodata.eadk_app_icon"]
+pub static EADK_APP_ICON: [u8; 4250] = *include_bytes!("../target/icon.nwi");
+
+#[no_mangle]
+pub fn main() {
+    let game = Game::new();
+    game.update();
+    eadk::timing::msleep(2000);
 }
