@@ -75,9 +75,9 @@ impl Renderer {
     }
 
     fn draw_2d_triangle(tri: Triangle2d) {
-        draw_line(tri.p1.x as usize, tri.p1.y as usize, tri.p2.x as usize, tri.p2.y as usize, get_color(0b11111, 0b0, 0b0));
-        draw_line(tri.p2.x as usize, tri.p2.y as usize, tri.p3.x as usize, tri.p3.y as usize, get_color(0b11111, 0b0, 0b0));
-        draw_line(tri.p3.x as usize, tri.p3.y as usize, tri.p1.x as usize, tri.p1.y as usize, get_color(0b11111, 0b0, 0b0));
+        draw_line(tri.p1.x as usize + HALF_SCREEN_WIDTH, tri.p1.y as usize + HALF_SCREEN_HEIGHT, tri.p2.x as usize + HALF_SCREEN_WIDTH, tri.p2.y as usize + HALF_SCREEN_HEIGHT, get_color(0b11111, 0b0, 0b0));
+        draw_line(tri.p2.x as usize + HALF_SCREEN_WIDTH, tri.p2.y as usize + HALF_SCREEN_HEIGHT, tri.p3.x as usize + HALF_SCREEN_WIDTH, tri.p3.y as usize + HALF_SCREEN_HEIGHT, get_color(0b11111, 0b0, 0b0));
+        draw_line(tri.p3.x as usize + HALF_SCREEN_WIDTH, tri.p3.y as usize + HALF_SCREEN_HEIGHT, tri.p1.x as usize + HALF_SCREEN_WIDTH, tri.p1.y as usize + HALF_SCREEN_HEIGHT, get_color(0b11111, 0b0, 0b0));
     }
 
     fn draw_3d_triangle(&self, tri: Triangle3d) {
