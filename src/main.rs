@@ -1,6 +1,11 @@
 #![no_std]
 #![no_main]
 
+#[global_allocator]
+static ALLOCATOR: emballoc::Allocator<4096> = emballoc::Allocator::new();
+
+extern crate alloc;
+
 pub mod eadk;
 mod game;
 mod camera;
@@ -20,7 +25,7 @@ pub static EADK_APP_API_LEVEL: u32 = 0;
 pub static EADK_APP_ICON: [u8; 4250] = *include_bytes!("../target/icon.nwi");
 
 #[no_mangle]
-pub fn main() {
+fn main() {
     let game = Game::new();
     game.update();
     eadk::timing::msleep(2000);

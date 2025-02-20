@@ -1,10 +1,26 @@
+cargo-features = ["profile-rustflags"]
 [package]
 name = "epsilon-sample-app"
 version = "0.1.0"
 authors = ["NumWorks <contact@numworks.com>"]
 edition = "2018"
 
+[profile.dev]
+panic="abort"
+strip=true
+opt-level= "z"
+lto = true
+codegen-units = 1
+
+[profile.release]
+panic="abort"
+strip=true
+opt-level= "z"
+lto = true
+codegen-units = 1
+
 [dependencies]
 nalgebra = {version = "0.33.2", default-features = false, features = [ "libm" ]}
 libm = "0.2.11"
-alloc-cortex-m = "0.4.4"
+emballoc = "0.3.0"
+format_no_std = "1.2.0"
