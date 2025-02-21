@@ -1,7 +1,8 @@
-#![no_std]
+#![cfg_attr(target_os = "none", no_std)]
+
 #![no_main]
 
-#[global_allocator]
+#[cfg_attr(target_os = "none", global_allocator)]
 static ALLOCATOR: emballoc::Allocator<4096> = emballoc::Allocator::new();
 
 extern crate alloc;
@@ -26,7 +27,10 @@ pub static EADK_APP_ICON: [u8; 4250] = *include_bytes!("../target/icon.nwi");
 
 #[no_mangle]
 fn main() {
-    let game = Game::new();
-    game.update();
-    eadk::timing::msleep(2000);
+    let mut game = Game::new();
+
+    #[cfg(target_os = "windows")]
+    eadk::init_window();
+
+    game.start();
 }

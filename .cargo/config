@@ -1,6 +1,6 @@
 [target.thumbv7em-none-eabihf]
 runner = 'cmd /c npx --yes -- nwlink@0.0.19 install-nwa'
-rustflags = ["-C", "link-arg=--relocatable", "-C", "link-arg=-no-gc-sections", "-Zlocation-detail=none"]
+rustflags = ["-C", "link-arg=--relocatable", "-C", "link-arg=-no-gc-sections"]
 
 [build]
 target = "thumbv7em-none-eabihf"
