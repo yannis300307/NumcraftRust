@@ -59,9 +59,10 @@ pub mod display {
 
     #[cfg(target_os = "windows")]
     pub fn push_rect(rect: Rect, pixels: &[Color]) {
-        use super::WindowOperation;
-        let mut global_tx = super::WINDOW_MANAGER_TX.lock().unwrap();
-        global_tx.as_mut().unwrap().send(WindowOperation::PushRect(rect, &(*pixels)));
+        todo!("implement push_rect")
+        //use super::WindowOperation;
+        //let mut global_tx = super::WINDOW_MANAGER_TX.lock().unwrap();
+        //global_tx.as_mut().unwrap().send(WindowOperation::PushRect(rect, *pixels));
     }
 
     #[cfg(target_os = "none")]
@@ -555,8 +556,13 @@ pub fn init_window() {
             if message.is_err() {continue;}
             println!("Hello");
             match message.unwrap() {
-                WindowOperation::PushRectUniform(_, _) => {
-                    println!("Uniform")
+                WindowOperation::PushRectUniform(rect, color) => {
+                    for x in rect.x..(rect.x+rect.width) {
+                        for y in rect.y..(rect.y+rect.height) {
+                            println!("{}", x);
+                            buffer[(x+y*340) as usize] = 255;
+                        }
+                    }
                 }
                 WindowOperation::PushRect(_, _) => {
                     println!("push")
