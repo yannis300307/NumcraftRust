@@ -10,7 +10,7 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly
           target: thumbv7em-none-eabihf
       - name: Run cargo build
         uses: actions-rs/cargo@v1
