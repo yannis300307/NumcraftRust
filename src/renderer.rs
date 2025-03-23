@@ -1,7 +1,7 @@
 use core::mem::swap;
 
 use libm::tanf;
-use nalgebra::{Matrix3, Matrix3x1, Matrix4, Perspective3, Point, Point2, Point3, Projective3, Vector2, Vector3, Vector4};
+use nalgebra::{Matrix3, Matrix3x1, Matrix4, Perspective3, Point, Point2, Point3, Projective3, Rotation3, Vector2, Vector3, Vector4};
 
 use crate::{
     camera::Camera,
@@ -198,8 +198,10 @@ impl Renderer {
 
         let projected_x = projected.x / projected.z;
         let projected_y = projected.y / projected.z;*/
+
+        let transformed = point - self.camera.get_pos();
         
-        let projected = self.math_tools.projection_matrix.unproject_point(&point);
+        let projected = self.math_tools.projection_matrix.unproject_point(&transformed);
 
         //debug(&projected);
 
