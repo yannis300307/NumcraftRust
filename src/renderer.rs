@@ -10,7 +10,7 @@ use crate::{
 
 const PI: f32 = 3.14159265358979323846264338327950288419716939937510582;
 
-const SCREEN_WIDTH: f32 = 340.0;
+const SCREEN_WIDTH: f32 = 320.0;
 const SCREEN_HEIGHT: f32 = 240.0;
 const ASPECT_RATIO: f32 = SCREEN_HEIGHT / SCREEN_WIDTH;
 const HALF_SCREEN_WIDTH: f32 = SCREEN_WIDTH / 2.0;
@@ -199,7 +199,7 @@ impl Renderer {
         let projected_x = projected.x / projected.z;
         let projected_y = projected.y / projected.z;*/
         
-        let projected = self.math_tools.projection_matrix.as_matrix() * point.to_homogeneous();
+        let projected = self.math_tools.projection_matrix.unproject_point(&point);
 
         //debug(&projected);
 
@@ -211,7 +211,7 @@ impl Renderer {
             eadk::Rect {
                 x: 0,
                 y: 0,
-                width: 340,
+                width: 320,
                 height: 240,
             },
             color,
@@ -271,11 +271,13 @@ impl Renderer {
         for mut tri in TEST_CUBE_MESH {
 
             tri.p1.z += 3.0;
-            tri.p1.z += 3.0;
-            tri.p1.z += 3.0;
+            tri.p2.z += 3.0;
+            tri.p3.z += 3.0;
             
             self.draw_3d_triangle(tri);
         }
+
+        //eadk::display::push_rect_uniform(eadk::Rect{ x: 10, y: 10, width: 50, height: 50 }, get_color(255, 0, 0));
 
         /*Renderer::draw_2d_triangle(Triangle2d {
             p1: Vector2::new(30.0, 20.0),

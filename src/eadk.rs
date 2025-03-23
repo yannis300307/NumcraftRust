@@ -76,7 +76,10 @@ pub mod display {
     pub fn push_rect_uniform(rect: Rect, color: Color) {
         use super::WindowOperation;
         let mut global_tx = super::WINDOW_MANAGER_TX.lock().unwrap();
-        global_tx.as_mut().unwrap().send(WindowOperation::PushRectUniform(rect, color));
+        global_tx
+            .as_mut()
+            .unwrap()
+            .send(WindowOperation::PushRectUniform(rect, color));
     }
 
     #[cfg(target_os = "none")]
@@ -481,7 +484,7 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
         Rect {
             x: 0,
             y: 0,
-            width: 340,
+            width: 320,
             height: 240,
         },
         Color { rgb565: 63488 },
@@ -522,11 +525,11 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
 enum WindowOperation<'a> {
     PushRectUniform(Rect, Color),
     PushRect(Rect, &'a [Color]),
-    Ping
 }
 
 #[cfg(target_os = "windows")]
-static WINDOW_MANAGER_TX: std::sync::Mutex<Option<std::sync::mpsc::Sender<WindowOperation>>> = std::sync::Mutex::new(None);
+static WINDOW_MANAGER_TX: std::sync::Mutex<Option<std::sync::mpsc::Sender<WindowOperation>>> =
+    std::sync::Mutex::new(None);
 
 #[cfg(target_os = "windows")]
 pub fn init_window() {
@@ -540,45 +543,40 @@ pub fn init_window() {
     *global_tx = Some(tx.clone());
 
     thread::spawn(move || {
-        let mut buffer: Vec<u32> = vec![0; 340 * 240];
+        let mut buffer: Vec<u32> = vec![0; 320 * 240];
 
-        let mut window = Window::new("Test - ESC to exit", 340, 240, WindowOptions::default())
+        let mut window = Window::new("Test - ESC to exit", 320, 240, WindowOptions::default())
             .unwrap_or_else(|e| {
                 panic!("{}", e);
             });
 
-        window.set_target_fps(5);
+        window.set_target_fps(60);
 
         while window.is_open() && !window.is_key_down(Key::Escape) {
-            timing::msleep(200);
+            timing::msleep(2);
 
             let message = rx.recv();
-            if message.is_err() {continue;}
-            println!("Hello");
+            if message.is_err() {
+                continue;
+            }
             match message.unwrap() {
                 WindowOperation::PushRectUniform(rect, color) => {
-                    for x in rect.x..(rect.x+rect.width) {
-                        for y in rect.y..(rect.y+rect.height) {
-                            println!("{}", x);
-                            buffer[(x+y*340) as usize] = 255;
+                    for x in rect.x..(rect.x + rect.width) {
+                        for y in rect.y..(rect.y + rect.height) {
+                            if x > 0 && x < 320 && y > 0 && y < 240 {
+                                buffer[(x as usize) + (y as usize) * 320] = 255;
+                            }
                         }
                     }
                 }
                 WindowOperation::PushRect(_, _) => {
                     println!("push")
-                },
-                WindowOperation::Ping => {
-                    println!("Helloooooo")
                 }
             }
 
-            window.update_with_buffer(&buffer, 340, 240).unwrap();
-
+            window.update_with_buffer(&buffer, 320, 240).unwrap();
         }
-
     });
-    tx.send(WindowOperation::Ping);
-
 }
 
 #[cfg(target_os = "windows")]
