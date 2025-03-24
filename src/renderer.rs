@@ -1,7 +1,11 @@
 use core::mem::swap;
 
+use alloc::vec::Vec;
 use libm::tanf;
-use nalgebra::{Matrix3, Matrix3x1, Matrix4, Perspective3, Point, Point2, Point3, Projective3, Rotation3, Vector2, Vector3, Vector4};
+use nalgebra::{
+    Isometry3, Matrix3, Matrix3x1, Matrix4, Perspective3, Point, Point2, Point3, Projective3,
+    Rotation3, Vector2, Vector3, Vector4,
+};
 
 use crate::{
     camera::Camera,
@@ -150,8 +154,7 @@ impl MathTools {
     pub fn new() -> Self {
         let fov_rad = 1.0 / tanf(FOV * 0.5 / 180.0 * PI);
         MathTools {
-            projection_matrix: Perspective3::new(ASPECT_RATIO, PI/4.0, 1.0, 1000.0),
-            
+            projection_matrix: Perspective3::new(ASPECT_RATIO, PI / 4.0, 1.0, 1000.0),
             /* Matrix4::new(
                 ASPECT_RATIO * fov_rad, 0.0,     0.0,                              0.0,
                 0.0,                    fov_rad, 0.0,                              0.0,
@@ -196,18 +199,24 @@ impl Renderer {
             1.0 / display_surface_position.z,
         ) * transformed_point;
 
-        let projected_x = projected.x / projected.z;
+        let projected_x = projected.x / projected.z;;
         let projected_y = projected.y / projected.z;*/
 
-        let transformed = point - self.camera.get_pos();
-        
-        let projected = self.math_tools.projection_matrix.unproject_point(&transformed);
+        let iso: Isometry3<f32> =
+            Isometry3::new(*self.camera.get_pos(), *self.camera.get_rotation());
+
+        let transformed = iso * (point - self.camera.get_pos());
+
+        let projected = self
+            .math_tools
+            .projection_matrix
+            .unproject_point(&transformed);
 
         //debug(&projected);
 
         Point2::new(projected.x, projected.y)
     }
-    
+
     fn clear_screen(color: eadk::Color) {
         eadk::display::push_rect_uniform(
             eadk::Rect {
@@ -222,24 +231,24 @@ impl Renderer {
 
     fn draw_2d_triangle(tri: Triangle2d) {
         draw_line(
-            ((tri.p1.x+1.0) * HALF_SCREEN_WIDTH) as isize,
-            ((tri.p1.y+1.0) * HALF_SCREEN_HEIGHT) as isize,
-            ((tri.p2.x+1.0) * HALF_SCREEN_WIDTH) as isize,
-            ((tri.p2.y+1.0) * HALF_SCREEN_HEIGHT) as isize,
+            ((tri.p1.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
+            ((tri.p1.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
+            ((tri.p2.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
+            ((tri.p2.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
             get_color(0b11111, 0b0, 0b0),
         );
         draw_line(
-            ((tri.p2.x+1.0) * HALF_SCREEN_WIDTH) as isize,
-            ((tri.p2.y+1.0) * HALF_SCREEN_HEIGHT) as isize,
-            ((tri.p3.x+1.0) * HALF_SCREEN_WIDTH) as isize,
-            ((tri.p3.y+1.0) * HALF_SCREEN_HEIGHT) as isize,
+            ((tri.p2.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
+            ((tri.p2.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
+            ((tri.p3.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
+            ((tri.p3.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
             get_color(0b11111, 0b0, 0b0),
         );
         draw_line(
-            ((tri.p3.x+1.0) * HALF_SCREEN_WIDTH) as isize,
-            ((tri.p3.y+1.0) * HALF_SCREEN_HEIGHT) as isize,
-            ((tri.p1.x+1.0) * HALF_SCREEN_WIDTH) as isize,
-            ((tri.p1.y+1.0) * HALF_SCREEN_HEIGHT) as isize,
+            ((tri.p3.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
+            ((tri.p3.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
+            ((tri.p1.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
+            ((tri.p1.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
             get_color(0b11111, 0b0, 0b0),
         );
     }
@@ -267,17 +276,18 @@ impl Renderer {
         );
     }
 
-    pub fn update(&self) {
-        //Renderer::clear_screen(get_color(0b01111, 0b011111, 0b11111));
+    pub fn update(&mut self) {
+        //Renderer::clear_screen(get_color(0, 0, 0));
 
         for mut tri in TEST_CUBE_MESH {
-
             tri.p1.z += 3.0;
             tri.p2.z += 3.0;
             tri.p3.z += 3.0;
-            
+
             self.draw_3d_triangle(tri);
         }
+
+        self.camera.rotate(Vector3::new(0.0, 0.02, 0.0));
 
         //eadk::display::push_rect_uniform(eadk::Rect{ x: 10, y: 10, width: 50, height: 50 }, get_color(255, 0, 0));
 

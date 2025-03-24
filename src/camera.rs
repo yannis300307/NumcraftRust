@@ -1,5 +1,6 @@
+use alloc::vec::Vec;
 use libm::{cosf, sinf};
-use nalgebra::{Matrix3, Vector3};
+use nalgebra::{Matrix3, Rotation3, Vector3};
 
 use crate::eadk;
 
@@ -17,9 +18,13 @@ impl Camera {
     pub fn new() -> Self {
         Camera {
             pos: Vector3::new(0., 0., 0.),
-            rotation: Vector3::new(0., 0., 0.),
+            rotation: Vector3::new(0., 0.0, 0.),
             fov: 0.,
         }
+    }
+
+    pub fn rotate(&mut self, rotation_vector: Vector3<f32>) {
+        self.rotation += rotation_vector;
     }
 
     pub fn update(&mut self, delta: f32, keyboard_state: eadk::input::KeyboardState) {
@@ -30,6 +35,10 @@ impl Camera {
         if keyboard_state.key_down(eadk::input::Key::Left) {
             self.rotation.y += delta * ROTATION_SPEED;
         }
+    }
+
+    pub fn get_rotation(&self) -> &Vector3<f32> {
+        &self.rotation
     }
 
     pub fn get_x_rotation_matrix(&self) -> Matrix3<f32> {
