@@ -1,25 +1,22 @@
 use core::mem::swap;
 
-use alloc::vec::Vec;
-use libm::tanf;
 use nalgebra::{
-    Isometry3, Matrix3, Matrix3x1, Matrix4, Perspective3, Point, Point2, Point3, Projective3,
-    Rotation3, Vector2, Vector3, Vector4,
+    Isometry3, Perspective3, Point2, Point3, Vector3,
 };
+
+use core::f32;
 
 use crate::{
     camera::Camera,
     eadk::{self, debug, Rect},
 };
 
-const PI: f32 = 3.14159265358979323846264338327950288419716939937510582;
-
 const SCREEN_WIDTH: f32 = 320.0;
 const SCREEN_HEIGHT: f32 = 240.0;
 const ASPECT_RATIO: f32 = SCREEN_HEIGHT / SCREEN_WIDTH;
 const HALF_SCREEN_WIDTH: f32 = SCREEN_WIDTH / 2.0;
 const HALF_SCREEN_HEIGHT: f32 = SCREEN_HEIGHT / 2.0;
-const FOV: f32 = 90.0;
+const FOV: f32 = f32::consts::PI / 4.0;
 
 const ZNEAR: f32 = 0.1;
 const ZFAR: f32 = 1000.0;
@@ -152,15 +149,8 @@ struct MathTools {
 
 impl MathTools {
     pub fn new() -> Self {
-        let fov_rad = 1.0 / tanf(FOV * 0.5 / 180.0 * PI);
         MathTools {
-            projection_matrix: Perspective3::new(ASPECT_RATIO, PI / 4.0, 1.0, 1000.0),
-            /* Matrix4::new(
-                ASPECT_RATIO * fov_rad, 0.0,     0.0,                              0.0,
-                0.0,                    fov_rad, 0.0,                              0.0,
-                0.0,                    0.0,     ZFAR / (ZFAR - ZNEAR),            1.0,
-                0.0,                    0.0,     (-ZFAR * ZNEAR) / (ZFAR - ZNEAR), 0.0,
-            ),*/
+            projection_matrix: Perspective3::new(ASPECT_RATIO, FOV, ZNEAR, ZFAR),
         }
     }
 }
@@ -181,27 +171,6 @@ impl Renderer {
     }
 
     fn compute_transform(&self, point: Point3<f32>) -> Point2<f32> {
-        /*let rotation_matrix: Matrix3<f32> = self.camera.get_x_rotation_matrix()
-            * self.camera.get_y_rotation_matrix()
-            * self.camera.get_z_rotation_matrix();
-        let translation_matrix: Matrix3x1<f32> = point - self.camera.get_pos();
-        let transformed_point: Matrix3x1<f32> = rotation_matrix * translation_matrix;
-        let display_surface_position: Vector3<f32> = Vector3::new(-1.0, 1.0, 1.0);
-        let projected: Matrix3x1<f32> = Matrix3::new(
-            1.0,
-            0.0,
-            display_surface_position.x / display_surface_position.z,
-            0.0,
-            1.0,
-            display_surface_position.y / display_surface_position.z,
-            0.0,
-            0.0,
-            1.0 / display_surface_position.z,
-        ) * transformed_point;
-
-        let projected_x = projected.x / projected.z;;
-        let projected_y = projected.y / projected.z;*/
-
         let iso: Isometry3<f32> =
             Isometry3::new(*self.camera.get_pos(), *self.camera.get_rotation());
 
@@ -211,8 +180,6 @@ impl Renderer {
             .math_tools
             .projection_matrix
             .unproject_point(&transformed);
-
-        //debug(&projected);
 
         Point2::new(projected.x, projected.y)
     }
@@ -288,17 +255,5 @@ impl Renderer {
         }
 
         self.camera.rotate(Vector3::new(0.0, 0.02, 0.0));
-
-        //eadk::display::push_rect_uniform(eadk::Rect{ x: 10, y: 10, width: 50, height: 50 }, get_color(255, 0, 0));
-
-        /*Renderer::draw_2d_triangle(Triangle2d {
-            p1: Vector2::new(30.0, 20.0),
-            p2: Vector2::new(40.0, 40.0),
-            p3: Vector2::new(20.0, 60.0),
-        });
-
-        let my_point:Vector3<f32> = Vector3::new(0.0, -3.0, 1.0);
-        let projected = self.compute_transform(my_point);
-        eadk::display::push_rect_uniform(eadk::Rect{x: (projected.0 as usize + HALF_SCREEN_WIDTH) as u16, y: (projected.1 as usize + HALF_SCREEN_HEIGHT) as u16, width: 2, height: 2}, get_color(0, 0, 0) );*/
     }
 }

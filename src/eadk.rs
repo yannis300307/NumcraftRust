@@ -564,7 +564,7 @@ pub fn init_window() {
                     for x in rect.x..(rect.x + rect.width) {
                         for y in rect.y..(rect.y + rect.height) {
                             if x > 0 && x < 320 && y > 0 && y < 240 {
-                                buffer[(x as usize) + (y as usize) * 320] = 255;
+                                buffer[(x as usize) + (y as usize) * 320] = 16581375;
                             }
                         }
                     }
