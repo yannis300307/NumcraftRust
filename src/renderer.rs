@@ -1,7 +1,7 @@
 use core::mem::swap;
 
 use nalgebra::{
-    Isometry3, Perspective3, Point2, Point3, Vector3,
+    Isometry3, Perspective3, Point2, Point3, Rotation3, Vector3
 };
 
 use core::f32;
@@ -18,7 +18,7 @@ const HALF_SCREEN_WIDTH: f32 = SCREEN_WIDTH / 2.0;
 const HALF_SCREEN_HEIGHT: f32 = SCREEN_HEIGHT / 2.0;
 const FOV: f32 = f32::consts::PI / 4.0;
 
-const ZNEAR: f32 = 0.1;
+const ZNEAR: f32 = 1.0;
 const ZFAR: f32 = 1000.0;
 
 const TEST_CUBE_MESH: [Triangle3d; 12] = [
@@ -171,10 +171,9 @@ impl Renderer {
     }
 
     fn compute_transform(&self, point: Point3<f32>) -> Point2<f32> {
-        let iso: Isometry3<f32> =
-            Isometry3::new(*self.camera.get_pos(), *self.camera.get_rotation());
+        let rotation: Rotation3<f32> = Rotation3::new(*self.camera.get_rotation());
 
-        let transformed = iso * (point - self.camera.get_pos());
+        let transformed = rotation.inverse_transform_point(&point)-self.camera.get_pos();
 
         let projected = self
             .math_tools
@@ -244,13 +243,9 @@ impl Renderer {
     }
 
     pub fn update(&mut self) {
-        //Renderer::clear_screen(get_color(0, 0, 0));
+        //Renderer::clear_screen(get_color(0b11111, 0b111111, 0b11111));
 
-        for mut tri in TEST_CUBE_MESH {
-            tri.p1.z += 3.0;
-            tri.p2.z += 3.0;
-            tri.p3.z += 3.0;
-
+        for tri in TEST_CUBE_MESH {
             self.draw_3d_triangle(tri);
         }
 
