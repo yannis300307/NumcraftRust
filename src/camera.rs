@@ -6,7 +6,7 @@ use crate::eadk;
 
 const PI: f32 = f32::consts::PI;
 
-const ROTATION_SPEED: f32 = PI; // rad / sec
+const ROTATION_SPEED: f32 = PI/4.0; // rad / sec
 
 pub struct Camera {
     pos: Vector3<f32>,

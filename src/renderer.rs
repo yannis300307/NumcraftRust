@@ -1,7 +1,8 @@
 use core::mem::swap;
 
+use alloc::vec::Vec;
 use nalgebra::{
-    Isometry3, Perspective3, Point2, Point3, Rotation3, Vector3
+    Const, Isometry3, OPoint, Perspective3, Point2, Point3, Rotation3, Vector3
 };
 
 use core::f32;
@@ -103,6 +104,13 @@ struct Triangle3d {
     p3: Point3<f32>,
 }
 
+impl Triangle3d {
+    fn get_normal(&self) -> Vector3<f32> {
+        let a = self.p2-self.p1;
+        a.cross(&(self.p3-self.p1))
+    }
+}
+
 fn get_color(r: u16, g: u16, b: u16) -> eadk::Color {
     eadk::Color {
         rgb565: r << 11 | g << 6 | b,
@@ -170,15 +178,11 @@ impl Renderer {
         renderer
     }
 
-    fn compute_transform(&self, point: Point3<f32>) -> Point2<f32> {
-        let rotation: Rotation3<f32> = Rotation3::new(*self.camera.get_rotation());
-
-        let transformed = rotation.inverse_transform_point(&point)-self.camera.get_pos();
-
+    fn project_point(&self, point: OPoint<f32, Const<3>>) -> Point2<f32> {
         let projected = self
             .math_tools
             .projection_matrix
-            .unproject_point(&transformed);
+            .unproject_point(&point);
 
         Point2::new(projected.x, projected.y)
     }
@@ -220,10 +224,22 @@ impl Renderer {
     }
 
     fn draw_3d_triangle(&self, tri: Triangle3d) {
+
+        let rotation: Rotation3<f32> = Rotation3::new(*self.camera.get_rotation());
+
+        let transformed = Triangle3d{
+            p1: rotation.inverse_transform_point(&(tri.p1-self.camera.get_pos())),
+            p2: rotation.inverse_transform_point(&(tri.p2-self.camera.get_pos())),
+            p3: rotation.inverse_transform_point(&(tri.p3-self.camera.get_pos()))
+        };
+        
+        if (Vector3::new(tri.p1.x, tri.p1.y, tri.p1.z) - self.camera.get_pos()).dot(&transformed.get_normal()) >= 0.0 {return}
+
+
         let projected_triangle = Triangle2d {
-            p1: self.compute_transform(tri.p1),
-            p2: self.compute_transform(tri.p2),
-            p3: self.compute_transform(tri.p3),
+            p1: self.project_point(transformed.p1),
+            p2: self.project_point(transformed.p2),
+            p3: self.project_point(transformed.p3),
         };
 
         Renderer::draw_2d_triangle(projected_triangle);
@@ -249,6 +265,6 @@ impl Renderer {
             self.draw_3d_triangle(tri);
         }
 
-        self.camera.rotate(Vector3::new(0.0, 0.02, 0.0));
+        self.camera.rotate(Vector3::new(0.0, 0.1, 0.0));
     }
 }
