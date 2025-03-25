@@ -15,16 +15,22 @@ impl Game {
         let last = eadk::timing::millis();
         loop {
             let current = eadk::timing::millis();
-            let delta = (current-last) as f32 / 1000.0;
-            self.update(delta);
+            let delta = (current - last) as f32 / 1000.0;
+            if !self.update(delta) {
+                break;
+            }
         }
     }
 
-    pub fn update(&mut self, delta: f32) {
+    pub fn update(&mut self, delta: f32) -> bool {
         let keyboard_state = eadk::input::KeyboardState::scan();
+        if keyboard_state.key_down(eadk::input::Key::Home) {
+            return false;
+        }
         self.renderer.update();
         self.renderer.camera.update(delta, keyboard_state);
 
         eadk::timing::msleep(100);
+        true
     }
 }

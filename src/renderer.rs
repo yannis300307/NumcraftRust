@@ -243,7 +243,7 @@ impl Renderer {
     }
 
     pub fn update(&mut self) {
-        //Renderer::clear_screen(get_color(0b11111, 0b111111, 0b11111));
+        Renderer::clear_screen(get_color(0b11111, 0b111111, 0b11111));
 
         for tri in TEST_CUBE_MESH {
             self.draw_3d_triangle(tri);
