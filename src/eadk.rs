@@ -4,6 +4,13 @@ pub struct Color {
     pub rgb565: u16,
 }
 
+fn to_rgb888(color: &Color) -> usize {
+    let r = ((color.rgb565 >> 11) as usize) << 3;
+    let g = (((color.rgb565 >> 5) & 0b111111) as usize) << 2;
+    let b = ((color.rgb565 & 0b11111) as usize) << 3;
+    (r << 16) | (g << 8) | b
+}
+
 #[repr(C)]
 pub struct Rect {
     pub x: u16,
@@ -550,21 +557,19 @@ pub fn init_window() {
                 panic!("{}", e);
             });
 
-        window.set_target_fps(60);
+        window.set_target_fps(300);
 
         while window.is_open() && !window.is_key_down(Key::Escape) {
-            timing::msleep(2);
-
-            let message = rx.recv();
+            let message = rx.try_recv();
             if message.is_err() {
                 continue;
             }
             match message.unwrap() {
                 WindowOperation::PushRectUniform(rect, color) => {
-                    for x in rect.x..(rect.x + rect.width) {
-                        for y in rect.y..(rect.y + rect.height) {
+                    for x in (rect.x as usize)..((rect.x as usize) + (rect.width as usize)) {
+                        for y in (rect.y as usize)..((rect.y as usize) + (rect.height as usize)) {
                             if x > 0 && x < 320 && y > 0 && y < 240 {
-                                buffer[(x as usize) + (y as usize) * 320] = 16581375;
+                                buffer[(x as usize) + (y as usize) * 320] = to_rgb888(&color) as u32;
                             }
                         }
                     }
