@@ -1,15 +1,10 @@
-use core::mem::swap;
+use nalgebra::{Const, OPoint, Perspective3, Point2, Point3, Rotation3, Vector2, Vector3};
 
-use alloc::vec::Vec;
-use nalgebra::{
-    Const, Isometry3, OPoint, Perspective3, Point2, Point3, Rotation3, Vector3
-};
-
-use core::f32;
+use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
     camera::Camera,
-    eadk::{self, debug, Rect},
+    eadk::{self, Color, Rect},
 };
 
 const SCREEN_WIDTH: f32 = 320.0;
@@ -21,6 +16,10 @@ const FOV: f32 = f32::consts::PI / 4.0;
 
 const ZNEAR: f32 = 1.0;
 const ZFAR: f32 = 1000.0;
+
+const GLOBAL_LIGHT: Vector3<f32> = Vector3::new(0.0, 0.0, -1.0);
+
+const MAX_TRIANGLES: usize = 100;
 
 const TEST_CUBE_MESH: [Triangle3d; 12] = [
     Triangle3d {
@@ -58,13 +57,13 @@ const TEST_CUBE_MESH: [Triangle3d; 12] = [
     // WEST
     Triangle3d {
         p1: Point3::new(0.0, 0.0, 1.0),
-        p2: Point3::new(0.0, 1.0, 1.0),
-        p3: Point3::new(0.0, 1.0, 0.0),
+        p2: Point3::new(0.0, 1.0, 0.0),
+        p3: Point3::new(0.0, 1.0, 1.0),
     },
     Triangle3d {
         p1: Point3::new(0.0, 0.0, 1.0),
-        p2: Point3::new(0.0, 1.0, 0.0),
-        p3: Point3::new(0.0, 0.0, 0.0),
+        p2: Point3::new(0.0, 0.0, 0.0),
+        p3: Point3::new(0.0, 1.0, 0.0),
     },
     // TOP
     Triangle3d {
@@ -90,11 +89,12 @@ const TEST_CUBE_MESH: [Triangle3d; 12] = [
     },
 ];
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct Triangle2d {
-    p1: Point2<f32>,
-    p2: Point2<f32>,
-    p3: Point2<f32>,
+    p1: Point3<f32>,
+    p2: Point3<f32>,
+    p3: Point3<f32>,
+    color: eadk::Color
 }
 
 #[derive(Clone, Copy)]
@@ -106,8 +106,8 @@ struct Triangle3d {
 
 impl Triangle3d {
     fn get_normal(&self) -> Vector3<f32> {
-        let a = self.p2-self.p1;
-        a.cross(&(self.p3-self.p1))
+        let a = self.p2 - self.p1;
+        a.cross(&(self.p3 - self.p1))
     }
 }
 
@@ -119,35 +119,91 @@ fn get_color(r: u16, g: u16, b: u16) -> eadk::Color {
 
 fn draw_line(x1: isize, y1: isize, x2: isize, y2: isize, color: eadk::Color) {
     let mut x1 = x1;
+    let mut y1 = y1;
     let mut x2 = x2;
-    let mut y1: isize = y1;
-    let mut y2: isize = y2;
-    if x1 > x2 {
-        swap(&mut x1, &mut x2);
-        swap(&mut y1, &mut y2);
-    }
-    let mut width = x2 - x1;
-    if width == 0 {
-        width = 1
-    }
+    let mut y2 = y2;
 
-    let mut height = y2 - y1;
+    let dx = (x2 - x1).abs();
+    let dy = (y2 - y1).abs();
+    let sx = if x1 < x2 { 1 } else { -1 };
+    let sy = if y1 < y2 { 1 } else { -1 };
+    let mut err = dx - dy;
 
-    if height == 0 {
-        height = 1
-    }
-    let error = if height > width { height / width } else { 1 };
-    for i in 0..width {
-        let coef = (i as f32) / (width as f32);
+    loop {
         eadk::display::push_rect_uniform(
             Rect {
-                x: (x1 + i) as u16,
-                y: (y1 + ((height as f32) * coef) as isize) as u16,
+                x: x1 as u16,
+                y: y1 as u16,
                 width: 1,
-                height: error as u16,
+                height: 1,
             },
             color,
         );
+
+        if x1 == x2 && y1 == y2 {
+            break;
+        }
+
+        let e2 = 2 * err;
+        if e2 > -dy {
+            err -= dy;
+            x1 += sx;
+        }
+        if e2 < dx {
+            err += dx;
+            y1 += sy;
+        }
+    }
+}
+
+fn fill_triangle(t0: Vector2<f32>, t1: Vector2<f32>, t2: Vector2<f32>, color: eadk::Color) {
+    let mut t0 = t0;
+    let mut t1 = t1;
+    let mut t2 = t2;
+    if t0.y == t1.y && t0.y == t2.y {
+        return;
+    }; // I dont care about degenerate triangles
+       // sort the vertices, t0, t1, t2 lower−to−upper (bubblesort yay!)
+    if t0.y > t1.y {
+        swap(&mut t0, &mut t1)
+    };
+    if t0.y > t2.y {
+        swap(&mut t0, &mut t2)
+    };
+    if t1.y > t2.y {
+        swap(&mut t1, &mut t2)
+    };
+    let total_height = t2.y - t0.y;
+    for i in 0..(total_height as isize) {
+        let second_half = i > ((t1.y - t0.y) as isize) || t1.y == t0.y;
+        let segment_height = if second_half {
+            t2.y - t1.y
+        } else {
+            t1.y - t0.y
+        };
+        let alpha = (i as f32) / total_height;
+        let beta =
+            (i as f32 - (if second_half { t1.y - t0.y } else { 0.0 })) / segment_height; // be careful: with above conditions no division by zero here
+        let mut a: Vector2<f32> = t0 + (t2 - t0) * alpha;
+        let mut b: Vector2<f32> = if second_half {
+            t1 + (t2 - t1) * beta
+        } else {
+            t0 + (t1 - t0) * beta
+        };
+        if a.x > b.x {
+            swap(&mut a, &mut b)
+        };
+        for j in (a.x as isize)..(b.x as isize) {
+            eadk::display::push_rect_uniform(
+                Rect {
+                    x: j as u16,
+                    y: ((t0.y as isize) + i) as u16,
+                    width: 1,
+                    height: 1,
+                },
+                color,
+            )
+        }
     }
 }
 
@@ -166,6 +222,7 @@ impl MathTools {
 pub struct Renderer {
     pub camera: Camera,
     math_tools: MathTools,
+    triangles_to_render: heapless::Vec<Triangle2d, MAX_TRIANGLES>
 }
 
 impl Renderer {
@@ -173,18 +230,14 @@ impl Renderer {
         let renderer: Renderer = Renderer {
             camera: Camera::new(),
             math_tools: MathTools::new(),
+            triangles_to_render: heapless::Vec::new()
         };
 
         renderer
     }
 
-    fn project_point(&self, point: OPoint<f32, Const<3>>) -> Point2<f32> {
-        let projected = self
-            .math_tools
-            .projection_matrix
-            .unproject_point(&point);
-
-        Point2::new(projected.x, projected.y)
+    fn project_point(&self, point: OPoint<f32, Const<3>>) -> Point3<f32> {
+        self.math_tools.projection_matrix.unproject_point(&point)
     }
 
     fn clear_screen(color: eadk::Color) {
@@ -199,8 +252,8 @@ impl Renderer {
         );
     }
 
-    fn draw_2d_triangle(tri: Triangle2d) {
-        draw_line(
+    fn draw_2d_triangle(tri: &Triangle2d) {
+        /*draw_line(
             ((tri.p1.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
             ((tri.p1.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
             ((tri.p2.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
@@ -220,29 +273,52 @@ impl Renderer {
             ((tri.p1.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
             ((tri.p1.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
             get_color(0b11111, 0b0, 0b0),
+        );*/
+
+        fill_triangle(
+            Vector2::new(
+                (tri.p1.x + 1.0) * HALF_SCREEN_WIDTH,
+                (tri.p1.y + 1.0) * HALF_SCREEN_HEIGHT,
+            ),
+            Vector2::new(
+                (tri.p2.x + 1.0) * HALF_SCREEN_WIDTH,
+                (tri.p2.y + 1.0) * HALF_SCREEN_HEIGHT,
+            ),
+            Vector2::new(
+                (tri.p3.x + 1.0) * HALF_SCREEN_WIDTH,
+                (tri.p3.y + 1.0) * HALF_SCREEN_HEIGHT,
+            ),
+            tri.color,
         );
     }
 
-    fn draw_3d_triangle(&self, tri: Triangle3d) {
-
+    fn add_3d_triangle_to_render(&mut self, tri: Triangle3d) {
         let rotation: Rotation3<f32> = Rotation3::new(*self.camera.get_rotation());
 
-        let transformed = Triangle3d{
-            p1: rotation.inverse_transform_point(&(tri.p1-self.camera.get_pos())),
-            p2: rotation.inverse_transform_point(&(tri.p2-self.camera.get_pos())),
-            p3: rotation.inverse_transform_point(&(tri.p3-self.camera.get_pos()))
-        };
-        
-        if (Vector3::new(tri.p1.x, tri.p1.y, tri.p1.z) - self.camera.get_pos()).dot(&transformed.get_normal()) >= 0.0 {return}
-
-
-        let projected_triangle = Triangle2d {
-            p1: self.project_point(transformed.p1),
-            p2: self.project_point(transformed.p2),
-            p3: self.project_point(transformed.p3),
+        let transformed = Triangle3d {
+            p1: rotation.inverse_transform_point(&(tri.p1 - self.camera.get_pos())),
+            p2: rotation.inverse_transform_point(&(tri.p2 - self.camera.get_pos())),
+            p3: rotation.inverse_transform_point(&(tri.p3 - self.camera.get_pos())),
         };
 
-        Renderer::draw_2d_triangle(projected_triangle);
+        if self
+            .camera
+            .get_pos()
+            .normalize()
+            .dot(&transformed.get_normal().normalize())
+            > 0.0
+        {
+            let light = GLOBAL_LIGHT.normalize().dot(&tri.get_normal().normalize()).max(0.2);
+            
+            let projected_triangle = Triangle2d {
+                p1: self.project_point(transformed.p1),
+                p2: self.project_point(transformed.p2),
+                p3: self.project_point(transformed.p3),
+                color: get_color(((0b11111 as f32)*light) as u16, ((0b111111 as f32)*light) as u16, ((0b11111 as f32)*light) as u16)
+            };
+
+            self.triangles_to_render.push(projected_triangle).unwrap();
+        }
     }
 
     pub fn draw_debug_float(value: f32) {
@@ -258,13 +334,29 @@ impl Renderer {
         );
     }
 
-    pub fn update(&mut self) {
-        Renderer::clear_screen(get_color(0b11111, 0b111111, 0b11111));
+    fn draw_triangles(&mut self) {
+        self.triangles_to_render.sort_by(|tri1: &Triangle2d, tri2: &Triangle2d| -> Ordering {
+            let z1 = (tri1.p1.z + tri1.p2.z + tri1.p3.z)/3.0;
+            let z2 = (tri2.p1.z + tri2.p2.z + tri2.p3.z)/3.0;
 
+            z1.partial_cmp(&z2).unwrap()
+        });
+
+        for tri in &self.triangles_to_render {
+            Renderer::draw_2d_triangle(tri);
+        }
+    }
+
+    pub fn update(&mut self) {
+        Renderer::clear_screen(get_color(0, 0, 0));
+
+        self.triangles_to_render.clear();
         for tri in TEST_CUBE_MESH {
-            self.draw_3d_triangle(tri);
+            self.add_3d_triangle_to_render(tri);
         }
 
-        self.camera.rotate(Vector3::new(0.0, 0.1, 0.0));
+        self.draw_triangles();
+
+        //self.camera.rotate(Vector3::new(0.0, 0.1, 0.0));
     }
 }

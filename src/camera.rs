@@ -1,5 +1,6 @@
 use core::f32;
 
+use libm::sincosf;
 use nalgebra::Vector3;
 
 use crate::eadk;
@@ -7,6 +8,7 @@ use crate::eadk;
 const PI: f32 = f32::consts::PI;
 
 const ROTATION_SPEED: f32 = PI/4.0; // rad / sec
+const MOVEMENT_SPEED: f32 = 1.0;
 
 pub struct Camera {
     pos: Vector3<f32>,
@@ -26,12 +28,34 @@ impl Camera {
     }
 
     pub fn update(&mut self, delta: f32, keyboard_state: eadk::input::KeyboardState) {
+        // Rotation
         if keyboard_state.key_down(eadk::input::Key::Right) {
             self.rotation.y -= delta * ROTATION_SPEED;
         }
-
         if keyboard_state.key_down(eadk::input::Key::Left) {
             self.rotation.y += delta * ROTATION_SPEED;
+        }
+
+        // Movements
+        if keyboard_state.key_down(eadk::input::Key::Toolbox) { // Forward
+            let translation = sincosf(self.rotation.y);
+            self.pos.x += translation.0*delta*MOVEMENT_SPEED;
+            self.pos.z += translation.1*delta*MOVEMENT_SPEED;
+        }
+        if keyboard_state.key_down(eadk::input::Key::Comma) { // Backward
+            let translation = sincosf(self.rotation.y);
+            self.pos.x -= translation.0*delta*MOVEMENT_SPEED;
+            self.pos.z -= translation.1*delta*MOVEMENT_SPEED;
+        }
+        if keyboard_state.key_down(eadk::input::Key::Imaginary) { // Left
+            let translation = sincosf(self.rotation.y);
+            self.pos.x += translation.1*delta*MOVEMENT_SPEED;
+            self.pos.z += translation.0*delta*MOVEMENT_SPEED;
+        }
+        if keyboard_state.key_down(eadk::input::Key::Power) { // Right
+            let translation = sincosf(self.rotation.y);
+            self.pos.x -= translation.1*delta*MOVEMENT_SPEED;
+            self.pos.z -= translation.0*delta*MOVEMENT_SPEED;
         }
     }
 

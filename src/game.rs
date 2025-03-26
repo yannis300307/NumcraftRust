@@ -12,10 +12,11 @@ impl Game {
     }
 
     pub fn start(&mut self) {
-        let last = eadk::timing::millis();
+        let mut last = eadk::timing::millis();
         loop {
             let current = eadk::timing::millis();
             let delta = (current - last) as f32 / 1000.0;
+            last = current;
             if !self.update(delta) {
                 break;
             }

@@ -3,7 +3,7 @@
 #![no_main]
 
 #[cfg_attr(target_os = "none", global_allocator)]
-static ALLOCATOR: emballoc::Allocator<4096> = emballoc::Allocator::new();
+static ALLOCATOR: emballoc::Allocator<512> = emballoc::Allocator::new();
 
 extern crate alloc;
 
