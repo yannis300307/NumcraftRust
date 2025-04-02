@@ -94,7 +94,7 @@ struct Triangle2d {
     p1: Point3<f32>,
     p2: Point3<f32>,
     p3: Point3<f32>,
-    color: eadk::Color
+    color: eadk::Color,
 }
 
 #[derive(Clone, Copy)]
@@ -115,6 +115,123 @@ fn get_color(r: u16, g: u16, b: u16) -> eadk::Color {
     eadk::Color {
         rgb565: r << 11 | g << 6 | b,
     }
+}
+
+fn vector_intersect_plane(
+    plane_p: &Vector3<f32>,
+    plane_n: &Vector3<f32>,
+    line_start: &Vector3<f32>,
+    line_end: &Vector3<f32>,
+) -> Point3<f32> {
+    let plane_n = plane_n.normalize();
+    let plane_d = -plane_n.dot(plane_p);
+    let ad = line_start.dot(&plane_n);
+    let bd = line_end.dot(&plane_n);
+    let t = (-plane_d - ad) / (bd - ad);
+    let line_start_to_end = line_end - line_start;
+    let line_to_intersect = line_start_to_end * t;
+    let coords = line_start + line_to_intersect;
+    Point3::new(coords.x, coords.y, coords.z)
+}
+
+fn triangle_clip_against_plane(
+    plane_p: &Vector3<f32>,
+    plane_n: &Vector3<f32>,
+    mut in_tri: &Triangle3d,
+) -> (usize, Option<Triangle3d>, Option<Triangle3d>) {
+    let plane_n = plane_n.normalize();
+
+    let dist = |p: Point3<f32>| {
+        let n = p.coords.normalize();
+        plane_n.x * p.x + plane_n.y * p.y + plane_n.z * p.z - plane_n.dot(plane_p)
+    };
+
+    let binding = Default::default();
+    let mut inside_points: [&Point3<f32>; 3] = [&binding; 3];
+    let mut n_inside_point_count = 0;
+    let binding = Default::default();
+    let mut outside_points: [&Point3<f32>; 3] = [&binding; 3];
+    let mut n_outside_point_count = 0;
+
+    let d0 = dist(in_tri.p1);
+    let d1 = dist(in_tri.p2);
+    let d2 = dist(in_tri.p3);
+
+    if (d0 >= 0.0) {
+        inside_points[n_inside_point_count] = &in_tri.p1;
+        n_inside_point_count += 1;
+    } else {
+        outside_points[n_outside_point_count] = &in_tri.p1;
+        n_outside_point_count += 1;
+    }
+    if (d1 >= 0.0) {
+        inside_points[n_inside_point_count] = &in_tri.p2;
+        n_inside_point_count += 1;
+    } else {
+        outside_points[n_outside_point_count] = &in_tri.p2;
+        n_outside_point_count += 1;
+    }
+    if (d2 >= 0.0) {
+        inside_points[n_inside_point_count] = &in_tri.p3;
+        n_inside_point_count += 1;
+    } else {
+        outside_points[n_outside_point_count] = &in_tri.p3;
+        n_outside_point_count += 1;
+    }
+
+    if (n_inside_point_count == 0) {
+        return (0, None, None);
+    }
+
+    if (n_inside_point_count == 3) {
+        return (1, Some(*in_tri), None);
+    }
+
+    if (n_inside_point_count == 1 && n_outside_point_count == 2) {
+        let out_tri = Triangle3d {
+            p1: *inside_points[0],
+            p2: vector_intersect_plane(
+                &plane_p,
+                &plane_n,
+                &inside_points[0].coords,
+                &outside_points[0].coords,
+            ),
+            p3: vector_intersect_plane(
+                plane_p,
+                &plane_n,
+                &inside_points[0].coords,
+                &outside_points[1].coords,
+            ),
+        };
+
+        return (1, Some(out_tri), None);
+    }
+
+    if (n_inside_point_count == 2 && n_outside_point_count == 1) {
+        let out_tri1 = Triangle3d {
+            p1: *inside_points[0],
+            p2: *inside_points[1],
+            p3: vector_intersect_plane(
+                &plane_p,
+                &plane_n,
+                &inside_points[0].coords,
+                &outside_points[0].coords,
+            ),
+        };
+
+        let out_tri2 = Triangle3d {
+            p1: *inside_points[1],
+            p2: out_tri1.p3,
+            p3: vector_intersect_plane(
+                &plane_p,
+                &plane_n,
+                &inside_points[1].coords,
+                &outside_points[0].coords,
+            ),
+        };
+        return (2, Some(out_tri1), Some(out_tri2));
+    }
+    (0, None, None)
 }
 
 fn draw_line(x1: isize, y1: isize, x2: isize, y2: isize, color: eadk::Color) {
@@ -182,8 +299,7 @@ fn fill_triangle(t0: Vector2<f32>, t1: Vector2<f32>, t2: Vector2<f32>, color: ea
             t1.y - t0.y
         };
         let alpha = (i as f32) / total_height;
-        let beta =
-            (i as f32 - (if second_half { t1.y - t0.y } else { 0.0 })) / segment_height; // be careful: with above conditions no division by zero here
+        let beta = (i as f32 - (if second_half { t1.y - t0.y } else { 0.0 })) / segment_height; // be careful: with above conditions no division by zero here
         let mut a: Vector2<f32> = t0 + (t2 - t0) * alpha;
         let mut b: Vector2<f32> = if second_half {
             t1 + (t2 - t1) * beta
@@ -222,7 +338,7 @@ impl MathTools {
 pub struct Renderer {
     pub camera: Camera,
     math_tools: MathTools,
-    triangles_to_render: heapless::Vec<Triangle2d, MAX_TRIANGLES>
+    triangles_to_render: heapless::Vec<Triangle2d, MAX_TRIANGLES>,
 }
 
 impl Renderer {
@@ -230,7 +346,7 @@ impl Renderer {
         let renderer: Renderer = Renderer {
             camera: Camera::new(),
             math_tools: MathTools::new(),
-            triangles_to_render: heapless::Vec::new()
+            triangles_to_render: heapless::Vec::new(),
         };
 
         renderer
@@ -308,13 +424,27 @@ impl Renderer {
             .dot(&transformed.get_normal().normalize())
             > 0.0
         {
-            let light = GLOBAL_LIGHT.normalize().dot(&tri.get_normal().normalize()).max(0.2);
-            
+            let light = GLOBAL_LIGHT
+                .normalize()
+                .dot(&tri.get_normal().normalize())
+                .max(0.2);
+
+            let clipped: [Triangle3d; 2];
+            let n_clipped_triangles = triangle_clip_against_plane(
+                &Vector3::new(0.0, 0.0, 0.1),
+                &Vector3::new(0.0, 0.0, 1.0),
+                &transformed,
+            );
+
             let projected_triangle = Triangle2d {
                 p1: self.project_point(transformed.p1),
                 p2: self.project_point(transformed.p2),
                 p3: self.project_point(transformed.p3),
-                color: get_color(((0b11111 as f32)*light) as u16, ((0b111111 as f32)*light) as u16, ((0b11111 as f32)*light) as u16)
+                color: get_color(
+                    ((0b11111 as f32) * light) as u16,
+                    ((0b111111 as f32) * light) as u16,
+                    ((0b11111 as f32) * light) as u16,
+                ),
             };
 
             self.triangles_to_render.push(projected_triangle).unwrap();
@@ -335,12 +465,13 @@ impl Renderer {
     }
 
     fn draw_triangles(&mut self) {
-        self.triangles_to_render.sort_by(|tri1: &Triangle2d, tri2: &Triangle2d| -> Ordering {
-            let z1 = (tri1.p1.z + tri1.p2.z + tri1.p3.z)/3.0;
-            let z2 = (tri2.p1.z + tri2.p2.z + tri2.p3.z)/3.0;
+        self.triangles_to_render
+            .sort_by(|tri1: &Triangle2d, tri2: &Triangle2d| -> Ordering {
+                let z1 = (tri1.p1.z + tri1.p2.z + tri1.p3.z) / 3.0;
+                let z2 = (tri2.p1.z + tri2.p2.z + tri2.p3.z) / 3.0;
 
-            z1.partial_cmp(&z2).unwrap()
-        });
+                z1.partial_cmp(&z2).unwrap()
+            });
 
         for tri in &self.triangles_to_render {
             Renderer::draw_2d_triangle(tri);
