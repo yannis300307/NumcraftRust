@@ -18,13 +18,16 @@ pub struct Camera {
 impl Camera {
     pub fn new() -> Self {
         Camera {
-            pos: Vector3::new(0., 0., -3.0),
+            pos: Vector3::new(0., 0., -2.0),
             rotation: Vector3::new(0., 0.0, 0.),
         }
     }
 
     pub fn rotate(&mut self, rotation_vector: Vector3<f32>) {
         self.rotation += rotation_vector;
+    }
+    pub fn translate(&mut self, translation_vector: Vector3<f32>) {
+        self.pos += translation_vector;
     }
 
     pub fn update(&mut self, delta: f32, keyboard_state: eadk::input::KeyboardState) {
@@ -48,14 +51,14 @@ impl Camera {
             self.pos.z -= translation.1*delta*MOVEMENT_SPEED;
         }
         if keyboard_state.key_down(eadk::input::Key::Imaginary) { // Left
-            let translation = sincosf(self.rotation.y);
-            self.pos.x += translation.1*delta*MOVEMENT_SPEED;
-            self.pos.z += translation.0*delta*MOVEMENT_SPEED;
+            let translation = sincosf(self.rotation.y+PI/2.0);
+            self.pos.x += translation.0*delta*MOVEMENT_SPEED;
+            self.pos.z += translation.1*delta*MOVEMENT_SPEED;
         }
         if keyboard_state.key_down(eadk::input::Key::Power) { // Right
-            let translation = sincosf(self.rotation.y);
-            self.pos.x -= translation.1*delta*MOVEMENT_SPEED;
-            self.pos.z -= translation.0*delta*MOVEMENT_SPEED;
+            let translation = sincosf(self.rotation.y+PI/2.0);
+            self.pos.x -= translation.0*delta*MOVEMENT_SPEED;
+            self.pos.z -= translation.1*delta*MOVEMENT_SPEED;
         }
     }
 

@@ -560,22 +560,26 @@ pub fn init_window() {
         window.set_target_fps(300);
 
         while window.is_open() && !window.is_key_down(Key::Escape) {
-            let message = rx.try_recv();
-            if message.is_err() {
-                continue;
-            }
-            match message.unwrap() {
-                WindowOperation::PushRectUniform(rect, color) => {
-                    for x in (rect.x as usize)..((rect.x as usize) + (rect.width as usize)) {
-                        for y in (rect.y as usize)..((rect.y as usize) + (rect.height as usize)) {
-                            if x > 0 && x < 320 && y > 0 && y < 240 {
-                                buffer[(x as usize) + (y as usize) * 320] = to_rgb888(&color) as u32;
+            while true {
+                let message = rx.try_recv();
+                if message.is_err() {
+                    break;
+                }
+                match message.unwrap() {
+                    WindowOperation::PushRectUniform(rect, color) => {
+                        for x in (rect.x as usize)..((rect.x as usize) + (rect.width as usize)) {
+                            for y in (rect.y as usize)..((rect.y as usize) + (rect.height as usize))
+                            {
+                                if x > 0 && x < 320 && y > 0 && y < 240 {
+                                    buffer[(x as usize) + (y as usize) * 320] =
+                                        to_rgb888(&color) as u32;
+                                }
                             }
                         }
                     }
-                }
-                WindowOperation::PushRect(_, _) => {
-                    println!("push")
+                    WindowOperation::PushRect(_, _) => {
+                        println!("push")
+                    }
                 }
             }
 

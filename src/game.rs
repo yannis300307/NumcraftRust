@@ -31,7 +31,7 @@ impl Game {
         self.renderer.update();
         self.renderer.camera.update(delta, keyboard_state);
 
-        eadk::timing::msleep(100);
+        eadk::timing::msleep(20);
         true
     }
 }

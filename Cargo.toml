@@ -25,6 +25,7 @@ libm = "0.2.11"
 emballoc = "0.3.0"
 format_no_std = "1.2.0"
 heapless = "0.8.0"
+cbitmap = "0.3.2"
 
 [target.'cfg(windows)'.dependencies]
 minifb = "0.28"
