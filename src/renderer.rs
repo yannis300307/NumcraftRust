@@ -2,7 +2,9 @@ use cbitmap::{
     bitmap::{self, Bitmap, BitsManage},
     newmap,
 };
-use nalgebra::{Const, Matrix4, OPoint, Perspective3, Point2, Point3, Rotation3, Vector2, Vector3};
+use nalgebra::{
+    Const, Matrix4, OPoint, Perspective3, Point2, Point3, Rotation3, Vector2, Vector3, Vector4,
+};
 
 use core::{cmp::Ordering, f32, mem::swap};
 
@@ -18,7 +20,7 @@ const SCREEN_HEIGHTF: f32 = SCREEN_HEIGHT as f32;
 
 const SCREEN_PIXELS_COUNT: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
 const Z_BUFFER_SIZE: usize = SCREEN_PIXELS_COUNT.div_ceil(8);
-const ASPECT_RATIO: f32 = SCREEN_WIDTHF/SCREEN_HEIGHTF;
+const ASPECT_RATIO: f32 = SCREEN_WIDTHF / SCREEN_HEIGHTF;
 const HALF_SCREEN_WIDTH: f32 = SCREEN_WIDTHF / 2.0;
 const HALF_SCREEN_HEIGHT: f32 = SCREEN_HEIGHTF / 2.0;
 const FOV: f32 = f32::consts::PI / 4.0;
@@ -128,16 +130,28 @@ fn get_color(r: u16, g: u16, b: u16) -> eadk::Color {
 }
 
 fn matrix_point_at(pos: &Vector3<f32>, target: &Vector3<f32>, up: &Vector3<f32>) -> Matrix4<f32> {
-    let new_forward = (target-pos).normalize();
+    let new_forward = (target - pos).normalize();
 
-    let new_up = (up-new_forward*up.dot(&new_forward)).normalize();
+    let new_up = (up - new_forward * up.dot(&new_forward)).normalize();
     let new_right = new_up.cross(&new_forward);
 
     Matrix4::new(
-        new_right.x,	new_right.y,	new_right.z,	0.0,
-		new_up.x,		new_up.y,		new_up.z,		0.0,
-		new_forward.x,	new_forward.y,	new_forward.z,	0.0,
-		pos.x,			pos.y,			pos.z,			1.0,
+        new_right.x,
+        new_right.y,
+        new_right.z,
+        0.0,
+        new_up.x,
+        new_up.y,
+        new_up.z,
+        0.0,
+        new_forward.x,
+        new_forward.y,
+        new_forward.z,
+        0.0,
+        pos.x,
+        pos.y,
+        pos.z,
+        1.0,
     )
 }
 
@@ -214,18 +228,8 @@ fn triangle_clip_against_plane(
     if n_inside_point_count == 1 && n_outside_point_count == 2 {
         let out_tri = Triangle3d {
             p1: *inside_points[0],
-            p2: vector_intersect_plane(
-                plane_p,
-                &plane_n,
-                &inside_points[0],
-                &outside_points[0],
-            ),
-            p3: vector_intersect_plane(
-                plane_p,
-                &plane_n,
-                &inside_points[0],
-                &outside_points[1],
-            ),
+            p2: vector_intersect_plane(plane_p, &plane_n, &inside_points[0], &outside_points[0]),
+            p3: vector_intersect_plane(plane_p, &plane_n, &inside_points[0], &outside_points[1]),
         };
 
         return (Some(out_tri), None);
@@ -235,23 +239,13 @@ fn triangle_clip_against_plane(
         let out_tri1 = Triangle3d {
             p1: *inside_points[0],
             p2: *inside_points[1],
-            p3: vector_intersect_plane(
-                &plane_p,
-                &plane_n,
-                &inside_points[0],
-                &outside_points[0],
-            ),
+            p3: vector_intersect_plane(&plane_p, &plane_n, &inside_points[0], &outside_points[0]),
         };
 
         let out_tri2 = Triangle3d {
             p1: *inside_points[1],
             p2: out_tri1.p3,
-            p3: vector_intersect_plane(
-                &plane_p,
-                &plane_n,
-                &inside_points[1],
-                &outside_points[0],
-            ),
+            p3: vector_intersect_plane(&plane_p, &plane_n, &inside_points[1], &outside_points[0]),
         };
         return (Some(out_tri1), Some(out_tri2));
     }
@@ -329,7 +323,7 @@ impl Renderer {
     }
 
     fn project_point(&self, point: Vector3<f32>) -> Vector3<f32> {
-        self.math_tools.projection_matrix.project_vector(&point)*-1.0
+        self.math_tools.projection_matrix.project_vector(&point) * -1.0
     }
 
     fn clear_screen(&mut self, color: eadk::Color) {
@@ -470,29 +464,40 @@ impl Renderer {
     }
 
     fn add_3d_triangle_to_render(&mut self, tri: Triangle3d) {
+        let mut tri = tri;
         let rotation: Rotation3<f32> = Rotation3::new(*self.camera.get_rotation());
 
         let mut transformed = Triangle3d {
-            p1: rotation.transform_vector(&tri.p1) - self.camera.get_pos(),
-            p2: rotation.transform_vector(&tri.p2) - self.camera.get_pos(),
-            p3: rotation.transform_vector(&tri.p3) - self.camera.get_pos(),
+            p1: tri.p1,
+            p2: tri.p2,
+            p3: tri.p3,
         };
 
-        let camera_ray = tri.p1-self.camera.get_pos();
+        let camera_ray = tri.p1 - self.camera.get_pos();
 
-        let up :Vector3<f32> = Vector3::new(0.0, 1.0, 0.0);
-        let look_dir: Vector3<f32> = Vector3::new(0.0, 0.0, 1.0);
-        let target = self.camera.get_pos()+look_dir;
+        let up: Vector3<f32> = Vector3::new(0.0, 1.0, 0.0);
+        let target: Vector3<f32> = Vector3::new(0.0, 0.0, 1.0);
+        let look_dir = rotation.transform_vector(&target);
+        let target = self.camera.get_pos() + look_dir;
 
         let mat_camera = matrix_point_at(self.camera.get_pos(), &target, &up);
 
-        let mat_view = mat_camera.try_inverse().unwrap();
+        let mat_view = mat_camera;
 
-
+        transformed.p1 = (mat_view
+            * Vector4::new(transformed.p1.x, transformed.p1.y, transformed.p1.z, 1.0))
+        .xyz(); // try to_homogenous here
+        transformed.p2 = (mat_view
+            * Vector4::new(transformed.p2.x, transformed.p2.y, transformed.p2.z, 1.0))
+        .xyz();
+        transformed.p3 = (mat_view
+            * Vector4::new(transformed.p3.x, transformed.p3.y, transformed.p3.z, 1.0))
+        .xyz();
 
         //println!("{:?}", transformed.get_normal().normalize());
 
-        if camera_ray.dot(&tri.get_normal().normalize()) < 0.0 {
+        if camera_ray.dot(&transformed.get_normal().normalize()) < 0.0 {
+            
             let light = GLOBAL_LIGHT
                 .normalize()
                 .dot(&tri.get_normal().normalize())
@@ -503,8 +508,6 @@ impl Renderer {
                 &Vector3::new(0.0, 0.0, 1.0),
                 &transformed,
             );
-
-            
 
             let mut project_and_add = |to_project: Triangle3d| {
                 let projected_triangle = Triangle2d {
@@ -569,7 +572,7 @@ impl Renderer {
 
         self.draw_triangles();
 
-        //self.camera.rotate(Vector3::new(0.0, 0.01, 0.0));
+        self.camera.rotate(Vector3::new(0.0, 0.01, 0.0));
         //self.camera.translate(Vector3::new(0.01, 0.0, 0.0));
     }
 }

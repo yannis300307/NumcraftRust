@@ -9,7 +9,6 @@ fn main() {
         else {
             Command::new("cmd").args(["/c", "nwlink", "png-nwi", "src/icon.png", "target/icon.nwi"]).output().expect("Unable to convert icon.")
         }
-        
     };
     assert!(
         output.status.success(),

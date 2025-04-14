@@ -18,7 +18,7 @@ pub struct Camera {
 impl Camera {
     pub fn new() -> Self {
         Camera {
-            pos: Vector3::new(0., 0., -2.0),
+            pos: Vector3::new(0., 0., -5.0),
             rotation: Vector3::new(0., 0.0, 0.),
         }
     }
