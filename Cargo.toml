@@ -5,13 +5,6 @@ version = "0.1.0"
 authors = ["NumWorks <contact@numworks.com>"]
 edition = "2024"
 
-[build]
-target = "thumbv7em-none-eabihf"
-
-[target.thumbv7em-none-eabihf]
-runner = 'cmd /c npx --yes -- nwlink@0.0.19 install-nwa'
-rustflags = ["-C", "link-arg=--relocatable", "-C", "link-arg=-no-gc-sections"]
-
 [profile.dev]
 panic="abort"
 strip=true
