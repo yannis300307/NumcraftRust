@@ -514,16 +514,6 @@ impl Renderer {
 
         let mat_view = mat_camera;
 
-        transformed.p1 = (mat_view
-            * Vector4::new(transformed.p1.x, transformed.p1.y, transformed.p1.z, 1.0))
-        .xyz(); // try to_homogenous here
-        transformed.p2 = (mat_view
-            * Vector4::new(transformed.p2.x, transformed.p2.y, transformed.p2.z, 1.0))
-        .xyz();
-        transformed.p3 = (mat_view
-            * Vector4::new(transformed.p3.x, transformed.p3.y, transformed.p3.z, 1.0))
-        .xyz();
-
         let camera_ray = transformed.p1 - self.camera.get_pos();
 
         //println!("{:?}", transformed.get_normal().normalize());
@@ -533,6 +523,16 @@ impl Renderer {
                 .normalize()
                 .dot(&tri.get_normal().normalize())
                 .max(0.2);
+
+            transformed.p1 = (mat_view
+                * Vector4::new(transformed.p1.x, transformed.p1.y, transformed.p1.z, 1.0))
+            .xyz(); // try to_homogenous here
+            transformed.p2 = (mat_view
+                * Vector4::new(transformed.p2.x, transformed.p2.y, transformed.p2.z, 1.0))
+            .xyz();
+            transformed.p3 = (mat_view
+                * Vector4::new(transformed.p3.x, transformed.p3.y, transformed.p3.z, 1.0))
+            .xyz();
 
             let clipped_triangles = triangle_clip_against_plane(
                 &Vector3::new(0.0, 0.0, 0.1),
@@ -654,7 +654,7 @@ impl Renderer {
 
         self.draw_triangles();
 
-        //self.camera.rotate(Vector3::new(0.0, 0.001, 0.0));
+        //self.camera.rotate(Vector3::new(0.0, 0.01, 0.0));
         //self.camera.translate(Vector3::new(0.01, 0.0, 0.0));
     }
 }
