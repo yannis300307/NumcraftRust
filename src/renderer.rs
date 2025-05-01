@@ -2,6 +2,7 @@ use cbitmap::{
     bitmap::{self, Bitmap, BitsManage},
     newmap,
 };
+use heapless::Vec;
 use nalgebra::{
     Const, Matrix4, OPoint, Perspective3, Point2, Point3, Rotation3, Vector2, Vector3, Vector4,
 };
@@ -32,72 +33,88 @@ const GLOBAL_LIGHT: Vector3<f32> = Vector3::new(0.0, 0.0, -1.0);
 
 const MAX_TRIANGLES: usize = 100;
 
-const TEST_CUBE_MESH: [Triangle3d; 2] = [
+const DEFAULT_DEBUG_COLOR: Color = Color {
+    rgb565: 0b1111100000000000,
+};
+
+const TEST_CUBE_MESH: [Triangle3d; 12] = [
     Triangle3d {
         p1: Vector3::new(0.0, 0.0, 0.0),
         p2: Vector3::new(0.0, 1.0, 0.0),
         p3: Vector3::new(1.0, 1.0, 0.0),
+        color: DEFAULT_DEBUG_COLOR,
     },
     Triangle3d {
         p1: Vector3::new(0.0, 0.0, 0.0),
         p2: Vector3::new(1.0, 1.0, 0.0),
         p3: Vector3::new(1.0, 0.0, 0.0),
+        color: DEFAULT_DEBUG_COLOR,
     },
-    /*// EAST
+    // EAST
     Triangle3d {
         p1: Vector3::new(1.0, 0.0, 0.0),
         p2: Vector3::new(1.0, 1.0, 0.0),
         p3: Vector3::new(1.0, 1.0, 1.0),
+        color: DEFAULT_DEBUG_COLOR,
     },
     Triangle3d {
         p1: Vector3::new(1.0, 0.0, 0.0),
         p2: Vector3::new(1.0, 1.0, 1.0),
         p3: Vector3::new(1.0, 0.0, 1.0),
+        color: DEFAULT_DEBUG_COLOR,
     },
     // NORTH
     Triangle3d {
         p1: Vector3::new(1.0, 0.0, 1.0),
         p2: Vector3::new(1.0, 1.0, 1.0),
         p3: Vector3::new(0.0, 1.0, 1.0),
+        color: DEFAULT_DEBUG_COLOR,
     },
     Triangle3d {
         p1: Vector3::new(1.0, 0.0, 1.0),
         p2: Vector3::new(0.0, 1.0, 1.0),
         p3: Vector3::new(0.0, 0.0, 1.0),
+        color: DEFAULT_DEBUG_COLOR,
     },
     // WEST
     Triangle3d {
         p1: Vector3::new(0.0, 0.0, 1.0),
         p3: Vector3::new(0.0, 1.0, 0.0),
         p2: Vector3::new(0.0, 1.0, 1.0),
+        color: DEFAULT_DEBUG_COLOR,
     },
     Triangle3d {
         p1: Vector3::new(0.0, 0.0, 1.0),
         p3: Vector3::new(0.0, 0.0, 0.0),
         p2: Vector3::new(0.0, 1.0, 0.0),
+        color: DEFAULT_DEBUG_COLOR,
     },
     // TOP
     Triangle3d {
         p1: Vector3::new(0.0, 1.0, 0.0),
         p2: Vector3::new(0.0, 1.0, 1.0),
         p3: Vector3::new(1.0, 1.0, 1.0),
+        color: DEFAULT_DEBUG_COLOR,
     },
     Triangle3d {
         p1: Vector3::new(0.0, 1.0, 0.0),
         p2: Vector3::new(1.0, 1.0, 1.0),
         p3: Vector3::new(1.0, 1.0, 0.0),
+        color: DEFAULT_DEBUG_COLOR,
     },
     // BOTTOM
     Triangle3d {
         p1: Vector3::new(1.0, 0.0, 1.0),
         p2: Vector3::new(0.0, 0.0, 1.0),
         p3: Vector3::new(0.0, 0.0, 0.0),
+        color: DEFAULT_DEBUG_COLOR,
     },
     Triangle3d {
         p1: Vector3::new(1.0, 0.0, 1.0),
         p2: Vector3::new(0.0, 0.0, 0.0),
         p3: Vector3::new(1.0, 0.0, 0.0),
-    },*/
+        color: DEFAULT_DEBUG_COLOR,
+    },
 ];
 
 #[derive(Clone, Copy, Debug)]
@@ -108,11 +125,12 @@ struct Triangle2d {
     color: eadk::Color,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct Triangle3d {
     p1: Vector3<f32>,
     p2: Vector3<f32>,
     p3: Vector3<f32>,
+    color: eadk::Color,
 }
 
 impl Triangle3d {
@@ -142,10 +160,22 @@ fn matrix_point_at(pos: &Vector3<f32>, target: &Vector3<f32>, up: &Vector3<f32>)
         pos.x, pos.y, pos.z, 1.0,
     )*/
     Matrix4::new(
-        new_right.x, new_up.x, new_forward.x, pos.x,
-        new_right.y, new_up.y, new_forward.y, pos.y,
-        new_right.z, new_up.z, new_forward.z, pos.z,
-        0.0, 0.0, 0.0, 1.0
+        new_right.x,
+        new_up.x,
+        new_forward.x,
+        pos.x,
+        new_right.y,
+        new_up.y,
+        new_forward.y,
+        pos.y,
+        new_right.z,
+        new_up.z,
+        new_forward.z,
+        pos.z,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
     )
 }
 
@@ -212,7 +242,7 @@ fn triangle_clip_against_plane(
         outside_points[n_outside_point_count] = &in_tri.p3;
         n_outside_point_count += 1;
     }
-    
+
     if n_inside_point_count == 0 {
         return (None, None);
     }
@@ -226,6 +256,7 @@ fn triangle_clip_against_plane(
             p1: *inside_points[0],
             p2: vector_intersect_plane(plane_p, &plane_n, &inside_points[0], &outside_points[0]),
             p3: vector_intersect_plane(plane_p, &plane_n, &inside_points[0], &outside_points[1]),
+            color: in_tri.color,
         };
 
         return (Some(out_tri), None);
@@ -236,12 +267,14 @@ fn triangle_clip_against_plane(
             p1: *inside_points[0],
             p2: *inside_points[1],
             p3: vector_intersect_plane(&plane_p, &plane_n, &inside_points[0], &outside_points[0]),
+            color: in_tri.color,
         };
 
         let out_tri2 = Triangle3d {
             p1: *inside_points[1],
             p2: out_tri1.p3,
             p3: vector_intersect_plane(&plane_p, &plane_n, &inside_points[1], &outside_points[0]),
+            color: in_tri.color,
         };
         return (Some(out_tri1), Some(out_tri2));
     }
@@ -302,7 +335,7 @@ impl MathTools {
 pub struct Renderer {
     pub camera: Camera,
     math_tools: MathTools,
-    triangles_to_render: heapless::Vec<Triangle2d, MAX_TRIANGLES>,
+    triangles_to_render: heapless::Vec<Triangle3d, MAX_TRIANGLES>,
     z_buffer: bitmap::Bitmap<Z_BUFFER_SIZE>,
 }
 
@@ -363,7 +396,7 @@ impl Renderer {
         if t0.y == t1.y && t0.y == t2.y {
             return;
         }; // I dont care about degenerate triangles
-           // sort the vertices, t0, t1, t2 lower−to−upper (bubblesort yay!)
+        // sort the vertices, t0, t1, t2 lower−to−upper (bubblesort yay!)
         if t0.y > t1.y {
             swap(&mut t0, &mut t1)
         };
@@ -419,7 +452,7 @@ impl Renderer {
         }
     }
 
-    fn draw_2d_triangle(&mut self, tri: &Triangle2d) {
+    fn draw_2d_triangle(&self, tri: &Triangle3d) {
         /*self.fill_triangle(
             Vector2::new(
                 (tri.p1.x + 1.0) * HALF_SCREEN_WIDTH,
@@ -437,36 +470,37 @@ impl Renderer {
         );*/
 
         draw_line(
-            ((tri.p1.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
-            ((tri.p1.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
-            ((tri.p2.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
-            ((tri.p2.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
+            (tri.p1.x + 1.0) as isize,
+            (tri.p1.y + 1.0) as isize,
+            (tri.p2.x + 1.0) as isize,
+            (tri.p2.y + 1.0) as isize,
             get_color(0b11111, 0b0, 0b0),
         );
         draw_line(
-            ((tri.p2.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
-            ((tri.p2.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
-            ((tri.p3.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
-            ((tri.p3.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
+            (tri.p2.x + 1.0) as isize,
+            (tri.p2.y + 1.0) as isize,
+            (tri.p3.x + 1.0) as isize,
+            (tri.p3.y + 1.0) as isize,
             get_color(0b11111, 0b0, 0b0),
         );
         draw_line(
-            ((tri.p3.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
-            ((tri.p3.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
-            ((tri.p1.x + 1.0) * HALF_SCREEN_WIDTH) as isize,
-            ((tri.p1.y + 1.0) * HALF_SCREEN_HEIGHT) as isize,
+            (tri.p3.x + 1.0) as isize,
+            (tri.p3.y + 1.0) as isize,
+            (tri.p1.x + 1.0) as isize,
+            (tri.p1.y + 1.0) as isize,
             get_color(0b11111, 0b0, 0b0),
         );
     }
 
     fn add_3d_triangle_to_render(&mut self, tri: Triangle3d) {
-        let mut tri = tri;
+        let tri = tri;
         let rotation: Rotation3<f32> = Rotation3::new(*self.camera.get_rotation());
 
         let mut transformed = Triangle3d {
             p1: tri.p1,
             p2: tri.p2,
             p3: tri.p3,
+            color: tri.color,
         };
 
         let up: Vector3<f32> = Vector3::new(0.0, 1.0, 0.0);
@@ -474,7 +508,9 @@ impl Renderer {
         let look_dir = rotation.transform_vector(&target);
         let target = self.camera.get_pos() + look_dir;
 
-        let mat_camera = matrix_point_at(self.camera.get_pos(), &target, &up).try_inverse().unwrap();
+        let mat_camera = matrix_point_at(self.camera.get_pos(), &target, &up)
+            .try_inverse()
+            .unwrap();
 
         let mat_view = mat_camera;
 
@@ -487,13 +523,12 @@ impl Renderer {
         transformed.p3 = (mat_view
             * Vector4::new(transformed.p3.x, transformed.p3.y, transformed.p3.z, 1.0))
         .xyz();
-    
+
         let camera_ray = transformed.p1 - self.camera.get_pos();
 
         //println!("{:?}", transformed.get_normal().normalize());
 
         if transformed.get_normal().dot(&camera_ray) < 0.0 {
-            
             let light = GLOBAL_LIGHT
                 .normalize()
                 .dot(&tri.get_normal().normalize())
@@ -506,7 +541,7 @@ impl Renderer {
             );
 
             let mut project_and_add = |to_project: Triangle3d| {
-                let projected_triangle = Triangle2d {
+                let mut projected_triangle = Triangle3d {
                     p1: self.project_point(to_project.p1),
                     p2: self.project_point(to_project.p2),
                     p3: self.project_point(to_project.p3),
@@ -516,6 +551,24 @@ impl Renderer {
                         ((0b11111 as f32) * light) as u16,
                     ),
                 };
+
+                // Center
+                projected_triangle.p1.x += 1.0;
+                projected_triangle.p2.x += 1.0;
+                projected_triangle.p3.x += 1.0;
+
+                projected_triangle.p1.y += 1.0;
+                projected_triangle.p2.y += 1.0;
+                projected_triangle.p3.y += 1.0;
+
+                // Multiply by size on screen
+                projected_triangle.p1.x *= HALF_SCREEN_WIDTH;
+                projected_triangle.p2.x *= HALF_SCREEN_WIDTH;
+                projected_triangle.p3.x *= HALF_SCREEN_WIDTH;
+
+                projected_triangle.p1.y *= HALF_SCREEN_HEIGHT;
+                projected_triangle.p2.y *= HALF_SCREEN_HEIGHT;
+                projected_triangle.p3.y *= HALF_SCREEN_HEIGHT;
 
                 self.triangles_to_render.push(projected_triangle).unwrap();
             };
@@ -545,22 +598,54 @@ impl Renderer {
 
     fn draw_triangles(&mut self) {
         self.triangles_to_render
-            .sort_by(|tri1: &Triangle2d, tri2: &Triangle2d| -> Ordering {
+            .sort_by(|tri1: &Triangle3d, tri2: &Triangle3d| -> Ordering {
                 let z1 = (tri1.p1.z + tri1.p2.z + tri1.p3.z) / 3.0;
                 let z2 = (tri2.p1.z + tri2.p2.z + tri2.p3.z) / 3.0;
 
                 z1.partial_cmp(&z2).unwrap()
             });
 
-        for tri in self.triangles_to_render.clone() {
-            self.draw_2d_triangle(&tri);
+        for tri in self.triangles_to_render.iter() {
+            let mut clip_buffer: heapless::Deque<Triangle3d, 16> = heapless::Deque::new(); // 2^4
+
+            clip_buffer.push_back(*tri).unwrap();
+            let mut new_tris = 1;
+
+            let mut clip_triangle = |plane_p, plane_n| {
+                while new_tris > 0 {
+                    let test = clip_buffer.pop_front().unwrap();
+                    new_tris -= 1;
+
+                    let clipped = triangle_clip_against_plane(&plane_p, &plane_n, &test);
+
+                    if let Some(clipped_tri) = clipped.0 {
+                        clip_buffer.push_back(clipped_tri).unwrap();
+                    }
+                    if let Some(clipped_tri) = clipped.1 {
+                        clip_buffer.push_back(clipped_tri).unwrap();
+                    }
+                }
+                new_tris = clip_buffer.len();
+            };
+
+            clip_triangle(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 1.0, 0.0));
+            clip_triangle(
+                Vector3::new(0.0, SCREEN_HEIGHTF - 1.0, 0.0),
+                Vector3::new(0.0, -1.0, 0.0),
+            );
+            clip_triangle(Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 0.0, 0.0));
+            clip_triangle(
+                Vector3::new(SCREEN_WIDTHF - 1.0, 0.0, 0.0),
+                Vector3::new(-1.0, 0.0, 0.0),
+            );
+            for tri_to_render in clip_buffer {
+                self.draw_2d_triangle(&tri_to_render);
+            }
         }
     }
 
     pub fn update(&mut self) {
         self.clear_screen(get_color(0, 0, 0));
-
-        let rotation: Rotation3<f32> = Rotation3::new(*self.camera.get_rotation());
 
         self.triangles_to_render.clear();
         for tri in TEST_CUBE_MESH {
@@ -569,7 +654,7 @@ impl Renderer {
 
         self.draw_triangles();
 
-        self.camera.rotate(Vector3::new(0.0, 0.001, 0.0));
+        //self.camera.rotate(Vector3::new(0.0, 0.001, 0.0));
         //self.camera.translate(Vector3::new(0.01, 0.0, 0.0));
     }
 }
