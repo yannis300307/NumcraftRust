@@ -14,18 +14,18 @@ mod renderer;
 use game::Game;
 
 #[used]
-#[link_section = ".rodata.eadk_app_name"]
+#[unsafe(link_section = ".rodata.eadk_app_name")]
 pub static EADK_APP_NAME: [u8; 10] = *b"HelloRust\0";
 
 #[used]
-#[link_section = ".rodata.eadk_api_level"]
+#[unsafe(link_section = ".rodata.eadk_api_level")]
 pub static EADK_APP_API_LEVEL: u32 = 0;
 
 #[used]
-#[link_section = ".rodata.eadk_app_icon"]
+#[unsafe(link_section = ".rodata.eadk_app_icon")]
 pub static EADK_APP_ICON: [u8; 4250] = *include_bytes!("../target/icon.nwi");
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn main() {
     let mut game = Game::new();
 

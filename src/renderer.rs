@@ -32,7 +32,7 @@ const GLOBAL_LIGHT: Vector3<f32> = Vector3::new(0.0, 0.0, -1.0);
 
 const MAX_TRIANGLES: usize = 100;
 
-const TEST_CUBE_MESH: [Triangle3d; 12] = [
+const TEST_CUBE_MESH: [Triangle3d; 2] = [
     Triangle3d {
         p1: Vector3::new(0.0, 0.0, 0.0),
         p2: Vector3::new(0.0, 1.0, 0.0),
@@ -43,7 +43,7 @@ const TEST_CUBE_MESH: [Triangle3d; 12] = [
         p2: Vector3::new(1.0, 1.0, 0.0),
         p3: Vector3::new(1.0, 0.0, 0.0),
     },
-    // EAST
+    /*// EAST
     Triangle3d {
         p1: Vector3::new(1.0, 0.0, 0.0),
         p2: Vector3::new(1.0, 1.0, 0.0),
@@ -97,7 +97,7 @@ const TEST_CUBE_MESH: [Triangle3d; 12] = [
         p1: Vector3::new(1.0, 0.0, 1.0),
         p2: Vector3::new(0.0, 0.0, 0.0),
         p3: Vector3::new(1.0, 0.0, 0.0),
-    },
+    },*/
 ];
 
 #[derive(Clone, Copy, Debug)]
@@ -119,7 +119,7 @@ impl Triangle3d {
     fn get_normal(&self) -> Vector3<f32> {
         let a = self.p2 - self.p1;
         let b = self.p3 - self.p1;
-        a.cross(&b)
+        a.cross(&b).normalize()
     }
 }
 
@@ -135,23 +135,17 @@ fn matrix_point_at(pos: &Vector3<f32>, target: &Vector3<f32>, up: &Vector3<f32>)
     let new_up = (up - new_forward * up.dot(&new_forward)).normalize();
     let new_right = new_up.cross(&new_forward);
 
+    /*Matrix4::new(
+        new_right.x, new_right.y, new_right.z, 0.0,
+        new_up.x, new_up.y, new_up.z, 0.0,
+        new_forward.x, new_forward.y, new_forward.z, 0.0,
+        pos.x, pos.y, pos.z, 1.0,
+    )*/
     Matrix4::new(
-        new_right.x,
-        new_right.y,
-        new_right.z,
-        0.0,
-        new_up.x,
-        new_up.y,
-        new_up.z,
-        0.0,
-        new_forward.x,
-        new_forward.y,
-        new_forward.z,
-        0.0,
-        pos.x,
-        pos.y,
-        pos.z,
-        1.0,
+        new_right.x, new_up.x, new_forward.x, pos.x,
+        new_right.y, new_up.y, new_forward.y, pos.y,
+        new_right.z, new_up.z, new_forward.z, pos.z,
+        0.0, 0.0, 0.0, 1.0
     )
 }
 
@@ -175,7 +169,7 @@ fn vector_intersect_plane(
 fn triangle_clip_against_plane(
     plane_p: &Vector3<f32>,
     plane_n: &Vector3<f32>,
-    mut in_tri: &Triangle3d,
+    in_tri: &Triangle3d,
 ) -> (Option<Triangle3d>, Option<Triangle3d>) {
     let plane_n = plane_n.normalize();
 
@@ -194,6 +188,8 @@ fn triangle_clip_against_plane(
     let d0 = dist(in_tri.p1);
     let d1 = dist(in_tri.p2);
     let d2 = dist(in_tri.p3);
+
+    //println!("{}, {}, {}", d0, d1, d2);
 
     if d0 >= 0.0 {
         inside_points[n_inside_point_count] = &in_tri.p1;
@@ -216,7 +212,7 @@ fn triangle_clip_against_plane(
         outside_points[n_outside_point_count] = &in_tri.p3;
         n_outside_point_count += 1;
     }
-
+    
     if n_inside_point_count == 0 {
         return (None, None);
     }
@@ -473,14 +469,12 @@ impl Renderer {
             p3: tri.p3,
         };
 
-        let camera_ray = tri.p1 - self.camera.get_pos();
-
         let up: Vector3<f32> = Vector3::new(0.0, 1.0, 0.0);
         let target: Vector3<f32> = Vector3::new(0.0, 0.0, 1.0);
         let look_dir = rotation.transform_vector(&target);
         let target = self.camera.get_pos() + look_dir;
 
-        let mat_camera = matrix_point_at(self.camera.get_pos(), &target, &up);
+        let mat_camera = matrix_point_at(self.camera.get_pos(), &target, &up).try_inverse().unwrap();
 
         let mat_view = mat_camera;
 
@@ -493,10 +487,12 @@ impl Renderer {
         transformed.p3 = (mat_view
             * Vector4::new(transformed.p3.x, transformed.p3.y, transformed.p3.z, 1.0))
         .xyz();
+    
+        let camera_ray = transformed.p1 - self.camera.get_pos();
 
         //println!("{:?}", transformed.get_normal().normalize());
 
-        if camera_ray.dot(&transformed.get_normal().normalize()) < 0.0 {
+        if transformed.get_normal().dot(&camera_ray) < 0.0 {
             
             let light = GLOBAL_LIGHT
                 .normalize()
@@ -527,12 +523,13 @@ impl Renderer {
             if let Some(clipped) = clipped_triangles.0 {
                 project_and_add(clipped)
             }
-            if let Some(clipped) = clipped_triangles.0 {
+            if let Some(clipped) = clipped_triangles.1 {
                 project_and_add(clipped)
             }
         }
     }
 
+    #[allow(unused)]
     pub fn draw_debug_float(value: f32) {
         let mut buf = [0u8; 64];
         let s = format_no_std::show(&mut buf, format_args!("{}", value)).unwrap();
@@ -572,7 +569,7 @@ impl Renderer {
 
         self.draw_triangles();
 
-        self.camera.rotate(Vector3::new(0.0, 0.01, 0.0));
+        self.camera.rotate(Vector3::new(0.0, 0.001, 0.0));
         //self.camera.translate(Vector3::new(0.01, 0.0, 0.0));
     }
 }
