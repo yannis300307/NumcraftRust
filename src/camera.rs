@@ -60,6 +60,12 @@ impl Camera {
             self.pos.x += translation.0*delta*MOVEMENT_SPEED;
             self.pos.z += translation.1*delta*MOVEMENT_SPEED;
         }
+        if keyboard_state.key_down(eadk::input::Key::Shift) { // Up
+            self.pos.y -= delta*MOVEMENT_SPEED;
+        }
+        if keyboard_state.key_down(eadk::input::Key::Exp) { // Down
+            self.pos.y += delta*MOVEMENT_SPEED;
+        }
     }
 
     pub fn get_rotation(&self) -> &Vector3<f32> {
