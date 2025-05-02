@@ -218,41 +218,32 @@ fn fill_triangle(
 
 fn draw_2d_triangle(tri: &Triangle3d, z_buffer: &mut Bitmap<Z_BUFFER_SIZE>) {
     fill_triangle(
-        Vector2::new(
-            (tri.p1.x + 1.0) * HALF_SCREEN_WIDTH,
-            (tri.p1.y + 1.0) * HALF_SCREEN_HEIGHT,
-        ),
-        Vector2::new(
-            (tri.p2.x + 1.0) * HALF_SCREEN_WIDTH,
-            (tri.p2.y + 1.0) * HALF_SCREEN_HEIGHT,
-        ),
-        Vector2::new(
-            (tri.p3.x + 1.0) * HALF_SCREEN_WIDTH,
-            (tri.p3.y + 1.0) * HALF_SCREEN_HEIGHT,
-        ),
+        tri.p1.xy(),
+        tri.p2.xy(),
+        tri.p3.xy(),
         tri.color,
         z_buffer
     );
 
     draw_line(
-        (tri.p1.x + 1.0) as isize,
-        (tri.p1.y + 1.0) as isize,
-        (tri.p2.x + 1.0) as isize,
-        (tri.p2.y + 1.0) as isize,
+        tri.p1.x as isize,
+        tri.p1.y as isize,
+        tri.p2.x as isize,
+        tri.p2.y as isize,
         get_color(0b11111, 0b0, 0b0),
     );
     draw_line(
-        (tri.p2.x + 1.0) as isize,
-        (tri.p2.y + 1.0) as isize,
-        (tri.p3.x + 1.0) as isize,
-        (tri.p3.y + 1.0) as isize,
+        tri.p2.x as isize,
+        tri.p2.y as isize,
+        tri.p3.x as isize,
+        tri.p3.y as isize,
         get_color(0b11111, 0b0, 0b0),
     );
     draw_line(
-        (tri.p3.x + 1.0) as isize,
-        (tri.p3.y + 1.0) as isize,
-        (tri.p1.x + 1.0) as isize,
-        (tri.p1.y + 1.0) as isize,
+        tri.p3.x as isize,
+        tri.p3.y as isize,
+        tri.p1.x as isize,
+        tri.p1.y as isize,
         get_color(0b11111, 0b0, 0b0),
     );
 }
@@ -481,7 +472,7 @@ impl Renderer {
                 }
             }
         }
-        //self.z_buffer.reset_all();
+        self.z_buffer.reset_all();
         /*eadk::display::push_rect_uniform(
             eadk::Rect {
                 x: 0,
