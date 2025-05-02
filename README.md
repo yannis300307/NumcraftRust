@@ -1,6 +1,6 @@
 # [WIP] Numcraft Rust
 
-Numcraft Rust is a (WIP) cube sndbox game running natively on Numworks calculators.
+Numcraft Rust is a (WIP) cube sandbox game running natively on Numworks calculators.
 
 ## Support
 
