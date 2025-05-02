@@ -147,6 +147,116 @@ fn get_color(r: u16, g: u16, b: u16) -> eadk::Color {
     }
 }
 
+fn fill_triangle(
+    t0: Vector2<f32>,
+    t1: Vector2<f32>,
+    t2: Vector2<f32>,
+    color: eadk::Color,
+    z_buffer: &mut Bitmap<Z_BUFFER_SIZE>
+) {
+    let mut t0 = t0;
+    let mut t1 = t1;
+    let mut t2 = t2;
+    if t0.y == t1.y && t0.y == t2.y {
+        return;
+    }; // I dont care about degenerate triangles
+    // sort the vertices, t0, t1, t2 lower−to−upper (bubblesort yay!)
+    if t0.y > t1.y {
+        swap(&mut t0, &mut t1)
+    };
+    if t0.y > t2.y {
+        swap(&mut t0, &mut t2)
+    };
+    if t1.y > t2.y {
+        swap(&mut t1, &mut t2)
+    };
+    let total_height = t2.y - t0.y;
+    for i in 0..(total_height as isize) {
+        let second_half = i > ((t1.y - t0.y) as isize) || t1.y == t0.y;
+        let segment_height = if second_half {
+            t2.y - t1.y
+        } else {
+            t1.y - t0.y
+        };
+        let alpha = (i as f32) / total_height;
+        let beta = (i as f32 - (if second_half { t1.y - t0.y } else { 0.0 })) / segment_height; // be careful: with above conditions no division by zero here
+        let mut a: Vector2<f32> = t0 + (t2 - t0) * alpha;
+        let mut b: Vector2<f32> = if second_half {
+            t1 + (t2 - t1) * beta
+        } else {
+            t0 + (t1 - t0) * beta
+        };
+        if a.x > b.x {
+            swap(&mut a, &mut b)
+        };
+        for j in (a.x as isize)..(b.x as isize) {
+            let y = (t0.y as isize) + i;
+
+            if j < 0 || j > SCREEN_WIDTH as isize || y < 0 || y > SCREEN_WIDTH as isize {
+                continue;
+            }
+
+            let pix_index = (j + y * (SCREEN_WIDTH as isize)) as usize;
+
+            if !z_buffer.get_bool(pix_index) {
+                
+                z_buffer.set(pix_index);
+
+                eadk::display::push_rect_uniform(
+                    Rect {
+                        x: j as u16,
+                        y: y as u16,
+                        width: 1,
+                        height: 1,
+                    },
+                    color,
+                )
+            }
+        }
+    }
+}
+
+fn draw_2d_triangle(tri: &Triangle3d, z_buffer: &mut Bitmap<Z_BUFFER_SIZE>) {
+    fill_triangle(
+        Vector2::new(
+            (tri.p1.x + 1.0) * HALF_SCREEN_WIDTH,
+            (tri.p1.y + 1.0) * HALF_SCREEN_HEIGHT,
+        ),
+        Vector2::new(
+            (tri.p2.x + 1.0) * HALF_SCREEN_WIDTH,
+            (tri.p2.y + 1.0) * HALF_SCREEN_HEIGHT,
+        ),
+        Vector2::new(
+            (tri.p3.x + 1.0) * HALF_SCREEN_WIDTH,
+            (tri.p3.y + 1.0) * HALF_SCREEN_HEIGHT,
+        ),
+        tri.color,
+        z_buffer
+    );
+
+    draw_line(
+        (tri.p1.x + 1.0) as isize,
+        (tri.p1.y + 1.0) as isize,
+        (tri.p2.x + 1.0) as isize,
+        (tri.p2.y + 1.0) as isize,
+        get_color(0b11111, 0b0, 0b0),
+    );
+    draw_line(
+        (tri.p2.x + 1.0) as isize,
+        (tri.p2.y + 1.0) as isize,
+        (tri.p3.x + 1.0) as isize,
+        (tri.p3.y + 1.0) as isize,
+        get_color(0b11111, 0b0, 0b0),
+    );
+    draw_line(
+        (tri.p3.x + 1.0) as isize,
+        (tri.p3.y + 1.0) as isize,
+        (tri.p1.x + 1.0) as isize,
+        (tri.p1.y + 1.0) as isize,
+        get_color(0b11111, 0b0, 0b0),
+    );
+}
+
 fn matrix_point_at(pos: &Vector3<f32>, target: &Vector3<f32>, up: &Vector3<f32>) -> Matrix4<f32> {
     let new_forward = (target - pos).normalize();
 
@@ -356,7 +466,7 @@ impl Renderer {
     }
 
     fn clear_screen(&mut self, color: eadk::Color) {
-        /*for x in 0..SCREEN_WIDTH {
+        for x in 0..SCREEN_WIDTH {
             for y in 0..SCREEN_HEIGHT {
                 if !self.z_buffer.get_bool(x+y*SCREEN_WIDTH) {
                     eadk::display::push_rect_uniform(
@@ -370,9 +480,9 @@ impl Renderer {
                     );
                 }
             }
-        }*/
-        self.z_buffer.reset_all();
-        eadk::display::push_rect_uniform(
+        }
+        //self.z_buffer.reset_all();
+        /*eadk::display::push_rect_uniform(
             eadk::Rect {
                 x: 0,
                 y: 0,
@@ -380,116 +490,7 @@ impl Renderer {
                 height: 240,
             },
             color,
-        );
-    }
-
-    fn fill_triangle(
-        &mut self,
-        t0: Vector2<f32>,
-        t1: Vector2<f32>,
-        t2: Vector2<f32>,
-        color: eadk::Color,
-    ) {
-        let mut t0 = t0;
-        let mut t1 = t1;
-        let mut t2 = t2;
-        if t0.y == t1.y && t0.y == t2.y {
-            return;
-        }; // I dont care about degenerate triangles
-        // sort the vertices, t0, t1, t2 lower−to−upper (bubblesort yay!)
-        if t0.y > t1.y {
-            swap(&mut t0, &mut t1)
-        };
-        if t0.y > t2.y {
-            swap(&mut t0, &mut t2)
-        };
-        if t1.y > t2.y {
-            swap(&mut t1, &mut t2)
-        };
-        let total_height = t2.y - t0.y;
-        for i in 0..(total_height as isize) {
-            let second_half = i > ((t1.y - t0.y) as isize) || t1.y == t0.y;
-            let segment_height = if second_half {
-                t2.y - t1.y
-            } else {
-                t1.y - t0.y
-            };
-            let alpha = (i as f32) / total_height;
-            let beta = (i as f32 - (if second_half { t1.y - t0.y } else { 0.0 })) / segment_height; // be careful: with above conditions no division by zero here
-            let mut a: Vector2<f32> = t0 + (t2 - t0) * alpha;
-            let mut b: Vector2<f32> = if second_half {
-                t1 + (t2 - t1) * beta
-            } else {
-                t0 + (t1 - t0) * beta
-            };
-            if a.x > b.x {
-                swap(&mut a, &mut b)
-            };
-            for j in (a.x as isize)..(b.x as isize) {
-                let y = (t0.y as isize) + i;
-
-                if a.x < 0.0 || a.x > SCREEN_WIDTHF || y < 0 || y > SCREEN_WIDTH as isize {
-                    continue;
-                }
-
-                /*let pix_index = a.x as usize * y as usize;
-
-                if self.z_buffer.get_bool(pix_index) {
-                    continue;
-                }
-                self.z_buffer.set(pix_index);*/
-
-                eadk::display::push_rect_uniform(
-                    Rect {
-                        x: j as u16,
-                        y: y as u16,
-                        width: 1,
-                        height: 1,
-                    },
-                    color,
-                )
-            }
-        }
-    }
-
-    fn draw_2d_triangle(&self, tri: &Triangle3d) {
-        /*self.fill_triangle(
-            Vector2::new(
-                (tri.p1.x + 1.0) * HALF_SCREEN_WIDTH,
-                (tri.p1.y + 1.0) * HALF_SCREEN_HEIGHT,
-            ),
-            Vector2::new(
-                (tri.p2.x + 1.0) * HALF_SCREEN_WIDTH,
-                (tri.p2.y + 1.0) * HALF_SCREEN_HEIGHT,
-            ),
-            Vector2::new(
-                (tri.p3.x + 1.0) * HALF_SCREEN_WIDTH,
-                (tri.p3.y + 1.0) * HALF_SCREEN_HEIGHT,
-            ),
-            tri.color,
         );*/
-
-        draw_line(
-            (tri.p1.x + 1.0) as isize,
-            (tri.p1.y + 1.0) as isize,
-            (tri.p2.x + 1.0) as isize,
-            (tri.p2.y + 1.0) as isize,
-            get_color(0b11111, 0b0, 0b0),
-        );
-        draw_line(
-            (tri.p2.x + 1.0) as isize,
-            (tri.p2.y + 1.0) as isize,
-            (tri.p3.x + 1.0) as isize,
-            (tri.p3.y + 1.0) as isize,
-            get_color(0b11111, 0b0, 0b0),
-        );
-        draw_line(
-            (tri.p3.x + 1.0) as isize,
-            (tri.p3.y + 1.0) as isize,
-            (tri.p1.x + 1.0) as isize,
-            (tri.p1.y + 1.0) as isize,
-            get_color(0b11111, 0b0, 0b0),
-        );
     }
 
     fn add_3d_triangle_to_render(&mut self, tri: Triangle3d) {
@@ -515,8 +516,6 @@ impl Renderer {
         let mat_view = mat_camera;
 
         let camera_ray = transformed.p1 - self.camera.get_pos();
-
-        //println!("{:?}", transformed.get_normal().normalize());
 
         if transformed.get_normal().dot(&camera_ray) < 0.0 {
             let light = GLOBAL_LIGHT
@@ -638,14 +637,16 @@ impl Renderer {
                 Vector3::new(SCREEN_WIDTHF - 1.0, 0.0, 0.0),
                 Vector3::new(-1.0, 0.0, 0.0),
             );
-            for tri_to_render in clip_buffer {
-                self.draw_2d_triangle(&tri_to_render);
+            
+            while !clip_buffer.is_empty() {
+                let tri_to_draw = clip_buffer.pop_front().unwrap();
+                draw_2d_triangle(&tri_to_draw, &mut self.z_buffer);
             }
         }
     }
 
     pub fn update(&mut self) {
-        self.clear_screen(get_color(0, 0, 0));
+        
 
         self.triangles_to_render.clear();
         for tri in TEST_CUBE_MESH {
@@ -653,6 +654,8 @@ impl Renderer {
         }
 
         self.draw_triangles();
+
+        self.clear_screen(get_color(0, 0, 0));
 
         //self.camera.rotate(Vector3::new(0.0, 0.01, 0.0));
         //self.camera.translate(Vector3::new(0.01, 0.0, 0.0));

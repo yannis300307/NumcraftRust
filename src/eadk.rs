@@ -64,7 +64,7 @@ pub mod display {
         }
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(not(target_os = "none"))]
     pub fn push_rect(rect: Rect, pixels: &[Color]) {
         todo!("implement push_rect")
         //use super::WindowOperation;
@@ -79,7 +79,7 @@ pub mod display {
         }
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(not(target_os = "none"))]
     pub fn push_rect_uniform(rect: Rect, color: Color) {
         use super::WindowOperation;
         let mut global_tx = super::WINDOW_MANAGER_TX.lock().unwrap();
@@ -96,7 +96,7 @@ pub mod display {
         }
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(not(target_os = "none"))]
     pub fn wait_for_vblank() {}
 
     #[cfg(target_os = "none")]
@@ -114,7 +114,7 @@ pub mod display {
         }
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(not(target_os = "none"))]
     pub fn draw_string(
         text: &str,
         _point: Point,
@@ -147,7 +147,7 @@ pub mod timing {
         }
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(not(target_os = "none"))]
     pub fn usleep(us: u32) {
         use std::{thread, time};
 
@@ -161,7 +161,7 @@ pub mod timing {
         }
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(not(target_os = "none"))]
     pub fn msleep(ms: u32) {
         use std::{thread, time};
 
@@ -173,7 +173,7 @@ pub mod timing {
         unsafe { eadk_timing_millis() }
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(not(target_os = "none"))]
     pub fn millis() -> u64 {
         use std::time::Instant;
         Instant::now().elapsed().as_millis() as u64
@@ -192,7 +192,7 @@ pub fn random() -> u32 {
     unsafe { eadk_random() }
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(not(target_os = "none"))]
 pub fn random() -> u32 {
     rand::random_range(0..u32::MAX)
 }
@@ -271,7 +271,7 @@ pub mod input {
             Self::from_raw(unsafe { eadk_keyboard_scan() })
         }
 
-        #[cfg(target_os = "windows")]
+        #[cfg(not(target_os = "none"))]
         pub fn scan() -> Self {
             Self::from_raw(0) // TODO : change this
         }
@@ -528,17 +528,17 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
     loop {} // FIXME: Do something better. Exit the app maybe?
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(not(target_os = "none"))]
 enum WindowOperation<'a> {
     PushRectUniform(Rect, Color),
     PushRect(Rect, &'a [Color]),
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(not(target_os = "none"))]
 static WINDOW_MANAGER_TX: std::sync::Mutex<Option<std::sync::mpsc::Sender<WindowOperation>>> =
     std::sync::Mutex::new(None);
 
-#[cfg(target_os = "windows")]
+#[cfg(not(target_os = "none"))]
 pub fn init_window() {
     use minifb::{Key, Window, WindowOptions};
     use std::sync::mpsc;
@@ -588,7 +588,7 @@ pub fn init_window() {
     });
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(not(target_os = "none"))]
 pub fn debug<T: std::fmt::Debug>(item: &T) {
     println!("{:?}", item)
 }
