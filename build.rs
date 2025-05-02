@@ -5,7 +5,7 @@ fn main() {
     println!("cargo:rerun-if-changed=src/icon.png");
     let output = 
     {
-        if let Ok(out) = Command::new("nwlink").args(["png-nwi", "src/icon.png", "target/icon.nwi"]).output() {out}
+        if let Ok(out) = Command::new("sh").arg("-c").arg("nwlink png-nwi src/icon.png target/icon.nwi").output() {out}
         else {
             Command::new("cmd").args(["/c", "nwlink", "png-nwi", "src/icon.png", "target/icon.nwi"]).output().expect("Unable to convert icon.")
         }
