@@ -1,6 +1,6 @@
 cargo-features = ["profile-rustflags", "edition2024"]
 [package]
-name = "epsilon-sample-app"
+name = "Numcraft"
 version = "0.1.0"
 authors = ["NumWorks <contact@numworks.com>"]
 edition = "2024"

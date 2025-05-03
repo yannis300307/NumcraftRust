@@ -3,6 +3,20 @@
 version = 4
 
 [[package]]
+name = "Numcraft"
+version = "0.1.0"
+dependencies = [
+ "cbitmap",
+ "emballoc",
+ "format_no_std",
+ "heapless",
+ "libm",
+ "minifb",
+ "nalgebra",
+ "rand",
+]
+
+[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -94,20 +108,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5f1cdcc6ee777565b5b04209526974a213a8f97879bdb314572265db86e3c63f"
 dependencies = [
  "spin",
-]
-
-[[package]]
-name = "epsilon-sample-app"
-version = "0.1.0"
-dependencies = [
- "cbitmap",
- "emballoc",
- "format_no_std",
- "heapless",
- "libm",
- "minifb",
- "nalgebra",
- "rand",
 ]
 
 [[package]]

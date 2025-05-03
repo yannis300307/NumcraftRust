@@ -10,21 +10,37 @@ use crate::{
     eadk::{self, Color, Rect},
 };
 
+// Screen size related constants
 const SCREEN_WIDTH: usize = 320;
 const SCREEN_HEIGHT: usize = 240;
+
 const SCREEN_WIDTHF: f32 = SCREEN_WIDTH as f32;
 const SCREEN_HEIGHTF: f32 = SCREEN_HEIGHT as f32;
 
-const SCREEN_PIXELS_COUNT: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
-const Z_BUFFER_SIZE: usize = SCREEN_PIXELS_COUNT.div_ceil(8);
-const ASPECT_RATIO: f32 = SCREEN_WIDTHF / SCREEN_HEIGHTF;
 const HALF_SCREEN_WIDTH: f32 = SCREEN_WIDTHF / 2.0;
 const HALF_SCREEN_HEIGHT: f32 = SCREEN_HEIGHTF / 2.0;
+
+// Screen tiling constants
+const SCREEN_TILE_SUBDIVISION: usize = 2;
+
+const SCREEN_TILE_WIDTH: usize = SCREEN_WIDTH.div_ceil(SCREEN_TILE_SUBDIVISION);
+const SCREEN_TILE_HEIGHT: usize = SCREEN_HEIGHT.div_ceil(SCREEN_TILE_SUBDIVISION);
+
+const HALF_SCREEN_TILE_WIDTH: f32 = SCREEN_WIDTH as f32 / 2.0;
+const HALF_SCREEN_TILE_HEIGHT: f32 = SCREEN_HEIGHT as f32 / 2.2;
+
+// z_buffer constants
+const SCREEN_PIXELS_COUNT: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
+const Z_BUFFER_SIZE: usize = SCREEN_PIXELS_COUNT.div_ceil(8);
+
+// Projection parameters
+const ASPECT_RATIO: f32 = SCREEN_WIDTHF / SCREEN_HEIGHTF;
 const FOV: f32 = f32::consts::PI / 4.0;
 
 const ZNEAR: f32 = 1.0;
 const ZFAR: f32 = 1000.0;
 
+// Other
 const GLOBAL_LIGHT: Vector3<f32> = Vector3::new(0.0, 0.0, -1.0);
 
 const MAX_TRIANGLES: usize = 100;
@@ -140,7 +156,8 @@ fn fill_triangle(
     t1: Vector2<f32>,
     t2: Vector2<f32>,
     color: eadk::Color,
-    z_buffer: &mut Bitmap<Z_BUFFER_SIZE>
+    z_buffer: &mut Bitmap<Z_BUFFER_SIZE>,
+    frame_buffer: &mut [Color; SCREEN_TILE_WIDTH*SCREEN_TILE_HEIGHT]
 ) {
     let mut t0 = t0;
     let mut t1 = t1;
@@ -180,17 +197,17 @@ fn fill_triangle(
         for j in (a.x as isize)..(b.x as isize) {
             let y = (t0.y as isize) + i;
 
-            if j < 0 || j > SCREEN_WIDTH as isize || y < 0 || y > SCREEN_WIDTH as isize {
+            if j < 0 || j > SCREEN_TILE_WIDTH as isize || y < 0 || y > SCREEN_TILE_HEIGHT as isize {
                 continue;
             }
 
-            let pix_index = (j + y * (SCREEN_WIDTH as isize)) as usize;
+            let pix_index = (j + y * (SCREEN_TILE_WIDTH as isize)) as usize;
 
-            if !z_buffer.get_bool(pix_index) {
+            /*if !z_buffer.get_bool(pix_index) {
                 
                 z_buffer.set(pix_index);
 
-                eadk::display::push_rect(
+                /*eadk::display::push_rect(
                     Rect {
                         x: j as u16,
                         y: y as u16,
@@ -198,22 +215,25 @@ fn fill_triangle(
                         height: 1,
                     },
                     &[color],
-                )
-            }
+                )*/
+                
+            }*/
+            frame_buffer[pix_index] = color;
         }
     }
 }
 
-fn draw_2d_triangle(tri: &Triangle, z_buffer: &mut Bitmap<Z_BUFFER_SIZE>) {
+fn draw_2d_triangle(tri: &Triangle, z_buffer: &mut Bitmap<Z_BUFFER_SIZE>, frame_buffer: &mut [Color; SCREEN_TILE_WIDTH*SCREEN_TILE_HEIGHT]) {
     fill_triangle(
         tri.p1.xy(),
         tri.p2.xy(),
         tri.p3.xy(),
         tri.color,
-        z_buffer
+        z_buffer,
+        frame_buffer
     );
 
-    draw_line(
+    /*draw_line(
         tri.p1.x as isize,
         tri.p1.y as isize,
         tri.p2.x as isize,
@@ -233,7 +253,7 @@ fn draw_2d_triangle(tri: &Triangle, z_buffer: &mut Bitmap<Z_BUFFER_SIZE>) {
         tri.p1.x as isize,
         tri.p1.y as isize,
         get_color(0b11111, 0b0, 0b0),
-    );
+    );*/
 }
 
 fn matrix_point_at(pos: &Vector3<f32>, target: &Vector3<f32>, up: &Vector3<f32>) -> Matrix4<f32> {
@@ -242,12 +262,6 @@ fn matrix_point_at(pos: &Vector3<f32>, target: &Vector3<f32>, up: &Vector3<f32>)
     let new_up = (up - new_forward * up.dot(&new_forward)).normalize();
     let new_right = new_up.cross(&new_forward);
 
-    /*Matrix4::new(
-        new_right.x, new_right.y, new_right.z, 0.0,
-        new_up.x, new_up.y, new_up.z, 0.0,
-        new_forward.x, new_forward.y, new_forward.z, 0.0,
-        pos.x, pos.y, pos.z, 1.0,
-    )*/
     Matrix4::new(
         new_right.x,
         new_up.x,
@@ -423,6 +437,7 @@ pub struct Renderer {
     math_tools: MathTools,
     triangles_to_render: heapless::Vec<Triangle, MAX_TRIANGLES>,
     z_buffer: bitmap::Bitmap<Z_BUFFER_SIZE>,
+    tile_frame_buffer: [Color; SCREEN_TILE_WIDTH*SCREEN_TILE_HEIGHT]
 }
 
 impl Renderer {
@@ -432,6 +447,7 @@ impl Renderer {
             math_tools: MathTools::new(),
             triangles_to_render: heapless::Vec::new(),
             z_buffer: bitmap::Bitmap::new(),
+            tile_frame_buffer: [Color{ rgb565: 0 }; SCREEN_TILE_WIDTH*SCREEN_TILE_HEIGHT]
         };
 
         renderer
@@ -442,7 +458,7 @@ impl Renderer {
     }
 
     fn clear_screen(&mut self, color: eadk::Color) {
-        for x in 0..SCREEN_WIDTH {
+        /*for x in 0..SCREEN_WIDTH {
             for y in 0..SCREEN_HEIGHT {
                 if !self.z_buffer.get_bool(x+y*SCREEN_WIDTH) {
                     eadk::display::push_rect(
@@ -456,7 +472,9 @@ impl Renderer {
                     );
                 }
             }
-        }
+        }*/
+        //eadk::display::push_rect_uniform(Rect { x: 0, y: 0, width: SCREEN_TILE_WIDTH as u16, height: SCREEN_TILE_HEIGHT as u16 }, color);
+        self.tile_frame_buffer.fill(Color{ rgb565: 0 });
         self.z_buffer.reset_all();
     }
 
@@ -528,13 +546,13 @@ impl Renderer {
                 projected_triangle.p3.y += 1.0;
 
                 // Multiply by size on screen
-                projected_triangle.p1.x *= HALF_SCREEN_WIDTH;
-                projected_triangle.p2.x *= HALF_SCREEN_WIDTH;
-                projected_triangle.p3.x *= HALF_SCREEN_WIDTH;
+                projected_triangle.p1.x *= HALF_SCREEN_TILE_WIDTH;
+                projected_triangle.p2.x *= HALF_SCREEN_TILE_WIDTH;
+                projected_triangle.p3.x *= HALF_SCREEN_TILE_WIDTH;
 
-                projected_triangle.p1.y *= HALF_SCREEN_HEIGHT;
-                projected_triangle.p2.y *= HALF_SCREEN_HEIGHT;
-                projected_triangle.p3.y *= HALF_SCREEN_HEIGHT;
+                projected_triangle.p1.y *= HALF_SCREEN_TILE_HEIGHT;
+                projected_triangle.p2.y *= HALF_SCREEN_TILE_HEIGHT;
+                projected_triangle.p3.y *= HALF_SCREEN_TILE_HEIGHT;
 
                 self.triangles_to_render.push(projected_triangle).unwrap();
             };
@@ -562,7 +580,7 @@ impl Renderer {
         );
     }
 
-    fn draw_triangles(&mut self) {
+    fn draw_triangles(&mut self, tile_x: usize, tile_y: usize) {
         self.triangles_to_render
             .sort_by(|tri1: &Triangle, tri2: &Triangle| -> Ordering {
                 let z1 = (tri1.p1.z + tri1.p2.z + tri1.p3.z) / 3.0;
@@ -571,7 +589,7 @@ impl Renderer {
                 z1.partial_cmp(&z2).unwrap()
             });
 
-        for tri in self.triangles_to_render.iter() {
+        for tri in self.triangles_to_render.iter_mut() {
             let mut clip_buffer: heapless::Deque<Triangle, 16> = heapless::Deque::new(); // 2^4
 
             clip_buffer.push_back(*tri).unwrap();
@@ -594,20 +612,36 @@ impl Renderer {
                 new_tris = clip_buffer.len();
             };
 
-            clip_triangle(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 1.0, 0.0));
+            clip_triangle(
+                Vector3::new(0.0, 0.0, 0.0), 
+                Vector3::new(0.0, 1.0, 0.0)
+            );
             clip_triangle(
                 Vector3::new(0.0, SCREEN_HEIGHTF - 1.0, 0.0),
                 Vector3::new(0.0, -1.0, 0.0),
             );
-            clip_triangle(Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 0.0, 0.0));
+            clip_triangle(
+                Vector3::new(0.0, 0.0, 0.0), 
+                Vector3::new(1.0, 0.0, 0.0)
+            );
             clip_triangle(
                 Vector3::new(SCREEN_WIDTHF - 1.0, 0.0, 0.0),
                 Vector3::new(-1.0, 0.0, 0.0),
             );
             
             while !clip_buffer.is_empty() {
-                let tri_to_draw = clip_buffer.pop_front().unwrap();
-                draw_2d_triangle(&tri_to_draw, &mut self.z_buffer);
+                let mut tri_to_draw = clip_buffer.pop_front().unwrap();
+
+                tri_to_draw.p1.x -= (SCREEN_TILE_WIDTH*tile_x) as f32;
+                tri_to_draw.p1.y -= (SCREEN_TILE_HEIGHT*tile_y) as f32;
+
+                tri_to_draw.p2.x -= (SCREEN_TILE_WIDTH*tile_x) as f32;
+                tri_to_draw.p2.y -= (SCREEN_TILE_HEIGHT*tile_y) as f32;
+
+                tri_to_draw.p3.x -= (SCREEN_TILE_WIDTH*tile_x) as f32;
+                tri_to_draw.p3.y -= (SCREEN_TILE_HEIGHT*tile_y) as f32;
+
+                draw_2d_triangle(&tri_to_draw, &mut self.z_buffer, &mut self.tile_frame_buffer);
             }
         }
     }
@@ -618,8 +652,21 @@ impl Renderer {
             self.add_3d_triangle_to_render(tri);
         }
 
-        self.draw_triangles();
-
         self.clear_screen(get_color(0, 0, 0));
+        self.draw_triangles(0, 0);
+        eadk::display::push_rect(Rect { x: 0, y: 0, width: SCREEN_TILE_WIDTH as u16, height: SCREEN_TILE_HEIGHT as u16 }, &self.tile_frame_buffer);
+        
+        self.clear_screen(get_color(0, 0, 0));
+        self.draw_triangles(1, 0);
+        eadk::display::push_rect(Rect { x: SCREEN_TILE_WIDTH as u16 , y: 0, width: SCREEN_TILE_WIDTH as u16, height: SCREEN_TILE_HEIGHT as u16 }, &self.tile_frame_buffer);
+        
+        self.clear_screen(get_color(0, 0, 0));
+        self.draw_triangles(0, 1);
+        eadk::display::push_rect(Rect { x: 0, y: SCREEN_TILE_HEIGHT as u16 , width: SCREEN_TILE_WIDTH as u16, height: SCREEN_TILE_HEIGHT as u16 }, &self.tile_frame_buffer);
+    
+        self.clear_screen(get_color(0, 0, 0));
+        self.draw_triangles(1, 1);
+        eadk::display::push_rect(Rect { x: SCREEN_TILE_WIDTH as u16 , y: SCREEN_TILE_HEIGHT as u16 , width: SCREEN_TILE_WIDTH as u16, height: SCREEN_TILE_HEIGHT as u16 }, &self.tile_frame_buffer);
+        
     }
 }
