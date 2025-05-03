@@ -30,7 +30,7 @@ const HALF_SCREEN_TILE_WIDTH: f32 = SCREEN_WIDTH as f32 / 2.0;
 const HALF_SCREEN_TILE_HEIGHT: f32 = SCREEN_HEIGHT as f32 / 2.2;
 
 // z_buffer constants
-const SCREEN_PIXELS_COUNT: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
+const SCREEN_PIXELS_COUNT: usize = SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT;
 const Z_BUFFER_SIZE: usize = SCREEN_PIXELS_COUNT.div_ceil(8);
 
 // Projection parameters
@@ -194,10 +194,10 @@ fn fill_triangle(
         if a.x > b.x {
             swap(&mut a, &mut b)
         };
-        for j in (a.x as isize)..(b.x as isize) {
+        for j in (a.x as isize).max(0)..(b.x as isize).min(SCREEN_TILE_WIDTH as isize) {
             let y = (t0.y as isize) + i;
 
-            if j < 0 || j > SCREEN_TILE_WIDTH as isize || y < 0 || y > SCREEN_TILE_HEIGHT as isize {
+            if y < 0 || y >= SCREEN_TILE_HEIGHT as isize {
                 continue;
             }
 
