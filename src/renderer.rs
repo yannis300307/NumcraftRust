@@ -10,15 +10,17 @@ use crate::{
     eadk::{self, Color, Rect},
 };
 
+use fixed::types::I16F16;
+
 // Screen size related constants
 const SCREEN_WIDTH: usize = 320;
 const SCREEN_HEIGHT: usize = 240;
 
-const SCREEN_WIDTHF: f32 = SCREEN_WIDTH as f32;
-const SCREEN_HEIGHTF: f32 = SCREEN_HEIGHT as f32;
+const SCREEN_WIDTHF: I16F16 = I16F16::const_from_int(SCREEN_WIDTH as i32);
+const SCREEN_HEIGHTF: I16F16 = I16F16::const_from_int(SCREEN_HEIGHT as i32);
 
-const HALF_SCREEN_WIDTH: f32 = SCREEN_WIDTHF / 2.0;
-const HALF_SCREEN_HEIGHT: f32 = SCREEN_HEIGHTF / 2.0;
+const HALF_SCREEN_WIDTH: I16F16 = I16F16::const_from_int(SCREEN_WIDTH as i32).unwrapped_div_int(2);
+const HALF_SCREEN_HEIGHT: I16F16 = I16F16::const_from_int(SCREEN_HEIGHT as i32).unwrapped_div_int(2);
 
 // Screen tiling constants
 const SCREEN_TILE_SUBDIVISION: usize = 2;
@@ -26,22 +28,22 @@ const SCREEN_TILE_SUBDIVISION: usize = 2;
 const SCREEN_TILE_WIDTH: usize = SCREEN_WIDTH.div_ceil(SCREEN_TILE_SUBDIVISION);
 const SCREEN_TILE_HEIGHT: usize = SCREEN_HEIGHT.div_ceil(SCREEN_TILE_SUBDIVISION);
 
-const HALF_SCREEN_TILE_WIDTH: f32 = SCREEN_WIDTH as f32 / 2.0;
-const HALF_SCREEN_TILE_HEIGHT: f32 = SCREEN_HEIGHT as f32 / 2.2;
+const HALF_SCREEN_TILE_WIDTH: I16F16 = I16F16::const_from_int(SCREEN_TILE_WIDTH as i32).unwrapped_div_int(2);
+const HALF_SCREEN_TILE_HEIGHT: I16F16 = I16F16::const_from_int(SCREEN_TILE_HEIGHT as i32).unwrapped_div_int(2);
 
 // z_buffer constants
 const SCREEN_PIXELS_COUNT: usize = SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT;
 const Z_BUFFER_SIZE: usize = SCREEN_PIXELS_COUNT.div_ceil(8);
 
 // Projection parameters
-const ASPECT_RATIO: f32 = SCREEN_WIDTHF / SCREEN_HEIGHTF;
-const FOV: f32 = f32::consts::PI / 4.0;
+const ASPECT_RATIO: I16F16 = I16F16::unwrapped_div(SCREEN_WIDTHF, SCREEN_HEIGHTF);
+const FOV: I16F16 = I16F16::lit("3.141592654").unwrapped_div_int(4);
 
-const ZNEAR: f32 = 1.0;
-const ZFAR: f32 = 1000.0;
+const ZNEAR: I16F16 = I16F16::lit("1.0");
+const ZFAR: I16F16 = I16F16::lit("1000.0");
 
 // Other
-const GLOBAL_LIGHT: Vector3<f32> = Vector3::new(0.0, 0.0, -1.0);
+const GLOBAL_LIGHT: Vector3<I16F16> = Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("-1.0"));
 
 const MAX_TRIANGLES: usize = 100;
 
@@ -51,94 +53,94 @@ const DEFAULT_DEBUG_COLOR: Color = Color {
 
 const TEST_CUBE_MESH: [Triangle; 12] = [
     Triangle {
-        p1: Vector3::new(0.0, 0.0, 0.0),
-        p2: Vector3::new(0.0, 1.0, 0.0),
-        p3: Vector3::new(1.0, 1.0, 0.0),
+        p1: Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("0.0")),
+        p2: Vector3::new(I16F16::lit("0.0"), I16F16::lit("1.0"), I16F16::lit("0.0")),
+        p3: Vector3::new (I16F16::lit("1.0"), I16F16::lit("1.0"), I16F16::lit("0.0")),
         color: DEFAULT_DEBUG_COLOR,
     },
     Triangle {
-        p1: Vector3::new(0.0, 0.0, 0.0),
-        p2: Vector3::new(1.0, 1.0, 0.0),
-        p3: Vector3::new(1.0, 0.0, 0.0),
+        p1: Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("0.0")),
+        p2: Vector3::new (I16F16::lit("1.0"), I16F16::lit("1.0"), I16F16::lit("0.0")),
+        p3: Vector3::new (I16F16::lit("1.0"), I16F16::lit("0.0"), I16F16::lit("0.0")),
         color: DEFAULT_DEBUG_COLOR,
     },
     // EAST
     Triangle {
-        p1: Vector3::new(1.0, 0.0, 0.0),
-        p2: Vector3::new(1.0, 1.0, 0.0),
-        p3: Vector3::new(1.0, 1.0, 1.0),
+        p1: Vector3::new (I16F16::lit("1.0"), I16F16::lit("0.0"), I16F16::lit("0.0")),
+        p2: Vector3::new (I16F16::lit("1.0"), I16F16::lit("1.0"), I16F16::lit("0.0")),
+        p3: Vector3::new (I16F16::lit("1.0"), I16F16::lit("1.0"), I16F16::lit("1.0")),
         color: DEFAULT_DEBUG_COLOR,
     },
     Triangle {
-        p1: Vector3::new(1.0, 0.0, 0.0),
-        p2: Vector3::new(1.0, 1.0, 1.0),
-        p3: Vector3::new(1.0, 0.0, 1.0),
+        p1: Vector3::new (I16F16::lit("1.0"), I16F16::lit("0.0"), I16F16::lit("0.0")),
+        p2: Vector3::new (I16F16::lit("1.0"), I16F16::lit("1.0"), I16F16::lit("1.0")),
+        p3: Vector3::new (I16F16::lit("1.0"), I16F16::lit("0.0"), I16F16::lit("1.0")),
         color: DEFAULT_DEBUG_COLOR,
     },
     // NORTH
     Triangle {
-        p1: Vector3::new(1.0, 0.0, 1.0),
-        p2: Vector3::new(1.0, 1.0, 1.0),
-        p3: Vector3::new(0.0, 1.0, 1.0),
+        p1: Vector3::new (I16F16::lit("1.0"), I16F16::lit("0.0"), I16F16::lit("1.0")),
+        p2: Vector3::new (I16F16::lit("1.0"), I16F16::lit("1.0"), I16F16::lit("1.0")),
+        p3: Vector3::new(I16F16::lit("0.0"), I16F16::lit("1.0"), I16F16::lit("1.0")),
         color: DEFAULT_DEBUG_COLOR,
     },
     Triangle {
-        p1: Vector3::new(1.0, 0.0, 1.0),
-        p2: Vector3::new(0.0, 1.0, 1.0),
-        p3: Vector3::new(0.0, 0.0, 1.0),
+        p1: Vector3::new (I16F16::lit("1.0"), I16F16::lit("0.0"), I16F16::lit("1.0")),
+        p2: Vector3::new(I16F16::lit("0.0"), I16F16::lit("1.0"), I16F16::lit("1.0")),
+        p3: Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("1.0")),
         color: DEFAULT_DEBUG_COLOR,
     },
     // WEST
     Triangle {
-        p1: Vector3::new(0.0, 0.0, 1.0),
-        p3: Vector3::new(0.0, 1.0, 0.0),
-        p2: Vector3::new(0.0, 1.0, 1.0),
+        p1: Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("1.0")),
+        p3: Vector3::new(I16F16::lit("0.0"), I16F16::lit("1.0"), I16F16::lit("0.0")),
+        p2: Vector3::new(I16F16::lit("0.0"), I16F16::lit("1.0"), I16F16::lit("1.0")),
         color: DEFAULT_DEBUG_COLOR,
     },
     Triangle {
-        p1: Vector3::new(0.0, 0.0, 1.0),
-        p3: Vector3::new(0.0, 0.0, 0.0),
-        p2: Vector3::new(0.0, 1.0, 0.0),
+        p1: Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("1.0")),
+        p3: Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("0.0")),
+        p2: Vector3::new(I16F16::lit("0.0"), I16F16::lit("1.0"), I16F16::lit("0.0")),
         color: DEFAULT_DEBUG_COLOR,
     },
     // TOP
     Triangle {
-        p1: Vector3::new(0.0, 1.0, 0.0),
-        p2: Vector3::new(0.0, 1.0, 1.0),
-        p3: Vector3::new(1.0, 1.0, 1.0),
+        p1: Vector3::new(I16F16::lit("0.0"), I16F16::lit("1.0"), I16F16::lit("0.0")),
+        p2: Vector3::new(I16F16::lit("0.0"), I16F16::lit("1.0"), I16F16::lit("1.0")),
+        p3: Vector3::new (I16F16::lit("1.0"), I16F16::lit("1.0"), I16F16::lit("1.0")),
         color: DEFAULT_DEBUG_COLOR,
     },
     Triangle {
-        p1: Vector3::new(0.0, 1.0, 0.0),
-        p2: Vector3::new(1.0, 1.0, 1.0),
-        p3: Vector3::new(1.0, 1.0, 0.0),
+        p1: Vector3::new(I16F16::lit("0.0"), I16F16::lit("1.0"), I16F16::lit("0.0")),
+        p2: Vector3::new (I16F16::lit("1.0"), I16F16::lit("1.0"), I16F16::lit("1.0")),
+        p3: Vector3::new (I16F16::lit("1.0"), I16F16::lit("1.0"), I16F16::lit("0.0")),
         color: DEFAULT_DEBUG_COLOR,
     },
     // BOTTOM
     Triangle {
-        p1: Vector3::new(1.0, 0.0, 1.0),
-        p2: Vector3::new(0.0, 0.0, 1.0),
-        p3: Vector3::new(0.0, 0.0, 0.0),
+        p1: Vector3::new (I16F16::lit("1.0"), I16F16::lit("0.0"), I16F16::lit("1.0")),
+        p2: Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("1.0")),
+        p3: Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("0.0")),
         color: DEFAULT_DEBUG_COLOR,
     },
     Triangle {
-        p1: Vector3::new(1.0, 0.0, 1.0),
-        p2: Vector3::new(0.0, 0.0, 0.0),
-        p3: Vector3::new(1.0, 0.0, 0.0),
+        p1: Vector3::new (I16F16::lit("1.0"), I16F16::lit("0.0"), I16F16::lit("1.0")),
+        p2: Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("0.0")),
+        p3: Vector3::new (I16F16::lit("1.0"), I16F16::lit("0.0"), I16F16::lit("0.0")),
         color: DEFAULT_DEBUG_COLOR,
     },
 ];
 
 #[derive(Clone, Copy, Debug)]
 struct Triangle {
-    p1: Vector3<f32>,
-    p2: Vector3<f32>,
-    p3: Vector3<f32>,
+    p1: Vector3<I16F16>,
+    p2: Vector3<I16F16>,
+    p3: Vector3<I16F16>,
     color: eadk::Color,
 }
 
 impl Triangle {
-    fn get_normal(&self) -> Vector3<f32> {
+    fn get_normal(&self) -> Vector3<I16F16> {
         let a = self.p2 - self.p1;
         let b = self.p3 - self.p1;
         a.cross(&b).normalize()
@@ -152,9 +154,9 @@ fn get_color(r: u16, g: u16, b: u16) -> eadk::Color {
 }
 
 fn fill_triangle(
-    t0: Vector2<f32>,
-    t1: Vector2<f32>,
-    t2: Vector2<f32>,
+    t0: Vector2<I16F16>,
+    t1: Vector2<I16F16>,
+    t2: Vector2<I16F16>,
     color: eadk::Color,
     z_buffer: &mut Bitmap<Z_BUFFER_SIZE>,
     frame_buffer: &mut [Color; SCREEN_TILE_WIDTH*SCREEN_TILE_HEIGHT]
@@ -183,10 +185,10 @@ fn fill_triangle(
         } else {
             t1.y - t0.y
         };
-        let alpha = (i as f32) / total_height;
-        let beta = (i as f32 - (if second_half { t1.y - t0.y } else { 0.0 })) / segment_height; // be careful: with above conditions no division by zero here
-        let mut a: Vector2<f32> = t0 + (t2 - t0) * alpha;
-        let mut b: Vector2<f32> = if second_half {
+        let alpha = (i as I16F16) / total_height;
+        let beta = (i as I16F16 - (if second_half { t1.y - t0.y } else { I16F16::lit("0.0") })) / segment_height; // be careful: with above conditions no division by zero here
+        let mut a: Vector2<I16F16> = t0 + (t2 - t0) * alpha;
+        let mut b: Vector2<I16F16> = if second_half {
             t1 + (t2 - t1) * beta
         } else {
             t0 + (t1 - t0) * beta
@@ -196,22 +198,19 @@ fn fill_triangle(
         };
         
         let y = (t0.y as isize) + i;
-        if y < 0 || y >= SCREEN_TILE_HEIGHT as isize || a.x as usize >= SCREEN_TILE_WIDTH || b.x < 0.0 {
+        if y < 0 || y >= SCREEN_TILE_HEIGHT as isize || a.x as usize >= SCREEN_TILE_WIDTH || b.x < I16F16::lit("0.0") {
             continue;
         }
+        let frame_buffer_start = ((a.x as isize).max(0) + y * (SCREEN_TILE_WIDTH as isize)) as usize;
 
-        frame_buffer[((a.x as isize).max(0) + y * (SCREEN_TILE_WIDTH as isize)) as usize..(((b.x as isize).min(SCREEN_TILE_WIDTH as isize)) + y * (SCREEN_TILE_WIDTH as isize)) as usize].fill(color);
+        let frame_buffer_end = (((b.x as isize).min(SCREEN_TILE_WIDTH as isize)) + y * (SCREEN_TILE_WIDTH as isize)) as usize;
+        
+        frame_buffer[frame_buffer_start..frame_buffer_end].fill(color);
 
-        /*for j in (a.x as isize).max(0)..(b.x as isize).min(SCREEN_TILE_WIDTH as isize) {
-            let pix_index = (j + y * (SCREEN_TILE_WIDTH as isize)) as usize;
-
-            if !z_buffer.get_bool(pix_index) {
-                
-                z_buffer.set(pix_index);
-
-                frame_buffer[pix_index] = color;
-            }
-        }*/
+        for i in frame_buffer_start..frame_buffer_end {
+            z_buffer.set(i);
+            if !z_buffer.get_bool(i) {frame_buffer[i] = color;}
+        }
     }
 }
 
@@ -248,7 +247,7 @@ fn draw_2d_triangle(tri: &Triangle, z_buffer: &mut Bitmap<Z_BUFFER_SIZE>, frame_
     );*/
 }
 
-fn matrix_point_at(pos: &Vector3<f32>, target: &Vector3<f32>, up: &Vector3<f32>) -> Matrix4<f32> {
+fn matrix_point_at(pos: &Vector3<I16F16>, target: &Vector3<I16F16>, up: &Vector3<I16F16>) -> Matrix4<I16F16> {
     let new_forward = (target - pos).normalize();
 
     let new_up = (up - new_forward * up.dot(&new_forward)).normalize();
@@ -267,19 +266,19 @@ fn matrix_point_at(pos: &Vector3<f32>, target: &Vector3<f32>, up: &Vector3<f32>)
         new_up.z,
         new_forward.z,
         pos.z,
-        0.0,
-        0.0,
-        0.0,
-        1.0,
+        I16F16::lit("0.0"),
+        I16F16::lit("0.0"),
+        I16F16::lit("0.0"),
+        I16F16::lit("1.0"),
     )
 }
 
 fn vector_intersect_plane(
-    plane_p: &Vector3<f32>,
-    plane_n: &Vector3<f32>,
-    line_start: &Vector3<f32>,
-    line_end: &Vector3<f32>,
-) -> Vector3<f32> {
+    plane_p: &Vector3<I16F16>,
+    plane_n: &Vector3<I16F16>,
+    line_start: &Vector3<I16F16>,
+    line_end: &Vector3<I16F16>,
+) -> Vector3<I16F16> {
     let plane_n = plane_n.normalize();
     let plane_d = -plane_n.dot(plane_p);
     let ad = line_start.dot(&plane_n);
@@ -292,42 +291,42 @@ fn vector_intersect_plane(
 }
 
 fn triangle_clip_against_plane(
-    plane_p: &Vector3<f32>,
-    plane_n: &Vector3<f32>,
+    plane_p: &Vector3<I16F16>,
+    plane_n: &Vector3<I16F16>,
     in_tri: &Triangle,
 ) -> (Option<Triangle>, Option<Triangle>) {
     let plane_n = plane_n.normalize();
 
-    let dist = |p: Vector3<f32>| {
+    let dist = |p: Vector3<I16F16>| {
         plane_n.x * p.x + plane_n.y * p.y + plane_n.z * p.z - plane_n.dot(plane_p)
     };
 
     let binding = Default::default();
-    let mut inside_points: [&Vector3<f32>; 3] = [&binding; 3];
+    let mut inside_points: [&Vector3<I16F16>; 3] = [&binding; 3];
     let mut n_inside_point_count = 0;
     let binding = Default::default();
-    let mut outside_points: [&Vector3<f32>; 3] = [&binding; 3];
+    let mut outside_points: [&Vector3<I16F16>; 3] = [&binding; 3];
     let mut n_outside_point_count = 0;
 
     let d0 = dist(in_tri.p1);
     let d1 = dist(in_tri.p2);
     let d2 = dist(in_tri.p3);
 
-    if d0 >= 0.0 {
+    if d0 >= I16F16::lit("0.0") {
         inside_points[n_inside_point_count] = &in_tri.p1;
         n_inside_point_count += 1;
     } else {
         outside_points[n_outside_point_count] = &in_tri.p1;
         n_outside_point_count += 1;
     }
-    if d1 >= 0.0 {
+    if d1 >= I16F16::lit("0.0") {
         inside_points[n_inside_point_count] = &in_tri.p2;
         n_inside_point_count += 1;
     } else {
         outside_points[n_outside_point_count] = &in_tri.p2;
         n_outside_point_count += 1;
     }
-    if d2 >= 0.0 {
+    if d2 >= I16F16::lit("0.0") {
         inside_points[n_inside_point_count] = &in_tri.p3;
         n_inside_point_count += 1;
     } else {
@@ -413,7 +412,7 @@ fn draw_line(x1: isize, y1: isize, x2: isize, y2: isize, color: eadk::Color) {
 }
 
 struct MathTools {
-    projection_matrix: Perspective3<f32>,
+    projection_matrix: Perspective3<I16F16>,
 }
 
 impl MathTools {
@@ -445,8 +444,8 @@ impl Renderer {
         renderer
     }
 
-    fn project_point(&self, point: Vector3<f32>) -> Vector3<f32> {
-        self.math_tools.projection_matrix.project_vector(&point) * -1.0
+    fn project_point(&self, point: Vector3<I16F16>) -> Vector3<I16F16> {
+        self.math_tools.projection_matrix.project_vector(&point) * I16F16::lit("-1.0")
     }
 
     fn clear_screen(&mut self, color: eadk::Color) {
@@ -472,7 +471,7 @@ impl Renderer {
 
     fn add_3d_triangle_to_render(&mut self, tri: Triangle) {
         let tri = tri;
-        let rotation: Rotation3<f32> = Rotation3::new(*self.camera.get_rotation());
+        let rotation: Rotation3<I16F16> = Rotation3::new(*self.camera.get_rotation());
 
         let mut transformed = Triangle {
             p1: tri.p1,
@@ -481,8 +480,8 @@ impl Renderer {
             color: tri.color,
         };
 
-        let up: Vector3<f32> = Vector3::new(0.0, 1.0, 0.0);
-        let target: Vector3<f32> = Vector3::new(0.0, 0.0, 1.0);
+        let up: Vector3<I16F16> = Vector3::new(I16F16::lit("0.0"), I16F16::lit("1.0"), I16F16::lit("0.0"));
+        let target: Vector3<I16F16> = Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("1.0"));
         let look_dir = rotation.transform_vector(&target);
         let target = self.camera.get_pos() + look_dir;
 
@@ -494,25 +493,25 @@ impl Renderer {
 
         let camera_ray = transformed.p1 - self.camera.get_pos();
 
-        if transformed.get_normal().dot(&camera_ray) < 0.0 {
+        if transformed.get_normal().dot(&camera_ray) < I16F16::lit("0.0") {
             let light = GLOBAL_LIGHT
                 .normalize()
                 .dot(&tri.get_normal().normalize())
                 .max(0.2);
 
             transformed.p1 = (mat_view
-                * Vector4::new(transformed.p1.x, transformed.p1.y, transformed.p1.z, 1.0))
+                * Vector4::new(transformed.p1.x, transformed.p1.y, transformed.p1.z, I16F16::lit("1.0")))
             .xyz(); // try to_homogenous here
             transformed.p2 = (mat_view
-                * Vector4::new(transformed.p2.x, transformed.p2.y, transformed.p2.z, 1.0))
+                * Vector4::new(transformed.p2.x, transformed.p2.y, transformed.p2.z, I16F16::lit("1.0")))
             .xyz();
             transformed.p3 = (mat_view
-                * Vector4::new(transformed.p3.x, transformed.p3.y, transformed.p3.z, 1.0))
+                * Vector4::new(transformed.p3.x, transformed.p3.y, transformed.p3.z, I16F16::lit("1.0")))
             .xyz();
 
             let clipped_triangles = triangle_clip_against_plane(
-                &Vector3::new(0.0, 0.0, 0.1),
-                &Vector3::new(0.0, 0.0, 1.0),
+                &Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), 0.1),
+                &Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("1.0")),
                 &transformed,
             );
 
@@ -522,20 +521,20 @@ impl Renderer {
                     p2: self.project_point(to_project.p2),
                     p3: self.project_point(to_project.p3),
                     color: get_color(
-                        ((0b11111 as f32) * light) as u16,
-                        ((0b111111 as f32) * light) as u16,
-                        ((0b11111 as f32) * light) as u16,
+                        ((0b11111 as I16F16) * light) as u16,
+                        ((0b111111 as I16F16) * light) as u16,
+                        ((0b11111 as I16F16) * light) as u16,
                     ),
                 };
 
                 // Center
-                projected_triangle.p1.x += 1.0;
-                projected_triangle.p2.x += 1.0;
-                projected_triangle.p3.x += 1.0;
+                projected_triangle.p1.x += I16F16::lit("1.0");
+                projected_triangle.p2.x += I16F16::lit("1.0");
+                projected_triangle.p3.x += I16F16::lit("1.0");
 
-                projected_triangle.p1.y += 1.0;
-                projected_triangle.p2.y += 1.0;
-                projected_triangle.p3.y += 1.0;
+                projected_triangle.p1.y += I16F16::lit("1.0");
+                projected_triangle.p2.y += I16F16::lit("1.0");
+                projected_triangle.p3.y += I16F16::lit("1.0");
 
                 // Multiply by size on screen
                 projected_triangle.p1.x *= HALF_SCREEN_TILE_WIDTH;
@@ -591,33 +590,33 @@ impl Renderer {
             };
 
             clip_triangle(
-                Vector3::new(0.0, 0.0, 0.0), 
-                Vector3::new(0.0, 1.0, 0.0)
+                Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("0.0")), 
+                Vector3::new(I16F16::lit("0.0"), I16F16::lit("1.0"), I16F16::lit("0.0"))
             );
             clip_triangle(
-                Vector3::new(0.0, SCREEN_HEIGHTF - 1.0, 0.0),
-                Vector3::new(0.0, -1.0, 0.0),
+                Vector3::new(I16F16::lit("0.0"), SCREEN_HEIGHTF - I16F16::lit("1.0"), I16F16::lit("0.0")),
+                Vector3::new(I16F16::lit("0.0"), I16F16::lit("-1.0"), I16F16::lit("0.0")),
             );
             clip_triangle(
-                Vector3::new(0.0, 0.0, 0.0), 
-                Vector3::new(1.0, 0.0, 0.0)
+                Vector3::new(I16F16::lit("0.0"), I16F16::lit("0.0"), I16F16::lit("0.0")), 
+                Vector3::new (I16F16::lit("1.0"), I16F16::lit("0.0"), I16F16::lit("0.0"))
             );
             clip_triangle(
-                Vector3::new(SCREEN_WIDTHF - 1.0, 0.0, 0.0),
-                Vector3::new(-1.0, 0.0, 0.0),
+                Vector3::new(SCREEN_WIDTHF - I16F16::lit("1.0"), I16F16::lit("0.0"), I16F16::lit("0.0")),
+                Vector3::new(-1.0, I16F16::lit("0.0"), I16F16::lit("0.0")),
             );
             
             while !clip_buffer.is_empty() {
                 let mut tri_to_draw = clip_buffer.pop_front().unwrap();
 
-                tri_to_draw.p1.x -= (SCREEN_TILE_WIDTH*tile_x) as f32;
-                tri_to_draw.p1.y -= (SCREEN_TILE_HEIGHT*tile_y) as f32;
+                tri_to_draw.p1.x -= (SCREEN_TILE_WIDTH*tile_x) as I16F16;
+                tri_to_draw.p1.y -= (SCREEN_TILE_HEIGHT*tile_y) as I16F16;
 
-                tri_to_draw.p2.x -= (SCREEN_TILE_WIDTH*tile_x) as f32;
-                tri_to_draw.p2.y -= (SCREEN_TILE_HEIGHT*tile_y) as f32;
+                tri_to_draw.p2.x -= (SCREEN_TILE_WIDTH*tile_x) as I16F16;
+                tri_to_draw.p2.y -= (SCREEN_TILE_HEIGHT*tile_y) as I16F16;
 
-                tri_to_draw.p3.x -= (SCREEN_TILE_WIDTH*tile_x) as f32;
-                tri_to_draw.p3.y -= (SCREEN_TILE_HEIGHT*tile_y) as f32;
+                tri_to_draw.p3.x -= (SCREEN_TILE_WIDTH*tile_x) as I16F16;
+                tri_to_draw.p3.y -= (SCREEN_TILE_HEIGHT*tile_y) as I16F16;
 
                 draw_2d_triangle(&tri_to_draw, &mut self.z_buffer, &mut self.tile_frame_buffer);
             }
@@ -645,6 +644,5 @@ impl Renderer {
         self.clear_screen(get_color(0, 0, 0));
         self.draw_triangles(1, 1);
         eadk::display::push_rect(Rect { x: SCREEN_TILE_WIDTH as u16 , y: SCREEN_TILE_HEIGHT as u16 , width: SCREEN_TILE_WIDTH as u16, height: SCREEN_TILE_HEIGHT as u16 }, &self.tile_frame_buffer);
-        
     }
 }
