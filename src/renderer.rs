@@ -196,13 +196,13 @@ fn fill_triangle(
         };
         
         let y = (t0.y as isize) + i;
-        if y < 0 || y >= SCREEN_TILE_HEIGHT as isize {
+        if y < 0 || y >= SCREEN_TILE_HEIGHT as isize || a.x as usize >= SCREEN_TILE_WIDTH || b.x < 0.0 {
             continue;
         }
 
-        //frame_buffer[(((a.x as isize).max(0) + y * (SCREEN_TILE_WIDTH as isize))) as usize..(((b.x as isize).min(SCREEN_TILE_WIDTH as isize)) + y * (SCREEN_TILE_WIDTH as isize)) as usize].fill(color);
+        frame_buffer[((a.x as isize).max(0) + y * (SCREEN_TILE_WIDTH as isize)) as usize..(((b.x as isize).min(SCREEN_TILE_WIDTH as isize)) + y * (SCREEN_TILE_WIDTH as isize)) as usize].fill(color);
 
-        for j in (a.x as isize).max(0)..(b.x as isize).min(SCREEN_TILE_WIDTH as isize) {
+        /*for j in (a.x as isize).max(0)..(b.x as isize).min(SCREEN_TILE_WIDTH as isize) {
             let pix_index = (j + y * (SCREEN_TILE_WIDTH as isize)) as usize;
 
             if !z_buffer.get_bool(pix_index) {
@@ -211,7 +211,7 @@ fn fill_triangle(
 
                 frame_buffer[pix_index] = color;
             }
-        }
+        }*/
     }
 }
 
