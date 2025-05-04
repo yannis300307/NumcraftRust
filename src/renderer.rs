@@ -194,31 +194,23 @@ fn fill_triangle(
         if a.x > b.x {
             swap(&mut a, &mut b)
         };
+        
+        let y = (t0.y as isize) + i;
+        if y < 0 || y >= SCREEN_TILE_HEIGHT as isize {
+            continue;
+        }
+
+        //frame_buffer[(((a.x as isize).max(0) + y * (SCREEN_TILE_WIDTH as isize))) as usize..(((b.x as isize).min(SCREEN_TILE_WIDTH as isize)) + y * (SCREEN_TILE_WIDTH as isize)) as usize].fill(color);
+
         for j in (a.x as isize).max(0)..(b.x as isize).min(SCREEN_TILE_WIDTH as isize) {
-            let y = (t0.y as isize) + i;
-
-            if y < 0 || y >= SCREEN_TILE_HEIGHT as isize {
-                continue;
-            }
-
             let pix_index = (j + y * (SCREEN_TILE_WIDTH as isize)) as usize;
 
-            /*if !z_buffer.get_bool(pix_index) {
+            if !z_buffer.get_bool(pix_index) {
                 
                 z_buffer.set(pix_index);
 
-                /*eadk::display::push_rect(
-                    Rect {
-                        x: j as u16,
-                        y: y as u16,
-                        width: 1,
-                        height: 1,
-                    },
-                    &[color],
-                )*/
-                
-            }*/
-            frame_buffer[pix_index] = color;
+                frame_buffer[pix_index] = color;
+            }
         }
     }
 }
@@ -564,20 +556,6 @@ impl Renderer {
                 project_and_add(clipped)
             }
         }
-    }
-
-    #[allow(unused)]
-    pub fn draw_debug_float(value: f32) {
-        let mut buf = [0u8; 64];
-        let s = format_no_std::show(&mut buf, format_args!("{}", value)).unwrap();
-
-        eadk::display::draw_string(
-            s,
-            eadk::Point { x: 10, y: 10 },
-            false,
-            get_color(0b11111, 0, 0),
-            get_color(0b11111, 0b111111, 0b11111),
-        );
     }
 
     fn draw_triangles(&mut self, tile_x: usize, tile_y: usize) {

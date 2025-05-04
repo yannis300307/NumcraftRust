@@ -19,6 +19,13 @@ opt-level= "z"
 lto = true
 codegen-units = 1
 
+[profile.dev.package."renderer::fill_rect"]
+opt-level = 3
+
+[profile.release.package."renderer::fill_rect"]
+opt-level = 3
+
+
 [dependencies]
 nalgebra = {version = "0.33.2", default-features = false, features = [ "libm" ]}
 libm = "0.2.13"
