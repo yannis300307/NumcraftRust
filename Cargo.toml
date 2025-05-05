@@ -33,7 +33,8 @@ emballoc = "0.3.0"
 format_no_std = "1.2.0"
 heapless = "0.8.0"
 cbitmap = "0.3.2"
-fixed = "1.29.0"
+fixed = {version="1.29.0", default-features = false}
+soroban-fixed-point-math = {version="1.3.0", default-features = false}
 
 [target.'cfg(any(windows, unix))'.dependencies]
 minifb = "0.28"

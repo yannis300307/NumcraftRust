@@ -178,15 +178,15 @@ fn fill_triangle(
         swap(&mut t1, &mut t2)
     };
     let total_height = t2.y - t0.y;
-    for i in 0..(total_height as isize) {
-        let second_half = i > ((t1.y - t0.y) as isize) || t1.y == t0.y;
+    for i in 0..(total_height.to_num()) {
+        let second_half = i > ((t1.y - t0.y).to_num()) || t1.y == t0.y;
         let segment_height = if second_half {
             t2.y - t1.y
         } else {
             t1.y - t0.y
         };
-        let alpha = (i as I16F16) / total_height;
-        let beta = (i as I16F16 - (if second_half { t1.y - t0.y } else { I16F16::lit("0.0") })) / segment_height; // be careful: with above conditions no division by zero here
+        let alpha = (i.to_num()) / total_height;
+        let beta = (i.to_num() - (if second_half { t1.y - t0.y } else { I16F16::lit("0.0") })) / segment_height; // be careful: with above conditions no division by zero here
         let mut a: Vector2<I16F16> = t0 + (t2 - t0) * alpha;
         let mut b: Vector2<I16F16> = if second_half {
             t1 + (t2 - t1) * beta
@@ -197,13 +197,13 @@ fn fill_triangle(
             swap(&mut a, &mut b)
         };
         
-        let y = (t0.y as isize) + i;
-        if y < 0 || y >= SCREEN_TILE_HEIGHT as isize || a.x as usize >= SCREEN_TILE_WIDTH || b.x < I16F16::lit("0.0") {
+        let y = (t0.y.to_num()) + i;
+        if y < 0 || y >= SCREEN_TILE_HEIGHT as isize || a.x.to_num() >= SCREEN_TILE_WIDTH || b.x < I16F16::lit("0.0") {
             continue;
         }
-        let frame_buffer_start = ((a.x as isize).max(0) + y * (SCREEN_TILE_WIDTH as isize)) as usize;
+        let frame_buffer_start = ((a.x.to_num()).max(0) + y * (SCREEN_TILE_WIDTH.to_num())) as usize;
 
-        let frame_buffer_end = (((b.x as isize).min(SCREEN_TILE_WIDTH as isize)) + y * (SCREEN_TILE_WIDTH as isize)) as usize;
+        let frame_buffer_end = (((b.x.to_num()).min(SCREEN_TILE_WIDTH.to_num())) + y * (SCREEN_TILE_WIDTH.to_num())) as usize;
         
         frame_buffer[frame_buffer_start..frame_buffer_end].fill(color);
 
@@ -521,9 +521,9 @@ impl Renderer {
                     p2: self.project_point(to_project.p2),
                     p3: self.project_point(to_project.p3),
                     color: get_color(
-                        ((0b11111 as I16F16) * light) as u16,
-                        ((0b111111 as I16F16) * light) as u16,
-                        ((0b11111 as I16F16) * light) as u16,
+                        (I16F16::const_from_int(0b11111) * light).to_num(),
+                        (I16F16::const_from_int(0b111111) * light).to_num(),
+                        (I16F16::const_from_int(0b11111) * light).to_num(),
                     ),
                 };
 
@@ -609,14 +609,14 @@ impl Renderer {
             while !clip_buffer.is_empty() {
                 let mut tri_to_draw = clip_buffer.pop_front().unwrap();
 
-                tri_to_draw.p1.x -= (SCREEN_TILE_WIDTH*tile_x) as I16F16;
-                tri_to_draw.p1.y -= (SCREEN_TILE_HEIGHT*tile_y) as I16F16;
+                tri_to_draw.p1.x -= (SCREEN_TILE_WIDTH*tile_x).to_num();
+                tri_to_draw.p1.y -= (SCREEN_TILE_HEIGHT*tile_y).to_num();
 
-                tri_to_draw.p2.x -= (SCREEN_TILE_WIDTH*tile_x) as I16F16;
-                tri_to_draw.p2.y -= (SCREEN_TILE_HEIGHT*tile_y) as I16F16;
+                tri_to_draw.p2.x -= (SCREEN_TILE_WIDTH*tile_x).to_num();
+                tri_to_draw.p2.y -= (SCREEN_TILE_HEIGHT*tile_y).to_num();
 
-                tri_to_draw.p3.x -= (SCREEN_TILE_WIDTH*tile_x) as I16F16;
-                tri_to_draw.p3.y -= (SCREEN_TILE_HEIGHT*tile_y) as I16F16;
+                tri_to_draw.p3.x -= (SCREEN_TILE_WIDTH*tile_x).to_num();
+                tri_to_draw.p3.y -= (SCREEN_TILE_HEIGHT*tile_y).to_num();
 
                 draw_2d_triangle(&tri_to_draw, &mut self.z_buffer, &mut self.tile_frame_buffer);
             }
