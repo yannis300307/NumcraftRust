@@ -587,13 +587,3 @@ pub fn init_window() {
         }
     });
 }
-
-#[cfg(not(target_os = "none"))]
-pub fn debug<T: std::fmt::Debug>(item: &T) {
-    println!("{:?}", item)
-}
-
-#[cfg(target_os = "none")]
-pub fn debug<T: core::fmt::Debug>(item: &T) {
-    // TODO
-}

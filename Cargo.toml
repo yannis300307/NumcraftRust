@@ -1,6 +1,6 @@
 cargo-features = ["profile-rustflags", "edition2024"]
 [package]
-name = "epsilon-sample-app"
+name = "Numcraft"
 version = "0.1.0"
 authors = ["NumWorks <contact@numworks.com>"]
 edition = "2024"
@@ -18,6 +18,13 @@ strip=true
 opt-level= "z"
 lto = true
 codegen-units = 1
+
+[profile.dev.package."renderer::fill_rect"]
+opt-level = 3
+
+[profile.release.package."renderer::fill_rect"]
+opt-level = 3
+
 
 [dependencies]
 nalgebra = {version = "0.33.2", default-features = false, features = [ "libm" ]}

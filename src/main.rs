@@ -16,7 +16,7 @@ use game::Game;
 #[used]
 #[cfg(target_os = "none")]
 #[unsafe(link_section = ".rodata.eadk_app_name")]
-pub static EADK_APP_NAME: [u8; 10] = *b"HelloRust\0";
+pub static EADK_APP_NAME: [u8; 9] = *b"Numcraft\0";
 
 #[used]
 #[cfg(target_os = "none")]
