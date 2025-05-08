@@ -1,23 +1,20 @@
 use cbitmap::bitmap::{self, Bitmap, BitsManage};
 use nalgebra::{Matrix4, Perspective3, Rotation3, Vector2, Vector3, Vector4};
 
+
+
 use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
-    camera::Camera,
-    eadk::{self, Color, Rect},
+    camera::Camera, constants::rendering::*, eadk::{self, Color, Rect}
 };
 
 // Screen size related constants
-const SCREEN_WIDTH: usize = 320;
-const SCREEN_HEIGHT: usize = 240;
 
 const SCREEN_WIDTHF: f32 = SCREEN_WIDTH as f32;
 const SCREEN_HEIGHTF: f32 = SCREEN_HEIGHT as f32;
 
 // Screen tiling constants
-const SCREEN_TILE_SUBDIVISION: usize = 2;
-
 const SCREEN_TILE_WIDTH: usize = SCREEN_WIDTH.div_ceil(SCREEN_TILE_SUBDIVISION);
 const SCREEN_TILE_HEIGHT: usize = SCREEN_HEIGHT.div_ceil(SCREEN_TILE_SUBDIVISION);
 
@@ -30,15 +27,12 @@ const Z_BUFFER_SIZE: usize = SCREEN_PIXELS_COUNT.div_ceil(8);
 
 // Projection parameters
 const ASPECT_RATIO: f32 = SCREEN_WIDTHF / SCREEN_HEIGHTF;
-const FOV: f32 = f32::consts::PI / 4.0;
 
 const ZNEAR: f32 = 1.0;
 const ZFAR: f32 = 1000.0;
 
 // Other
 const GLOBAL_LIGHT: Vector3<f32> = Vector3::new(0.5, 0.0, -1.0);
-
-const MAX_TRIANGLES: usize = 100;
 
 const DEFAULT_DEBUG_COLOR: Color = Color {
     rgb565: 0b1111100000000000,
