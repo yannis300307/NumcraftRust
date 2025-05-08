@@ -1,4 +1,4 @@
-use crate::{eadk, renderer::Renderer};
+use crate::{eadk, renderer::Renderer, chunk::Chunk};
 
 pub struct Game {
     renderer: Renderer,

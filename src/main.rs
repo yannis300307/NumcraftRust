@@ -12,11 +12,13 @@ static HEAP: Heap = Heap::empty();
 
 extern crate alloc;
 
+pub mod eadk;
+pub mod constants;
 mod camera;
 mod chunk;
-pub mod eadk;
 mod game;
 mod renderer;
+mod world;
 use game::Game;
 
 #[used]
