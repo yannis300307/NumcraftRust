@@ -14,6 +14,7 @@ extern crate alloc;
 
 pub mod eadk;
 pub mod constants;
+pub mod mesh;
 mod camera;
 mod chunk;
 mod game;

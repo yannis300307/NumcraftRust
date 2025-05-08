@@ -12,3 +12,9 @@ pub mod rendering {
 pub mod world {
     pub const CHUNK_SIZE: usize = 8;
 }
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum BlockType {
+    Air = 0,
+    Stone = 1,
+}

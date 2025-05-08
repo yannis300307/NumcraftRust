@@ -1,4 +1,6 @@
+use alloc::vec::Vec;
 use cbitmap::bitmap::{self, Bitmap, BitsManage};
+use libm::cosf;
 use nalgebra::{Matrix4, Perspective3, Rotation3, Vector2, Vector3, Vector4};
 
 
@@ -6,7 +8,7 @@ use nalgebra::{Matrix4, Perspective3, Rotation3, Vector2, Vector3, Vector4};
 use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
-    camera::Camera, constants::rendering::*, eadk::{self, Color, Rect}
+    camera::Camera, constants::rendering::*, eadk::{self, Color, Rect}, mesh::{Quad, QuadDir, Triangle}
 };
 
 // Screen size related constants
@@ -117,22 +119,6 @@ const TEST_CUBE_MESH: [Triangle; 12] = [
         color: DEFAULT_DEBUG_COLOR,
     },
 ];
-
-#[derive(Clone, Copy, Debug)]
-struct Triangle {
-    p1: Vector3<f32>,
-    p2: Vector3<f32>,
-    p3: Vector3<f32>,
-    color: eadk::Color,
-}
-
-impl Triangle {
-    fn get_normal(&self) -> Vector3<f32> {
-        let a = self.p2 - self.p1;
-        let b = self.p3 - self.p1;
-        a.cross(&b).normalize()
-    }
-}
 
 fn get_color(r: u16, g: u16, b: u16) -> eadk::Color {
     eadk::Color {
@@ -396,7 +382,6 @@ impl Renderer {
 
     fn add_3d_triangle_to_render(&mut self, tri: Triangle) {
         let tri = tri;
-        let rotation: Rotation3<f32> = Rotation3::new(*self.camera.get_rotation());
 
         let mut transformed = Triangle {
             p1: tri.p1,
@@ -407,14 +392,12 @@ impl Renderer {
 
         let up: Vector3<f32> = Vector3::new(0.0, 1.0, 0.0);
         let target: Vector3<f32> = Vector3::new(0.0, 0.0, 1.0);
-        let look_dir = rotation.transform_vector(&target);
-        let target = self.camera.get_pos() + look_dir;
+        let look_dir = self.camera.get_rotation_matrix() * &target.to_homogeneous();
+        let target = self.camera.get_pos() + look_dir.xyz();
 
-        let mat_camera = matrix_point_at(self.camera.get_pos(), &target, &up)
-            .try_inverse()
-            .unwrap();
+        let mat_camera = matrix_point_at(self.camera.get_pos(), &target, &up);
 
-        let mat_view = mat_camera;
+        let mat_view = mat_camera.try_inverse().unwrap();
 
         let camera_ray = transformed.p1 - self.camera.get_pos();
 
@@ -470,7 +453,7 @@ impl Renderer {
                 projected_triangle.p2.y *= HALF_SCREEN_TILE_HEIGHT;
                 projected_triangle.p3.y *= HALF_SCREEN_TILE_HEIGHT;
 
-                self.triangles_to_render.push(projected_triangle).unwrap();
+                self.triangles_to_render.push(projected_triangle); // Do nothing if overflow
             };
 
             if let Some(clipped) = clipped_triangles.0 {
@@ -546,11 +529,26 @@ impl Renderer {
         }
     }
 
-    pub fn update(&mut self) {
+    fn add_quad_to_render(&mut self, quad: &Quad) {
+        let quad_triangles = quad.get_triangles();
+        self.add_3d_triangle_to_render(quad_triangles.0);
+        self.add_3d_triangle_to_render(quad_triangles.1);
+    }
+
+    pub fn update(&mut self, mesh: &Vec<Quad>) {
         self.triangles_to_render.clear();
-        for tri in TEST_CUBE_MESH {
-            self.add_3d_triangle_to_render(tri);
+
+        for quad in mesh {
+            self.add_quad_to_render(quad);
         }
+
+        /*self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Front, color: DEFAULT_DEBUG_COLOR});
+        self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Back, color: DEFAULT_DEBUG_COLOR});
+        self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Right, color: DEFAULT_DEBUG_COLOR});
+        self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Left, color: DEFAULT_DEBUG_COLOR});
+        self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Up, color: DEFAULT_DEBUG_COLOR});
+        self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Down, color: DEFAULT_DEBUG_COLOR});*/
+        
 
         for x in 0..SCREEN_TILE_SUBDIVISION {
             for y in 0..SCREEN_TILE_SUBDIVISION {
