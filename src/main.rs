@@ -1,15 +1,21 @@
 #![cfg_attr(target_os = "none", no_std)]
-
 #![no_main]
 
-#[cfg_attr(target_os = "none", global_allocator)]
-static ALLOCATOR: emballoc::Allocator<512> = emballoc::Allocator::new();
+
+#[allow(unused_imports)]
+use cortex_m;
+
+use embedded_alloc::LlffHeap as Heap;
+
+#[global_allocator]
+static HEAP: Heap = Heap::empty();
 
 extern crate alloc;
 
+mod camera;
+mod chunk;
 pub mod eadk;
 mod game;
-mod camera;
 mod renderer;
 use game::Game;
 
@@ -28,8 +34,14 @@ pub static EADK_APP_API_LEVEL: u32 = 0;
 #[unsafe(link_section = ".rodata.eadk_app_icon")]
 pub static EADK_APP_ICON: [u8; 4250] = *include_bytes!("../target/icon.nwi");
 
+
 #[unsafe(no_mangle)]
 fn main() {
+    {
+        const HEAP_SIZE: usize = 100000;
+        unsafe { HEAP.init(eadk::HEAP_START as usize, HEAP_SIZE) }
+    }
+
     let mut game = Game::new();
 
     #[cfg(not(target_os = "none"))]
