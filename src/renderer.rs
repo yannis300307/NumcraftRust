@@ -3,12 +3,13 @@ use cbitmap::bitmap::{self, Bitmap, BitsManage};
 use libm::cosf;
 use nalgebra::{Matrix4, Perspective3, Rotation3, Vector2, Vector3, Vector4};
 
-
-
 use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
-    camera::Camera, constants::rendering::*, eadk::{self, Color, Rect}, mesh::{Quad, QuadDir, Triangle}
+    camera::Camera,
+    constants::rendering::*,
+    eadk::{self, Color, Rect},
+    mesh::{BlockFace, BlockFaceDir, Triangle},
 };
 
 // Screen size related constants
@@ -529,13 +530,13 @@ impl Renderer {
         }
     }
 
-    fn add_quad_to_render(&mut self, quad: &Quad) {
+    fn add_quad_to_render(&mut self, quad: &BlockFace) {
         let quad_triangles = quad.get_triangles();
         self.add_3d_triangle_to_render(quad_triangles.0);
         self.add_3d_triangle_to_render(quad_triangles.1);
     }
 
-    pub fn update(&mut self, mesh: &Vec<Quad>) {
+    pub fn update(&mut self, mesh: &Vec<BlockFace>) {
         self.triangles_to_render.clear();
 
         for quad in mesh {
@@ -548,7 +549,6 @@ impl Renderer {
         self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Left, color: DEFAULT_DEBUG_COLOR});
         self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Up, color: DEFAULT_DEBUG_COLOR});
         self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Down, color: DEFAULT_DEBUG_COLOR});*/
-        
 
         for x in 0..SCREEN_TILE_SUBDIVISION {
             for y in 0..SCREEN_TILE_SUBDIVISION {

@@ -1,7 +1,7 @@
 use crate::{
     constants::{BlockType, world::*},
     eadk::{self, Color},
-    mesh::{Quad, QuadDir},
+    mesh::{BlockFace, BlockFaceDir},
 };
 use alloc::vec::Vec;
 use nalgebra::Vector3;
@@ -38,20 +38,60 @@ impl Chunk {
         }
     }
 
-    pub fn add_mesh_to_world_mesh(&self, world_mesh: &mut Vec<Quad>) {
+    pub fn add_mesh_to_world_mesh(&self, world_mesh: &mut Vec<BlockFace>) {
         let chunk_world_pos = self.pos * (CHUNK_SIZE as isize);
         for x in 0..CHUNK_SIZE {
             for y in 0..CHUNK_SIZE {
                 for z in 0..CHUNK_SIZE {
                     if self.get_at(Vector3::new(x, y, z)) != BlockType::Air {
-                        let bloc_pos = Vector3::new(x as f32, y as f32, z as f32) + Vector3::<f32>::new(chunk_world_pos.x as f32, chunk_world_pos.y as f32, chunk_world_pos.z as f32); // TODO : MAKE CLEANER
-                        world_mesh.push(Quad {pos: bloc_pos, dir: QuadDir::Front,color: eadk::Color {rgb565: 0b1111111111111111}});
-                        world_mesh.push(Quad {pos: bloc_pos, dir: QuadDir::Back,color: eadk::Color {rgb565: 0b1111111111111111}});
-                        world_mesh.push(Quad {pos: bloc_pos, dir: QuadDir::Right,color: eadk::Color {rgb565: 0b1111111111111111}});
-                        world_mesh.push(Quad {pos: bloc_pos, dir: QuadDir::Left,color: eadk::Color {rgb565: 0b1111111111111111}});
-                        world_mesh.push(Quad {pos: bloc_pos, dir: QuadDir::Up,color: eadk::Color {rgb565: 0b1111111111111111}});
-                        world_mesh.push(Quad {pos: bloc_pos, dir: QuadDir::Down,color: eadk::Color {rgb565: 0b1111111111111111}});
-
+                        let bloc_pos = Vector3::new(x as f32, y as f32, z as f32)
+                            + Vector3::<f32>::new(
+                                chunk_world_pos.x as f32,
+                                chunk_world_pos.y as f32,
+                                chunk_world_pos.z as f32,
+                            ); // TODO : MAKE CLEANER
+                        world_mesh.push(BlockFace {
+                            pos: bloc_pos,
+                            dir: BlockFaceDir::Front,
+                            color: eadk::Color {
+                                rgb565: 0b1111111111111111,
+                            },
+                        });
+                        world_mesh.push(BlockFace {
+                            pos: bloc_pos,
+                            dir: BlockFaceDir::Back,
+                            color: eadk::Color {
+                                rgb565: 0b1111111111111111,
+                            },
+                        });
+                        world_mesh.push(BlockFace {
+                            pos: bloc_pos,
+                            dir: BlockFaceDir::Right,
+                            color: eadk::Color {
+                                rgb565: 0b1111111111111111,
+                            },
+                        });
+                        world_mesh.push(BlockFace {
+                            pos: bloc_pos,
+                            dir: BlockFaceDir::Left,
+                            color: eadk::Color {
+                                rgb565: 0b1111111111111111,
+                            },
+                        });
+                        world_mesh.push(BlockFace {
+                            pos: bloc_pos,
+                            dir: BlockFaceDir::Up,
+                            color: eadk::Color {
+                                rgb565: 0b1111111111111111,
+                            },
+                        });
+                        world_mesh.push(BlockFace {
+                            pos: bloc_pos,
+                            dir: BlockFaceDir::Down,
+                            color: eadk::Color {
+                                rgb565: 0b1111111111111111,
+                            },
+                        });
                     }
                 }
             }

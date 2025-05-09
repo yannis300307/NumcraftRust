@@ -1,13 +1,13 @@
 use crate::chunk::{self, Chunk};
 use crate::constants::world::*;
 use crate::eadk;
-use crate::mesh::Quad;
+use crate::mesh::BlockFace;
 use alloc::vec::Vec;
 use nalgebra::Vector3;
 
 pub struct World {
     chunks: Vec<chunk::Chunk>,
-    mesh: Vec<Quad>,
+    mesh: Vec<BlockFace>,
 }
 
 impl World {
@@ -25,11 +25,11 @@ impl World {
         self.chunks.last_mut()
     }
 
-    pub fn get_mesh(&self) -> &Vec<Quad> { // TODO Render each chunk mesh independentely
+    pub fn get_mesh(&self) -> &Vec<BlockFace> { // TODO Render each chunk mesh independentely
         &self.mesh
     }
 
-    pub fn generate_mesh(&mut self) -> &Vec<Quad> {
+    pub fn generate_mesh(&mut self) -> &Vec<BlockFace> {
         for chunk in &self.chunks {
             chunk.add_mesh_to_world_mesh(&mut self.mesh);
         }

@@ -2,7 +2,7 @@ use nalgebra::Vector3;
 
 use crate::eadk;
 
-pub enum QuadDir {
+pub enum BlockFaceDir {
     Front = 1,
     Back = 2,
     Up = 3,
@@ -11,16 +11,16 @@ pub enum QuadDir {
     Left = 6,
 }
 
-pub struct Quad {
+pub struct BlockFace {
     pub pos: Vector3<f32>,
-    pub dir: QuadDir,
+    pub dir: BlockFaceDir,
     pub color: eadk::Color,
 }
 
-impl Quad {
+impl BlockFace {
     pub fn get_triangles(&self) -> (Triangle, Triangle) {
         match self.dir {
-            QuadDir::Front => (
+            BlockFaceDir::Front => (
                 Triangle {
                     p3: Vector3::new(self.pos.x, self.pos.y, self.pos.z),
                     p2: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z),
@@ -34,7 +34,7 @@ impl Quad {
                     color: self.color,
                 },
             ),
-            QuadDir::Back => (
+            BlockFaceDir::Back => (
                 Triangle {
                     p1: Vector3::new(self.pos.x, self.pos.y, self.pos.z + 1.0),
                     p2: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z + 1.0),
@@ -48,7 +48,7 @@ impl Quad {
                     color: self.color,
                 },
             ),
-            QuadDir::Up => (
+            BlockFaceDir::Up => (
                 Triangle {
                     p3: Vector3::new(self.pos.x, self.pos.y, self.pos.z + 1.0),
                     p2: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z + 1.0),
@@ -62,7 +62,7 @@ impl Quad {
                     color: self.color,
                 },
             ),
-            QuadDir::Down => (
+            BlockFaceDir::Down => (
                 Triangle {
                     p1: Vector3::new(self.pos.x, self.pos.y + 1.0, self.pos.z + 1.0),
                     p2: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z + 1.0),
@@ -76,34 +76,34 @@ impl Quad {
                     color: self.color,
                 },
             ),
-            QuadDir::Right => (
+            BlockFaceDir::Right => (
                 Triangle {
-                    p3: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z+1.0),
-                    p2: Vector3::new(self.pos.x + 1.0, self.pos.y+1.0, self.pos.z),
+                    p3: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z + 1.0),
+                    p2: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z),
                     p1: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z),
                     color: self.color,
                 },
                 Triangle {
                     p3: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z + 1.0),
-                    p2: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z+1.0),
+                    p2: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z + 1.0),
                     p1: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z),
                     color: self.color,
                 },
             ),
-            QuadDir::Left => (
+            BlockFaceDir::Left => (
                 Triangle {
-                    p1: Vector3::new(self.pos.x, self.pos.y, self.pos.z+1.0),
-                    p2: Vector3::new(self.pos.x, self.pos.y+1.0, self.pos.z),
+                    p1: Vector3::new(self.pos.x, self.pos.y, self.pos.z + 1.0),
+                    p2: Vector3::new(self.pos.x, self.pos.y + 1.0, self.pos.z),
                     p3: Vector3::new(self.pos.x, self.pos.y, self.pos.z),
                     color: self.color,
                 },
                 Triangle {
                     p1: Vector3::new(self.pos.x, self.pos.y, self.pos.z + 1.0),
-                    p2: Vector3::new(self.pos.x, self.pos.y + 1.0, self.pos.z+1.0),
+                    p2: Vector3::new(self.pos.x, self.pos.y + 1.0, self.pos.z + 1.0),
                     p3: Vector3::new(self.pos.x, self.pos.y + 1.0, self.pos.z),
                     color: self.color,
                 },
-            )
+            ),
         }
     }
 }
