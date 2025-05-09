@@ -1,7 +1,6 @@
 use alloc::vec::Vec;
 use cbitmap::bitmap::{self, Bitmap, BitsManage};
-use libm::cosf;
-use nalgebra::{Matrix4, Perspective3, Rotation3, Vector2, Vector3, Vector4};
+use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
 use core::{cmp::Ordering, f32, mem::swap};
 
@@ -9,7 +8,7 @@ use crate::{
     camera::Camera,
     constants::rendering::*,
     eadk::{self, Color, Rect},
-    mesh::{BlockFace, BlockFaceDir, Triangle},
+    mesh::{BlockFace, Triangle},
 };
 
 // Screen size related constants
@@ -37,89 +36,6 @@ const ZFAR: f32 = 1000.0;
 // Other
 const GLOBAL_LIGHT: Vector3<f32> = Vector3::new(0.5, 0.0, -1.0);
 
-const DEFAULT_DEBUG_COLOR: Color = Color {
-    rgb565: 0b1111100000000000,
-};
-
-const TEST_CUBE_MESH: [Triangle; 12] = [
-    Triangle {
-        p1: Vector3::new(0.0, 0.0, 0.0),
-        p2: Vector3::new(0.0, 1.0, 0.0),
-        p3: Vector3::new(1.0, 1.0, 0.0),
-        color: DEFAULT_DEBUG_COLOR,
-    },
-    Triangle {
-        p1: Vector3::new(0.0, 0.0, 0.0),
-        p2: Vector3::new(1.0, 1.0, 0.0),
-        p3: Vector3::new(1.0, 0.0, 0.0),
-        color: DEFAULT_DEBUG_COLOR,
-    },
-    // EAST
-    Triangle {
-        p1: Vector3::new(1.0, 0.0, 0.0),
-        p2: Vector3::new(1.0, 1.0, 0.0),
-        p3: Vector3::new(1.0, 1.0, 1.0),
-        color: DEFAULT_DEBUG_COLOR,
-    },
-    Triangle {
-        p1: Vector3::new(1.0, 0.0, 0.0),
-        p2: Vector3::new(1.0, 1.0, 1.0),
-        p3: Vector3::new(1.0, 0.0, 1.0),
-        color: DEFAULT_DEBUG_COLOR,
-    },
-    // NORTH
-    Triangle {
-        p1: Vector3::new(1.0, 0.0, 1.0),
-        p2: Vector3::new(1.0, 1.0, 1.0),
-        p3: Vector3::new(0.0, 1.0, 1.0),
-        color: DEFAULT_DEBUG_COLOR,
-    },
-    Triangle {
-        p1: Vector3::new(1.0, 0.0, 1.0),
-        p2: Vector3::new(0.0, 1.0, 1.0),
-        p3: Vector3::new(0.0, 0.0, 1.0),
-        color: DEFAULT_DEBUG_COLOR,
-    },
-    // WEST
-    Triangle {
-        p1: Vector3::new(0.0, 0.0, 1.0),
-        p3: Vector3::new(0.0, 1.0, 0.0),
-        p2: Vector3::new(0.0, 1.0, 1.0),
-        color: DEFAULT_DEBUG_COLOR,
-    },
-    Triangle {
-        p1: Vector3::new(0.0, 0.0, 1.0),
-        p3: Vector3::new(0.0, 0.0, 0.0),
-        p2: Vector3::new(0.0, 1.0, 0.0),
-        color: DEFAULT_DEBUG_COLOR,
-    },
-    // TOP
-    Triangle {
-        p1: Vector3::new(0.0, 1.0, 0.0),
-        p2: Vector3::new(0.0, 1.0, 1.0),
-        p3: Vector3::new(1.0, 1.0, 1.0),
-        color: DEFAULT_DEBUG_COLOR,
-    },
-    Triangle {
-        p1: Vector3::new(0.0, 1.0, 0.0),
-        p2: Vector3::new(1.0, 1.0, 1.0),
-        p3: Vector3::new(1.0, 1.0, 0.0),
-        color: DEFAULT_DEBUG_COLOR,
-    },
-    // BOTTOM
-    Triangle {
-        p1: Vector3::new(1.0, 0.0, 1.0),
-        p2: Vector3::new(0.0, 0.0, 1.0),
-        p3: Vector3::new(0.0, 0.0, 0.0),
-        color: DEFAULT_DEBUG_COLOR,
-    },
-    Triangle {
-        p1: Vector3::new(1.0, 0.0, 1.0),
-        p2: Vector3::new(0.0, 0.0, 0.0),
-        p3: Vector3::new(1.0, 0.0, 0.0),
-        color: DEFAULT_DEBUG_COLOR,
-    },
-];
 
 fn get_color(r: u16, g: u16, b: u16) -> eadk::Color {
     eadk::Color {
@@ -180,15 +96,12 @@ fn fill_triangle(
             continue;
         }
 
-        //frame_buffer[((a.x as isize).max(0) + y * (SCREEN_TILE_WIDTH as isize)) as usize..(((b.x as isize).min(SCREEN_TILE_WIDTH as isize)) + y * (SCREEN_TILE_WIDTH as isize)) as usize].fill(color);
-
         let frame_buffer_start =
             ((a.x as isize).max(0) + y * (SCREEN_TILE_WIDTH as isize)) as usize;
 
         let frame_buffer_end = (((b.x as isize).min(SCREEN_TILE_WIDTH as isize))
             + y * (SCREEN_TILE_WIDTH as isize)) as usize;
 
-        //frame_buffer[frame_buffer_start..frame_buffer_end].fill(color);
 
         for i in frame_buffer_start..frame_buffer_end {
             if !z_buffer.get_bool(i) {
@@ -312,8 +225,8 @@ fn triangle_clip_against_plane(
     if n_inside_point_count == 1 && n_outside_point_count == 2 {
         let out_tri = Triangle {
             p1: *inside_points[0],
-            p2: vector_intersect_plane(plane_p, &plane_n, &inside_points[0], &outside_points[0]),
-            p3: vector_intersect_plane(plane_p, &plane_n, &inside_points[0], &outside_points[1]),
+            p2: vector_intersect_plane(plane_p, &plane_n, inside_points[0], outside_points[0]),
+            p3: vector_intersect_plane(plane_p, &plane_n, inside_points[0], outside_points[1]),
             color: in_tri.color,
         };
 
@@ -324,14 +237,14 @@ fn triangle_clip_against_plane(
         let out_tri1 = Triangle {
             p1: *inside_points[0],
             p2: *inside_points[1],
-            p3: vector_intersect_plane(&plane_p, &plane_n, &inside_points[0], &outside_points[0]),
+            p3: vector_intersect_plane(plane_p, &plane_n, inside_points[0], outside_points[0]),
             color: in_tri.color,
         };
 
         let out_tri2 = Triangle {
             p1: *inside_points[1],
             p2: out_tri1.p3,
-            p3: vector_intersect_plane(&plane_p, &plane_n, &inside_points[1], &outside_points[0]),
+            p3: vector_intersect_plane(plane_p, &plane_n, inside_points[1], outside_points[0]),
             color: in_tri.color,
         };
         return (Some(out_tri1), Some(out_tri2));
@@ -382,8 +295,6 @@ impl Renderer {
     }
 
     fn add_3d_triangle_to_render(&mut self, tri: Triangle) {
-        let tri = tri;
-
         let mut transformed = Triangle {
             p1: tri.p1,
             p2: tri.p2,
@@ -393,7 +304,7 @@ impl Renderer {
 
         let up: Vector3<f32> = Vector3::new(0.0, 1.0, 0.0);
         let target: Vector3<f32> = Vector3::new(0.0, 0.0, 1.0);
-        let look_dir = self.camera.get_rotation_matrix() * &target.to_homogeneous();
+        let look_dir = self.camera.get_rotation_matrix() * target.to_homogeneous();
         let target = self.camera.get_pos() + look_dir.xyz();
 
         let mat_camera = matrix_point_at(self.camera.get_pos(), &target, &up);
@@ -454,7 +365,7 @@ impl Renderer {
                 projected_triangle.p2.y *= HALF_SCREEN_TILE_HEIGHT;
                 projected_triangle.p3.y *= HALF_SCREEN_TILE_HEIGHT;
 
-                self.triangles_to_render.push(projected_triangle); // Do nothing if overflow
+                let _ = self.triangles_to_render.push(projected_triangle); // Do nothing if overflow
             };
 
             if let Some(clipped) = clipped_triangles.0 {
@@ -543,12 +454,6 @@ impl Renderer {
             self.add_quad_to_render(quad);
         }
 
-        /*self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Front, color: DEFAULT_DEBUG_COLOR});
-        self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Back, color: DEFAULT_DEBUG_COLOR});
-        self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Right, color: DEFAULT_DEBUG_COLOR});
-        self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Left, color: DEFAULT_DEBUG_COLOR});
-        self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Up, color: DEFAULT_DEBUG_COLOR});
-        self.add_quad_to_render(&Quad{pos: Vector3::new(0.0, 0.0, 0.0), dir: QuadDir::Down, color: DEFAULT_DEBUG_COLOR});*/
 
         for x in 0..SCREEN_TILE_SUBDIVISION {
             for y in 0..SCREEN_TILE_SUBDIVISION {
