@@ -21,6 +21,8 @@ impl Game {
         let mut test_chunk = self.world.add_chunk(Vector3::new(0, 0, 0)).unwrap();
 
         test_chunk.set_at(Vector3::new(0, 0, 0), crate::constants::BlockType::Stone);
+        test_chunk.set_at(Vector3::new(1, 1, 1), crate::constants::BlockType::Stone);
+        test_chunk.set_at(Vector3::new(1, 1, 2), crate::constants::BlockType::Stone);
 
         self.world.generate_mesh();
 
