@@ -2,6 +2,7 @@ use nalgebra::Vector3;
 
 use crate::eadk;
 
+#[derive(PartialEq, Eq)]
 pub enum BlockFaceDir {
     Front = 1,
     Back = 2,

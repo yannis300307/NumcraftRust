@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 
-use crate::{chunk::Chunk, constants::world, eadk, renderer::Renderer, world::World};
+use crate::{chunk::Chunk, constants::world::{self, CHUNK_SIZE}, eadk, renderer::Renderer, world::World};
 
 pub struct Game {
     renderer: Renderer,
@@ -20,9 +20,11 @@ impl Game {
 
         let mut test_chunk = self.world.add_chunk(Vector3::new(0, 0, 0)).unwrap();
 
-        test_chunk.set_at(Vector3::new(0, 0, 0), crate::constants::BlockType::Stone);
-        test_chunk.set_at(Vector3::new(1, 1, 1), crate::constants::BlockType::Stone);
-        test_chunk.set_at(Vector3::new(1, 1, 2), crate::constants::BlockType::Stone);
+        for x in 0..CHUNK_SIZE {
+            for z in 0..CHUNK_SIZE {
+                test_chunk.set_at(Vector3::new(x, 7, z), crate::constants::BlockType::Stone);
+            }
+        }
 
         self.world.generate_mesh();
 
@@ -41,7 +43,7 @@ impl Game {
         if keyboard_state.key_down(eadk::input::Key::Home) {
             return false;
         }
-        self.renderer.update(self.world.get_mesh());
+        self.renderer.update(&self.world.get_mesh());
         self.renderer.camera.update(delta, keyboard_state);
 
         eadk::timing::msleep(20);

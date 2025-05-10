@@ -36,7 +36,6 @@ const ZFAR: f32 = 1000.0;
 // Other
 const GLOBAL_LIGHT: Vector3<f32> = Vector3::new(0.5, 0.0, -1.0);
 
-
 fn get_color(r: u16, g: u16, b: u16) -> eadk::Color {
     eadk::Color {
         rgb565: r << 11 | g << 6 | b,
@@ -67,7 +66,7 @@ fn fill_triangle(
     if t1.y > t2.y {
         swap(&mut t1, &mut t2)
     };
-    let total_height = t2.y - t0.y;
+    let total_height = t2.y - t0.y + 1.0;
     for i in 0..(total_height as isize) {
         let second_half = i > ((t1.y - t0.y) as isize) || t1.y == t0.y;
         let segment_height = if second_half {
@@ -99,9 +98,8 @@ fn fill_triangle(
         let frame_buffer_start =
             ((a.x as isize).max(0) + y * (SCREEN_TILE_WIDTH as isize)) as usize;
 
-        let frame_buffer_end = (((b.x as isize).min(SCREEN_TILE_WIDTH as isize))
+        let frame_buffer_end = (((b.x as isize + 1).min(SCREEN_TILE_WIDTH as isize))
             + y * (SCREEN_TILE_WIDTH as isize)) as usize;
-
 
         for i in frame_buffer_start..frame_buffer_end {
             if !z_buffer.get_bool(i) {
@@ -447,13 +445,14 @@ impl Renderer {
         self.add_3d_triangle_to_render(quad_triangles.1);
     }
 
-    pub fn update(&mut self, mesh: &Vec<BlockFace>) {
+    pub fn update(&mut self, world_mesh: &Vec<&Vec<BlockFace>>) {
         self.triangles_to_render.clear();
 
-        for quad in mesh {
-            self.add_quad_to_render(quad);
+        for chunk_mech in world_mesh.iter() {
+            for quad in chunk_mech.iter() {
+                self.add_quad_to_render(quad);
+            }
         }
-
 
         for x in 0..SCREEN_TILE_SUBDIVISION {
             for y in 0..SCREEN_TILE_SUBDIVISION {

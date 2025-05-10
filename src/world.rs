@@ -7,15 +7,11 @@ use nalgebra::Vector3;
 
 pub struct World {
     chunks: Vec<chunk::Chunk>,
-    mesh: Vec<BlockFace>,
 }
 
 impl World {
     pub fn new() -> Self {
-        World {
-            chunks: Vec::new(),
-            mesh: Vec::new(),
-        }
+        World { chunks: Vec::new() }
     }
 
     pub fn add_chunk(&mut self, pos: Vector3<isize>) -> Option<&mut Chunk> {
@@ -25,15 +21,18 @@ impl World {
         self.chunks.last_mut()
     }
 
-    pub fn get_mesh(&self) -> &Vec<BlockFace> { // TODO Render each chunk mesh independentely
-        &self.mesh
-    }
-
-    pub fn generate_mesh(&mut self) -> &Vec<BlockFace> {
+    pub fn get_mesh(&self) -> Vec<&Vec<BlockFace>> {
+        let mut world_mesh = Vec::new();
         for chunk in &self.chunks {
-            chunk.add_mesh_to_world_mesh(&mut self.mesh);
+            world_mesh.push(chunk.get_mesh());
         }
 
-        &self.mesh
+        world_mesh
+    }
+
+    pub fn generate_mesh(&mut self) {
+        for chunk in self.chunks.iter_mut() {
+            chunk.generate_mesh();
+        }
     }
 }
