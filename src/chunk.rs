@@ -1,7 +1,7 @@
 use crate::{
     constants::{world::*, BlockType},
-    eadk::{self, Color},
-    mesh::{self, BlockFace, BlockFaceDir},
+    eadk::{self},
+    mesh::{BlockFace, BlockFaceDir},
 };
 use alloc::vec::Vec;
 use nalgebra::Vector3;

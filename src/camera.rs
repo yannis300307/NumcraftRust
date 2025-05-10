@@ -21,13 +21,6 @@ impl Camera {
         }
     }
 
-    pub fn rotate(&mut self, rotation_vector: Vector3<f32>) {
-        self.rotation += rotation_vector;
-    }
-    pub fn translate(&mut self, translation_vector: Vector3<f32>) {
-        self.pos += translation_vector;
-    }
-
     pub fn update(&mut self, delta: f32, keyboard_state: eadk::input::KeyboardState) {
         // Rotation
         if keyboard_state.key_down(eadk::input::Key::Right) {

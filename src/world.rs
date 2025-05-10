@@ -1,6 +1,4 @@
 use crate::chunk::{self, Chunk};
-use crate::constants::world::*;
-use crate::eadk;
 use crate::mesh::BlockFace;
 use alloc::vec::Vec;
 use nalgebra::Vector3;

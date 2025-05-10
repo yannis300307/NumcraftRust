@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 
-use crate::{chunk::Chunk, constants::world::{self, CHUNK_SIZE}, eadk, renderer::Renderer, world::World};
+use crate::{constants::world::CHUNK_SIZE, eadk, renderer::Renderer, world::World};
 
 pub struct Game {
     renderer: Renderer,
