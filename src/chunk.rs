@@ -1,9 +1,10 @@
 use crate::{
-    constants::{world::*, BlockType},
+    constants::{BlockType, world::*},
     eadk::{self},
     mesh::{BlockFace, BlockFaceDir},
 };
 use alloc::vec::Vec;
+use fastnoise_lite::FastNoiseLite;
 use nalgebra::Vector3;
 
 const BLOCK_COUNT: usize = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
@@ -13,6 +14,7 @@ pub struct Chunk {
     blocks: [BlockType; BLOCK_COUNT],
     pos: Vector3<isize>,
     mesh: Vec<BlockFace>,
+    pub generated: bool,
 }
 
 impl Chunk {
@@ -21,6 +23,7 @@ impl Chunk {
             blocks: [BlockType::Air; BLOCK_COUNT],
             pos,
             mesh: Vec::new(),
+            generated: false,
         }
     }
 
@@ -46,6 +49,17 @@ impl Chunk {
         } else {
             BlockType::Air
         }
+    }
+
+    pub fn generate_chunk(&mut self, noise: &FastNoiseLite) {
+        for x in 0..CHUNK_SIZE {
+            for z in 0..CHUNK_SIZE {
+                let negative_1_to_1 = noise.get_noise_2d(x as f32, z as f32);
+                let height = (negative_1_to_1 + 1.) / 2. * 4.0;
+                self.set_at(Vector3::new(x, height as usize, z), crate::constants::BlockType::Stone);
+            }
+        }
+        self.generated = true
     }
 
     pub fn get_mesh(&self) -> &Vec<BlockFace> {

@@ -6,7 +6,7 @@ pub mod rendering {
 
     pub const FOV: f32 = core::f32::consts::PI / 4.0;
 
-    pub const MAX_TRIANGLES: usize = 400;
+    pub const MAX_TRIANGLES: usize = 800;
 }
 
 pub mod world {

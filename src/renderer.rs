@@ -381,7 +381,7 @@ impl Renderer {
                 let z1 = (tri1.p1.z + tri1.p2.z + tri1.p3.z) / 3.0;
                 let z2 = (tri2.p1.z + tri2.p2.z + tri2.p3.z) / 3.0;
 
-                z1.partial_cmp(&z2).unwrap()
+                z1.partial_cmp(&z2).unwrap().reverse()
             });
 
         for tri in self.triangles_to_render.iter_mut() {

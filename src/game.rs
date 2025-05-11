@@ -18,13 +18,12 @@ impl Game {
     pub fn start(&mut self) {
         let mut last = eadk::timing::millis();
 
-        let mut test_chunk = self.world.add_chunk(Vector3::new(0, 0, 0)).unwrap();
+        self.world.add_chunk(Vector3::new(0, 0, 0)).unwrap();
+        self.world.add_chunk(Vector3::new(1, 0, 0)).unwrap();
+        self.world.add_chunk(Vector3::new(1, 0, 1)).unwrap();
+        self.world.add_chunk(Vector3::new(0, 0, 1)).unwrap();
 
-        for x in 0..CHUNK_SIZE {
-            for z in 0..CHUNK_SIZE {
-                test_chunk.set_at(Vector3::new(x, 7, z), crate::constants::BlockType::Stone);
-            }
-        }
+        self.world.generate_world();
 
         self.world.generate_mesh();
 

@@ -2,6 +2,7 @@
 #![no_main]
 
 
+use alloc::format;
 #[allow(unused_imports)]
 use cortex_m;
 
