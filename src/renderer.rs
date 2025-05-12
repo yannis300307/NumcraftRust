@@ -293,13 +293,7 @@ impl Renderer {
     }
 
     fn add_3d_triangle_to_render(&mut self, tri: Triangle) {
-        let mut transformed = Triangle {
-            p1: tri.p1,
-            p2: tri.p2,
-            p3: tri.p3,
-            color: tri.color,
-        };
-
+        let mut tri = tri;
         let up: Vector3<f32> = Vector3::new(0.0, 1.0, 0.0);
         let target: Vector3<f32> = Vector3::new(0.0, 0.0, 1.0);
         let look_dir = self.camera.get_rotation_matrix() * target.to_homogeneous();
@@ -309,28 +303,28 @@ impl Renderer {
 
         let mat_view = mat_camera.try_inverse().unwrap();
 
-        let camera_ray = transformed.p1 - self.camera.get_pos();
+        let camera_ray = tri.p1 - self.camera.get_pos();
 
-        if transformed.get_normal().dot(&camera_ray) < 0.0 {
+        if tri.get_normal().dot(&camera_ray) < 0.0 {
             let light = GLOBAL_LIGHT
                 .normalize()
                 .dot(&tri.get_normal().normalize())
                 .max(0.2);
 
-            transformed.p1 = (mat_view
-                * Vector4::new(transformed.p1.x, transformed.p1.y, transformed.p1.z, 1.0))
+            tri.p1 = (mat_view
+                * Vector4::new(tri.p1.x, tri.p1.y, tri.p1.z, 1.0))
             .xyz(); // try to_homogenous here
-            transformed.p2 = (mat_view
-                * Vector4::new(transformed.p2.x, transformed.p2.y, transformed.p2.z, 1.0))
+            tri.p2 = (mat_view
+                * Vector4::new(tri.p2.x, tri.p2.y, tri.p2.z, 1.0))
             .xyz();
-            transformed.p3 = (mat_view
-                * Vector4::new(transformed.p3.x, transformed.p3.y, transformed.p3.z, 1.0))
+            tri.p3 = (mat_view
+                * Vector4::new(tri.p3.x, tri.p3.y, tri.p3.z, 1.0))
             .xyz();
 
             let clipped_triangles = triangle_clip_against_plane(
                 &Vector3::new(0.0, 0.0, 0.1),
                 &Vector3::new(0.0, 0.0, 1.0),
-                &transformed,
+                &tri,
             );
 
             let mut project_and_add = |to_project: Triangle| {
@@ -340,7 +334,7 @@ impl Renderer {
                     p3: self.project_point(to_project.p3),
                     color: get_color(
                         ((0b11111 as f32) * light) as u16,
-                        ((0b111111 as f32) * light) as u16,
+                        ((0b111111 as f32) * light) as u16, // Why is my white green?
                         ((0b11111 as f32) * light) as u16,
                     ),
                 };
@@ -381,7 +375,7 @@ impl Renderer {
                 let z1 = (tri1.p1.z + tri1.p2.z + tri1.p3.z) / 3.0;
                 let z2 = (tri2.p1.z + tri2.p2.z + tri2.p3.z) / 3.0;
 
-                z1.partial_cmp(&z2).unwrap().reverse()
+                z1.partial_cmp(&z2).unwrap()
             });
 
         for tri in self.triangles_to_render.iter_mut() {
