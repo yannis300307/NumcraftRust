@@ -42,7 +42,7 @@ impl Game {
         if keyboard_state.key_down(eadk::input::Key::Home) {
             return false;
         }
-        self.renderer.update(&self.world.get_mesh(), 0.0);
+        self.renderer.update(&self.world.get_mesh(), 1.0/delta);
         self.renderer.camera.update(delta, keyboard_state);
 
         //eadk::timing::msleep(20);

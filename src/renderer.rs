@@ -439,7 +439,7 @@ impl Renderer {
         self.add_3d_triangle_to_render(quad_triangles.1);
     }
 
-    pub fn update(&mut self, world_mesh: &Vec<&Vec<BlockFace>>) {
+    pub fn update(&mut self, world_mesh: &Vec<&Vec<BlockFace>>, fps_count: f32) {
         self.triangles_to_render.clear();
 
         for chunk_mech in world_mesh.iter() {
@@ -463,5 +463,7 @@ impl Renderer {
                 );
             }
         }
+
+        
     }
 }
