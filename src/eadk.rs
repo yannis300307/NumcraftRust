@@ -107,10 +107,11 @@ pub mod display {
         text_color: Color,
         background_color: Color,
     ) {
-        let mut buf = [0u8; 256]; // MAXIMUM is 256 chars
-        let s = format_no_std::show(&mut buf, format_args!("{}\0", text)).unwrap();
+        use alloc::ffi;
+
+        let c_string = ffi::CString::new(text).unwrap();
         unsafe {
-            eadk_display_draw_string(s.as_ptr(), point, large_font, text_color, background_color)
+            eadk_display_draw_string(c_string.as_ptr(), point, large_font, text_color, background_color)
         }
     }
 
