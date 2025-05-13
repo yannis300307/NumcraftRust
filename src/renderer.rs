@@ -38,7 +38,7 @@ const GLOBAL_LIGHT: Vector3<f32> = Vector3::new(0.5, 0.0, -1.0);
 
 fn get_color(r: u16, g: u16, b: u16) -> eadk::Color {
     eadk::Color {
-        rgb565: r << 11 | g << 6 | b,
+        rgb565: r << 11 | g << 5 | b,
     }
 }
 
