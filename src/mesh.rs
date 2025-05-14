@@ -1,4 +1,4 @@
-use nalgebra::Vector3;
+use nalgebra::{Vector2, Vector3};
 
 use crate::eadk;
 
@@ -13,7 +13,8 @@ pub enum BlockFaceDir {
 }
 
 pub struct BlockFace {
-    pub pos: Vector3<f32>,
+    pub pos: Vector3<isize>,
+    pub scale: Vector2<i8>,
     pub dir: BlockFaceDir,
     pub color: eadk::Color,
 }
@@ -23,85 +24,85 @@ impl BlockFace {
         match self.dir {
             BlockFaceDir::Front => (
                 Triangle {
-                    p3: Vector3::new(self.pos.x, self.pos.y, self.pos.z),
-                    p2: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z),
-                    p1: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z),
+                    p3: Vector3::new(self.pos.x as f32, self.pos.y as f32, self.pos.z as f32),
+                    p2: Vector3::new((self.pos.x + self.scale.x as isize) as f32, self.pos.y as f32, self.pos.z as f32),
+                    p1: Vector3::new((self.pos.x + self.scale.x as isize) as f32, (self.pos.y + self.scale.y as isize) as f32, self.pos.z as f32),
                     color: self.color,
                 },
                 Triangle {
-                    p1: Vector3::new(self.pos.x, self.pos.y, self.pos.z),
-                    p2: Vector3::new(self.pos.x, self.pos.y + 1.0, self.pos.z),
-                    p3: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z),
+                    p1: Vector3::new(self.pos.x as f32, self.pos.y as f32, self.pos.z as f32),
+                    p2: Vector3::new(self.pos.x as f32, (self.pos.y + self.scale.y as isize) as f32, self.pos.z as f32),
+                    p3: Vector3::new((self.pos.x + self.scale.x as isize) as f32, (self.pos.y + self.scale.y as isize) as f32, self.pos.z as f32),
                     color: self.color,
                 },
             ),
             BlockFaceDir::Back => (
                 Triangle {
-                    p1: Vector3::new(self.pos.x, self.pos.y, self.pos.z + 1.0),
-                    p2: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z + 1.0),
-                    p3: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z + 1.0),
+                    p1: Vector3::new(self.pos.x as f32, self.pos.y as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p2: Vector3::new((self.pos.x + self.scale.x as isize) as f32, self.pos.y as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p3: Vector3::new((self.pos.x + self.scale.x as isize) as f32, (self.pos.y + self.scale.y as isize) as f32, (self.pos.z+self.scale.y as isize) as f32),
                     color: self.color,
                 },
                 Triangle {
-                    p3: Vector3::new(self.pos.x, self.pos.y, self.pos.z + 1.0),
-                    p2: Vector3::new(self.pos.x, self.pos.y + 1.0, self.pos.z + 1.0),
-                    p1: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z + 1.0), // TODO sort points from p1 to p3
+                    p3: Vector3::new(self.pos.x as f32, self.pos.y as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p2: Vector3::new(self.pos.x as f32, (self.pos.y + self.scale.y as isize) as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p1: Vector3::new((self.pos.x + self.scale.x as isize) as f32, (self.pos.y + self.scale.y as isize) as f32, (self.pos.z+self.scale.y as isize) as f32), // TODO sort points from p1 to p3
                     color: self.color,
                 },
             ),
             BlockFaceDir::Up => (
                 Triangle {
-                    p3: Vector3::new(self.pos.x, self.pos.y, self.pos.z + 1.0),
-                    p2: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z + 1.0),
-                    p1: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z),
+                    p3: Vector3::new(self.pos.x as f32, self.pos.y as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p2: Vector3::new((self.pos.x + self.scale.x as isize) as f32, self.pos.y as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p1: Vector3::new((self.pos.x + self.scale.x as isize) as f32, self.pos.y as f32, self.pos.z as f32),
                     color: self.color,
                 },
                 Triangle {
-                    p1: Vector3::new(self.pos.x, self.pos.y, self.pos.z + 1.0),
-                    p2: Vector3::new(self.pos.x, self.pos.y, self.pos.z),
-                    p3: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z),
+                    p1: Vector3::new(self.pos.x as f32, self.pos.y as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p2: Vector3::new(self.pos.x as f32, self.pos.y as f32, self.pos.z as f32),
+                    p3: Vector3::new((self.pos.x + self.scale.x as isize) as f32, self.pos.y as f32, self.pos.z as f32),
                     color: self.color,
                 },
             ),
             BlockFaceDir::Down => (
                 Triangle {
-                    p1: Vector3::new(self.pos.x, self.pos.y + 1.0, self.pos.z + 1.0),
-                    p2: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z + 1.0),
-                    p3: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z),
+                    p1: Vector3::new(self.pos.x as f32, (self.pos.y + self.scale.y as isize) as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p2: Vector3::new((self.pos.x + self.scale.x as isize) as f32, (self.pos.y + self.scale.y as isize) as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p3: Vector3::new((self.pos.x + self.scale.x as isize) as f32, (self.pos.y + self.scale.y as isize) as f32, self.pos.z as f32),
                     color: self.color,
                 },
                 Triangle {
-                    p3: Vector3::new(self.pos.x, self.pos.y + 1.0, self.pos.z + 1.0),
-                    p2: Vector3::new(self.pos.x, self.pos.y + 1.0, self.pos.z),
-                    p1: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z),
+                    p3: Vector3::new(self.pos.x as f32, (self.pos.y + self.scale.y as isize) as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p2: Vector3::new(self.pos.x as f32, (self.pos.y + self.scale.y as isize) as f32, self.pos.z as f32),
+                    p1: Vector3::new((self.pos.x + self.scale.x as isize) as f32, (self.pos.y + self.scale.y as isize) as f32, self.pos.z as f32),
                     color: self.color,
                 },
             ),
             BlockFaceDir::Right => (
                 Triangle {
-                    p3: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z + 1.0),
-                    p2: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z),
-                    p1: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z),
+                    p3: Vector3::new((self.pos.x + self.scale.x as isize) as f32, self.pos.y as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p2: Vector3::new((self.pos.x + self.scale.x as isize) as f32, (self.pos.y + self.scale.y as isize) as f32, self.pos.z as f32),
+                    p1: Vector3::new((self.pos.x + self.scale.x as isize) as f32, self.pos.y as f32, self.pos.z as f32),
                     color: self.color,
                 },
                 Triangle {
-                    p3: Vector3::new(self.pos.x + 1.0, self.pos.y, self.pos.z + 1.0),
-                    p2: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z + 1.0),
-                    p1: Vector3::new(self.pos.x + 1.0, self.pos.y + 1.0, self.pos.z),
+                    p3: Vector3::new((self.pos.x + self.scale.x as isize) as f32, self.pos.y as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p2: Vector3::new((self.pos.x + self.scale.x as isize) as f32, (self.pos.y + self.scale.y as isize) as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p1: Vector3::new((self.pos.x + self.scale.x as isize) as f32, (self.pos.y + self.scale.y as isize) as f32, self.pos.z as f32),
                     color: self.color,
                 },
             ),
             BlockFaceDir::Left => (
                 Triangle {
-                    p1: Vector3::new(self.pos.x, self.pos.y, self.pos.z + 1.0),
-                    p2: Vector3::new(self.pos.x, self.pos.y + 1.0, self.pos.z),
-                    p3: Vector3::new(self.pos.x, self.pos.y, self.pos.z),
+                    p1: Vector3::new(self.pos.x as f32, self.pos.y as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p2: Vector3::new(self.pos.x as f32, (self.pos.y + self.scale.y as isize) as f32, self.pos.z as f32),
+                    p3: Vector3::new(self.pos.x as f32, self.pos.y as f32, self.pos.z as f32),
                     color: self.color,
                 },
                 Triangle {
-                    p1: Vector3::new(self.pos.x, self.pos.y, self.pos.z + 1.0),
-                    p2: Vector3::new(self.pos.x, self.pos.y + 1.0, self.pos.z + 1.0),
-                    p3: Vector3::new(self.pos.x, self.pos.y + 1.0, self.pos.z),
+                    p1: Vector3::new(self.pos.x as f32, self.pos.y as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p2: Vector3::new(self.pos.x as f32, (self.pos.y + self.scale.y as isize) as f32, (self.pos.z+self.scale.y as isize) as f32),
+                    p3: Vector3::new(self.pos.x as f32, (self.pos.y + self.scale.y as isize) as f32, self.pos.z as f32),
                     color: self.color,
                 },
             ),

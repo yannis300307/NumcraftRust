@@ -476,21 +476,29 @@ impl Renderer {
     pub fn update(&mut self, world_mesh: &Vec<&Vec<BlockFace>>, fps_count: f32) {
         self.triangles_to_render.clear();
 
+        let mut quad_count: usize= 0;
+
         for chunk_mech in world_mesh.iter() {
             for quad in chunk_mech.iter() {
                 self.add_quad_to_render(quad);
+                quad_count += 1;
             }
         }
 
         for x in 0..SCREEN_TILE_SUBDIVISION {
             for y in 0..SCREEN_TILE_SUBDIVISION {
-                self.clear_screen(get_color(0, 0, 0));
+                self.clear_screen(get_color(0b01110, 0b110110, 0b11111));
                 self.draw_triangles(x, y);
 
                 if x == 0 && y == 0 {
                     self.draw_string(
                         alloc::format!("FPS:{fps_count:.2}").as_str(),
                         &Vector2::new(10, 10),
+                    );
+
+                    self.draw_string(
+                        alloc::format!("Quads:{quad_count}").as_str(),
+                        &Vector2::new(10, 30),
                     );
                 }
 
