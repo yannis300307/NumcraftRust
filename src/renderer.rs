@@ -36,9 +36,22 @@ const ZFAR: f32 = 1000.0;
 // Other
 const GLOBAL_LIGHT: Vector3<f32> = Vector3::new(0.5, 0.0, -1.0);
 
+static FONT_DATA: &[u8] = include_bytes!("../assets/font.bin");
+const FONT_WIDTH: usize = 1045;
+const FONT_HEIGHT: usize = 15;
+const FONT_CHAR_WIDTH: usize = 11;
+static FONT_ORDER: &str = "!\" $%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^+`abcdefghijklmnopqrstuvwxyz{|}~€";
+
+#[inline]
 fn get_color(r: u16, g: u16, b: u16) -> eadk::Color {
     eadk::Color {
         rgb565: r << 11 | g << 5 | b,
+    }
+}
+
+fn rgb565_from_888(r: u16, g: u16, b: u16) -> Color {
+    Color {
+        rgb565: ((r & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (b >> 3),
     }
 }
 
@@ -311,15 +324,9 @@ impl Renderer {
                 .dot(&tri.get_normal().normalize())
                 .max(0.2);
 
-            tri.p1 = (mat_view
-                * Vector4::new(tri.p1.x, tri.p1.y, tri.p1.z, 1.0))
-            .xyz(); // try to_homogenous here
-            tri.p2 = (mat_view
-                * Vector4::new(tri.p2.x, tri.p2.y, tri.p2.z, 1.0))
-            .xyz();
-            tri.p3 = (mat_view
-                * Vector4::new(tri.p3.x, tri.p3.y, tri.p3.z, 1.0))
-            .xyz();
+            tri.p1 = (mat_view * Vector4::new(tri.p1.x, tri.p1.y, tri.p1.z, 1.0)).xyz(); // try to_homogenous here
+            tri.p2 = (mat_view * Vector4::new(tri.p2.x, tri.p2.y, tri.p2.z, 1.0)).xyz();
+            tri.p3 = (mat_view * Vector4::new(tri.p3.x, tri.p3.y, tri.p3.z, 1.0)).xyz();
 
             let clipped_triangles = triangle_clip_against_plane(
                 &Vector3::new(0.0, 0.0, 0.1),
@@ -433,6 +440,33 @@ impl Renderer {
         }
     }
 
+    fn draw_string(&mut self, text: &str, pos: &Vector2<usize>) {
+        let mut text_cursor: usize = 0;
+        for char in text.chars() {
+            let font_index = FONT_ORDER.chars().position(|c| c == char).unwrap();
+
+            let font_pixel_index = font_index * FONT_CHAR_WIDTH;
+
+            for x in 0..FONT_CHAR_WIDTH {
+                for y in 0..FONT_HEIGHT {
+                    let pixel_value = FONT_DATA[(font_pixel_index + x) + y * FONT_WIDTH];
+
+                    let rgb565 =
+                        rgb565_from_888(pixel_value as u16, pixel_value as u16, pixel_value as u16);
+
+                    let pix_x = pos.x + x + text_cursor;
+
+                    if pix_x > SCREEN_TILE_WIDTH {
+                        continue;
+                    }
+
+                    self.tile_frame_buffer[pix_x + (pos.y + y) * SCREEN_TILE_WIDTH] = rgb565;
+                }
+            }
+            text_cursor += FONT_CHAR_WIDTH;
+        }
+    }
+
     fn add_quad_to_render(&mut self, quad: &BlockFace) {
         let quad_triangles = quad.get_triangles();
         self.add_3d_triangle_to_render(quad_triangles.0);
@@ -452,6 +486,14 @@ impl Renderer {
             for y in 0..SCREEN_TILE_SUBDIVISION {
                 self.clear_screen(get_color(0, 0, 0));
                 self.draw_triangles(x, y);
+
+                if x == 0 && y == 0 {
+                    self.draw_string(
+                        alloc::format!("FPS:{fps_count:.2}").as_str(),
+                        &Vector2::new(10, 10),
+                    );
+                }
+
                 eadk::display::push_rect(
                     Rect {
                         x: (SCREEN_TILE_WIDTH * x) as u16,
@@ -463,7 +505,5 @@ impl Renderer {
                 );
             }
         }
-
-        
     }
 }
