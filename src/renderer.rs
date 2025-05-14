@@ -36,7 +36,7 @@ const ZFAR: f32 = 1000.0;
 // Other
 const GLOBAL_LIGHT: Vector3<f32> = Vector3::new(0.5, 0.0, -1.0);
 
-static FONT_DATA: &[u8] = include_bytes!("../assets/font.bin");
+static FONT_DATA: &[u8] = include_bytes!("../target/font.bin");
 const FONT_WIDTH: usize = 1045;
 const FONT_HEIGHT: usize = 15;
 const FONT_CHAR_WIDTH: usize = 11;

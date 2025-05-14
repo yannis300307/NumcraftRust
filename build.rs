@@ -31,5 +31,5 @@ fn main() {
 
     let data = converted_pixels.as_slice();
 
-    fs::write("assets/font.bin", data).unwrap();
+    fs::write("target/font.bin", data).unwrap();
 }
