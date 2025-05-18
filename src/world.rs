@@ -1,5 +1,5 @@
 use crate::chunk::{self, Chunk};
-use crate::mesh::BlockFace;
+use crate::mesh::Quad;
 use alloc::vec::Vec;
 use fastnoise_lite::FastNoiseLite;
 use nalgebra::Vector3;
@@ -38,7 +38,7 @@ impl World {
         }
     }
 
-    pub fn get_mesh(&self) -> Vec<&Vec<BlockFace>> {
+    pub fn get_mesh(&self) -> Vec<&Vec<Quad>> {
         let mut world_mesh = Vec::new();
         for chunk in &self.chunks {
             world_mesh.push(chunk.get_mesh());

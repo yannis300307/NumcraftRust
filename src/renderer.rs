@@ -402,7 +402,7 @@ impl Renderer {
 
             clip_triangle(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 1.0, 0.0));
             clip_triangle(
-                Vector3::new(0.0, SCREEN_HEIGHTF - 1.0, 0.0),
+                Vector3::new(0.0, SCREEN_HEIGHTF, 0.0),
                 Vector3::new(0.0, -1.0, 0.0),
             );
             clip_triangle(Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 0.0, 0.0));

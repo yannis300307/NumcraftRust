@@ -1,7 +1,7 @@
 use crate::{
     constants::{BlockType, world::*},
-    eadk::{Color},
-    mesh::{BlockFace, BlockFaceDir},
+    eadk::Color,
+    mesh::{Quad, QuadDir},
 };
 use alloc::vec::Vec;
 use fastnoise_lite::FastNoiseLite;
@@ -13,7 +13,7 @@ const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 pub struct Chunk {
     blocks: [BlockType; BLOCK_COUNT],
     pos: Vector3<isize>,
-    mesh: Vec<BlockFace>,
+    mesh: Vec<Quad>,
     pub generated: bool,
 }
 
@@ -65,11 +65,11 @@ impl Chunk {
         self.generated = true
     }
 
-    pub fn get_mesh(&self) -> &Vec<BlockFace> {
+    pub fn get_mesh(&self) -> &Vec<Quad> {
         &self.mesh
     }
 
-    fn add_face_to_mesh(&mut self, pos: Vector3<isize>, color: Color, dir: BlockFaceDir) {
+    fn add_face_to_mesh(&mut self, pos: Vector3<isize>, color: Color, dir: QuadDir) {
         for face in self.mesh.iter_mut() {
             if face.dir == dir
                 && face.pos.y == pos.y
@@ -90,7 +90,7 @@ impl Chunk {
             }
         }
         // else add new face
-        self.mesh.push(BlockFace {
+        self.mesh.push(Quad {
             pos,
             scale: Vector2::new(1, 1),
             dir,
@@ -101,7 +101,7 @@ impl Chunk {
     pub fn generate_mesh(&mut self) {
         self.mesh.clear();
 
-        for x in 0..CHUNK_SIZE as isize {
+        /*for x in 0..CHUNK_SIZE as isize {
             for y in 0..CHUNK_SIZE as isize {
                 for z in 0..CHUNK_SIZE as isize {
                     if self.get_at(Vector3::new(x, y, z)) != BlockType::Air {
@@ -111,7 +111,7 @@ impl Chunk {
                             z + self.pos.z * CHUNK_SIZE_I,
                         );
 
-                        if self.get_at(Vector3::new(x, y, z - 1)) == BlockType::Air {
+                        /*if self.get_at(Vector3::new(x, y, z - 1)) == BlockType::Air {
                             self.add_face_to_mesh(
                                 bloc_pos,
                                 Color {
@@ -148,7 +148,7 @@ impl Chunk {
                                 },
                                 BlockFaceDir::Left,
                             );
-                        }
+                        }*/
 
                         if self.get_at(Vector3::new(x, y - 1, z)) == BlockType::Air {
                             self.add_face_to_mesh(
@@ -156,11 +156,11 @@ impl Chunk {
                                 Color {
                                     rgb565: 0b1111111111111111,
                                 },
-                                BlockFaceDir::Up,
+                                QuadDir::Up,
                             );
                         }
 
-                        if self.get_at(Vector3::new(x, y + 1, z)) == BlockType::Air {
+                        /*if self.get_at(Vector3::new(x, y + 1, z)) == BlockType::Air {
                             self.add_face_to_mesh(
                                 bloc_pos,
                                 Color {
@@ -168,13 +168,72 @@ impl Chunk {
                                 },
                                 BlockFaceDir::Down,
                             );
-                        }
+                        }*/
                     }
+                }
+            }
+        }*/
+
+        for layer in 0..CHUNK_SIZE_I {
+            let mut processed_mask = [false; CHUNK_SIZE * CHUNK_SIZE];
+            for v in 0..CHUNK_SIZE_I {
+                // On a 2D plane
+                let mut lenght = 0;
+                let mut last_type = self.get_at(Vector3::new(0, layer, 0));
+                for u in 0..CHUNK_SIZE_I {
+                    let current_block_type = self.get_at(Vector3::new(u, layer, v));
+                    if current_block_type != last_type
+                        || u == CHUNK_SIZE_I - 1
+                        || self.get_at(Vector3::new(u, layer - 1, v)) != BlockType::Air
+                        || processed_mask[u as usize + CHUNK_SIZE * (v as usize)]
+                    {
+                        if lenght > 0 && last_type != BlockType::Air {
+                            // Create quad
+                            if u == CHUNK_SIZE_I - 1 {
+                                lenght += 1
+                            }
+
+                            // Count the maximum height we can
+                            let mut height = 1;
+                            let mut last_type2 = current_block_type;
+                            'v2: for v2 in v..CHUNK_SIZE_I {
+                                for u2 in u..CHUNK_SIZE_I {
+                                    let current_block_type2 = self.get_at(Vector3::new(u2, layer, v2));
+                                    if current_block_type2 != last_type2
+                                        || self.get_at(Vector3::new(u2, layer - 1, v2))
+                                            != BlockType::Air
+                                    {
+                                        break 'v2;
+                                    }
+                                    last_type2 = current_block_type2;
+                                }
+                                for u2 in u as usize..CHUNK_SIZE {
+                                    processed_mask[u2 + CHUNK_SIZE * (v2 as usize)] = true;
+                                }
+
+                                height += 1;
+                            }
+
+                            self.mesh.push(Quad {
+                                pos: Vector3::new(u - 1, layer, v) + self.pos * CHUNK_SIZE_I,
+                                scale: Vector2::new(lenght, height),
+                                dir: QuadDir::Up,
+                                color: Color {
+                                    rgb565: 0b1111111111111111,
+                                },
+                            });
+                            lenght = 0;
+                        }
+                    } else {
+                        lenght += 1;
+                    }
+                    processed_mask[u as usize + CHUNK_SIZE * v as usize] = true;
+                    last_type = current_block_type;
                 }
             }
         }
 
-        let mut face = 0;
+        /*let mut face = 0;
         while face != self.mesh.len() {
             let mut candidate: Option<usize> = None;
             for other in face..self.mesh.len() {
@@ -196,6 +255,6 @@ impl Chunk {
             }
 
             face += 1;
-        }
+        }*/
     }
 }
