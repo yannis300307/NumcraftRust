@@ -8,7 +8,7 @@ use crate::{
     camera::Camera,
     constants::rendering::*,
     eadk::{self, Color, Rect},
-    mesh::{BlockFace, Triangle},
+    mesh::{Quad, Triangle},
 };
 
 // Screen size related constants
@@ -56,85 +56,80 @@ fn rgb565_from_888(r: u16, g: u16, b: u16) -> Color {
 }
 
 fn fill_triangle(
-    t0: Vector2<f32>,
-    t1: Vector2<f32>,
-    t2: Vector2<f32>,
-    color: eadk::Color,
-    z_buffer: &mut Bitmap<Z_BUFFER_SIZE>,
+    mut t0: Vector2<isize>,
+    mut t1: Vector2<isize>,
+    mut t2: Vector2<isize>,
     frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    color: Color,
 ) {
-    let mut t0 = t0;
-    let mut t1 = t1;
-    let mut t2 = t2;
-    if t0.y == t1.y && t0.y == t2.y {
-        return;
-    }; // I dont care about degenerate triangles
-    // sort the vertices, t0, t1, t2 lower−to−upper (bubblesort yay!)
     if t0.y > t1.y {
-        swap(&mut t0, &mut t1)
-    };
+        swap(&mut t0, &mut t1);
+    }
     if t0.y > t2.y {
-        swap(&mut t0, &mut t2)
-    };
+        swap(&mut t0, &mut t2);
+    }
     if t1.y > t2.y {
-        swap(&mut t1, &mut t2)
-    };
-    let total_height = t2.y - t0.y + 1.0;
-    for i in 0..(total_height as isize) {
-        let second_half = i > ((t1.y - t0.y) as isize) || t1.y == t0.y;
+        swap(&mut t1, &mut t2);
+    }
+
+    let triangle_height = t2.y - t0.y;
+
+    'height_iter: for i in 0..triangle_height as isize {
+        let second_half = i > (t1.y - t0.y) as isize || (t1.y == t0.y);
         let segment_height = if second_half {
             t2.y - t1.y
         } else {
             t1.y - t0.y
         };
-        let alpha = (i as f32) / total_height;
-        let beta = (i as f32 - (if second_half { t1.y - t0.y } else { 0.0 })) / segment_height; // be careful: with above conditions no division by zero here
-        let mut a: Vector2<f32> = t0 + (t2 - t0) * alpha;
-        let mut b: Vector2<f32> = if second_half {
-            t1 + (t2 - t1) * beta
+
+        let alpha = i as f32 / triangle_height as f32;
+        let beta = if second_half {
+            (i as f32 - (t1.y - t0.y) as f32) / segment_height as f32
         } else {
-            t0 + (t1 - t0) * beta
-        };
-        if a.x > b.x {
-            swap(&mut a, &mut b)
+            i as f32 / segment_height as f32
         };
 
-        let y = (t0.y as isize) + i;
-        if y < 0
-            || y >= SCREEN_TILE_HEIGHT as isize
-            || a.x as usize >= SCREEN_TILE_WIDTH
-            || b.x < 0.0
-        {
+        let mut a = t0.x as f32 + ((t2 - t0).x as f32 * alpha);
+        let mut b = if second_half {
+            t1.x as f32 + ((t2 - t1).x as f32 * beta)
+        } else {
+            t0.x as f32 + ((t1 - t0).x as f32 * beta)
+        };
+
+        if a > b {
+            swap(&mut a, &mut b);
+        }
+
+
+        let y = t0.y + i;
+        if y < 0 {
+            continue 'height_iter;
+        }
+        if y >= SCREEN_TILE_HEIGHT as isize {
+            break 'height_iter;
+        }
+
+        if (b as usize) < 1 { // prevent line bug
             continue;
         }
 
-        let frame_buffer_start =
-            ((a.x as isize).max(0) + y * (SCREEN_TILE_WIDTH as isize)) as usize;
-
-        let frame_buffer_end = (((b.x as isize + 1).min(SCREEN_TILE_WIDTH as isize))
-            + y * (SCREEN_TILE_WIDTH as isize)) as usize;
-
-        for i in frame_buffer_start..frame_buffer_end {
-            if !z_buffer.get_bool(i) {
-                frame_buffer[i] = color;
-                z_buffer.set(i);
-            }
+        for j in (a as usize)..=(b as usize) {
+            if j >= SCREEN_TILE_WIDTH {continue 'height_iter;}
+            frame_buffer[(j + y as usize * SCREEN_TILE_WIDTH) as usize] = color;
         }
     }
 }
 
 fn draw_2d_triangle(
     tri: &Triangle,
-    z_buffer: &mut Bitmap<Z_BUFFER_SIZE>,
     frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 ) {
     fill_triangle(
-        tri.p1.xy(),
-        tri.p2.xy(),
-        tri.p3.xy(),
-        tri.color,
-        z_buffer,
+        Vector2::new(tri.p1.x as isize, tri.p1.y as isize),
+        Vector2::new(tri.p2.x as isize, tri.p2.y as isize),
+        Vector2::new(tri.p3.x as isize, tri.p3.y as isize),
         frame_buffer,
+        tri.color,
     );
 }
 
@@ -279,7 +274,6 @@ pub struct Renderer {
     pub camera: Camera,
     math_tools: MathTools,
     triangles_to_render: heapless::Vec<Triangle, MAX_TRIANGLES>,
-    z_buffer: bitmap::Bitmap<Z_BUFFER_SIZE>,
     tile_frame_buffer: [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 }
 
@@ -289,7 +283,6 @@ impl Renderer {
             camera: Camera::new(),
             math_tools: MathTools::new(),
             triangles_to_render: heapless::Vec::new(),
-            z_buffer: bitmap::Bitmap::new(),
             tile_frame_buffer: [Color { rgb565: 0 }; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
         };
 
@@ -302,7 +295,6 @@ impl Renderer {
 
     fn clear_screen(&mut self, color: eadk::Color) {
         self.tile_frame_buffer.fill(color);
-        self.z_buffer.reset_all();
     }
 
     fn add_3d_triangle_to_render(&mut self, tri: Triangle) {
@@ -433,7 +425,6 @@ impl Renderer {
 
                 draw_2d_triangle(
                     &tri_to_draw,
-                    &mut self.z_buffer,
                     &mut self.tile_frame_buffer,
                 );
             }
@@ -467,16 +458,16 @@ impl Renderer {
         }
     }
 
-    fn add_quad_to_render(&mut self, quad: &BlockFace) {
+    fn add_quad_to_render(&mut self, quad: &Quad) {
         let quad_triangles = quad.get_triangles();
         self.add_3d_triangle_to_render(quad_triangles.0);
         self.add_3d_triangle_to_render(quad_triangles.1);
     }
 
-    pub fn update(&mut self, world_mesh: &Vec<&Vec<BlockFace>>, fps_count: f32) {
+    pub fn update(&mut self, world_mesh: &Vec<&Vec<Quad>>, fps_count: f32) {
         self.triangles_to_render.clear();
 
-        let mut quad_count: usize= 0;
+        let mut quad_count: usize = 0;
 
         for chunk_mech in world_mesh.iter() {
             for quad in chunk_mech.iter() {
