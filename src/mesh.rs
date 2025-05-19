@@ -1,8 +1,9 @@
 use nalgebra::{Vector2, Vector3};
+use strum::EnumIter;
 
 use crate::eadk;
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, EnumIter, Clone, Copy)]
 pub enum QuadDir {
     Front = 1,
     Back = 2,

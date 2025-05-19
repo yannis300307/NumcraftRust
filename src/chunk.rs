@@ -11,6 +11,7 @@ use alloc::vec::Vec;
 use cbitmap::bitmap::{self, Bitmap, BitsManage};
 use fastnoise_lite::FastNoiseLite;
 use nalgebra::{Vector2, Vector3};
+use strum::IntoEnumIterator;
 
 const BLOCK_COUNT: usize = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
@@ -110,13 +111,31 @@ impl Chunk {
     pub fn generate_mesh(&mut self) {
         self.mesh.clear();
 
+        for dir in QuadDir::iter() {
         for layer in 0..CHUNK_SIZE_I {
             let mut map: Bitmap<LAYER_SIZE_BITS> = Bitmap::new();
             // Generate the bitmap
             for u in 0..CHUNK_SIZE_I {
                 for v in 0..CHUNK_SIZE_I {
-                    if self.get_at(Vector3::new(u, layer, v)) != BlockType::Air {
-                        map.set((u + v * CHUNK_SIZE_I) as usize);
+                    match dir {
+                        QuadDir::Top => if self.get_at(Vector3::new(u, layer, v)).is_air() || !self.get_at(Vector3::new(u, layer-1, v)).is_air() {
+                                            map.set((u + v * CHUNK_SIZE_I) as usize);
+                                        },
+                        QuadDir::Bottom => if self.get_at(Vector3::new(u, layer, v)).is_air() || !self.get_at(Vector3::new(u, layer+1, v)).is_air() {
+                                            map.set((u + v * CHUNK_SIZE_I) as usize);
+                                        },
+                        QuadDir::Front => if self.get_at(Vector3::new(u, v, layer)).is_air() || !self.get_at(Vector3::new(u, v, layer-1)).is_air() {
+                                            map.set((u + v * CHUNK_SIZE_I) as usize);
+                                        },
+                        QuadDir::Back => if self.get_at(Vector3::new(u, v, layer)).is_air() || !self.get_at(Vector3::new(u, v, layer+1)).is_air() {
+                                            map.set((u + v * CHUNK_SIZE_I) as usize);
+                                        },
+                        QuadDir::Right => if self.get_at(Vector3::new(layer, v, u)).is_air() || !self.get_at(Vector3::new(layer, v, u)).is_air() {
+                                            map.set((u + v * CHUNK_SIZE_I) as usize);
+                                        },
+                        QuadDir::Left => if self.get_at(Vector3::new(layer, v, u)).is_air() || !self.get_at(Vector3::new(layer, v, u)).is_air() {
+                                            map.set((u + v * CHUNK_SIZE_I) as usize);
+                                        },
                     }
                 }
             }
@@ -127,13 +146,14 @@ impl Chunk {
                 self.mesh.push(Quad {
                     pos: Vector3::new(rect.0, layer, rect.1),
                     scale: Vector2::new(rect.2 as i8, rect.3 as i8),
-                    dir: QuadDir::Top,
+                    dir,
                     color: Color {
                         rgb565: 0b1111111111111111,
                     },
                 });
             }
         }
+    }
     }
 }
 

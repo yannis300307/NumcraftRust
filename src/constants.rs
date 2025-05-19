@@ -18,3 +18,9 @@ pub enum BlockType {
     Air = 0,
     Stone = 1,
 }
+
+impl BlockType {
+    pub fn is_air(&self) -> bool {
+        *self == BlockType::Air
+    }
+}
