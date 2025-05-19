@@ -200,7 +200,7 @@ fn vector_intersect_plane(
     let line_start_to_end = line_end - line_start;
     let line_to_intersect = line_start_to_end * t;
     let coords = line_start + line_to_intersect;
-    Vector3::new(coords.x, coords.y, coords.z)
+    coords
 }
 
 fn triangle_clip_against_plane(
@@ -399,7 +399,8 @@ impl Renderer {
         self.triangles_to_render
             .sort_by(|tri1: &Triangle, tri2: &Triangle| -> Ordering {
                 let z1 = (tri1.p1.z + tri1.p2.z + tri1.p3.z) / 3.0;
-                let z2 = (tri2.p1.z + tri2.p2.z + tri2.p3.z) / 3.0;
+                let z2 = (tri2.p1.z + tri2.p2.z + tri2.p3.z) / 3.0; // TODO: Fix here: The Z component seems to be lost somewhere
+                
 
                 z1.total_cmp(&z2)
             });

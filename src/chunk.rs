@@ -1,5 +1,3 @@
-use core::ops::BitAnd;
-
 use crate::{
     constants::{BlockType, world::*},
     eadk::Color,
@@ -8,7 +6,7 @@ use crate::{
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
 
-use cbitmap::bitmap::{self, Bitmap, BitsManage};
+use cbitmap::bitmap::{Bitmap, BitsManage};
 use fastnoise_lite::FastNoiseLite;
 use nalgebra::{Vector2, Vector3};
 use strum::IntoEnumIterator;
@@ -62,7 +60,7 @@ impl Chunk {
         for x in 0..CHUNK_SIZE {
             for z in 0..CHUNK_SIZE {
                 let negative_1_to_1 = noise.get_noise_2d(x as f32, z as f32);
-                let height = 7; //(negative_1_to_1 + 1.) / 2. * 4.0;
+                let height = (negative_1_to_1 + 1.) / 2. * 4.0;
                 if x == 3 && z == 4 {
                     continue;
                 }
@@ -79,81 +77,67 @@ impl Chunk {
         &self.mesh
     }
 
-    fn add_face_to_mesh(&mut self, pos: Vector3<isize>, color: Color, dir: QuadDir) {
-        for face in self.mesh.iter_mut() {
-            if face.dir == dir
-                && face.pos.y == pos.y
-                && face.pos.x == pos.x + 1
-                && face.pos.z == pos.z
-            {
-                face.scale.x += 1;
-                return;
-            }
-            if face.dir == dir
-                && face.pos.y == pos.y
-                && face.pos.x == pos.x - 1
-                && face.pos.z == pos.z
-            {
-                face.scale.x += 1; // move to the left and add 1 to the x scale
-                face.pos.x -= 1;
-                return;
-            }
-        }
-        // else add new face
-        self.mesh.push(Quad {
-            pos,
-            scale: Vector2::new(1, 1),
-            dir,
-            color,
-        });
-    }
-
     pub fn generate_mesh(&mut self) {
         self.mesh.clear();
 
         for dir in QuadDir::iter() {
-        for layer in 0..CHUNK_SIZE_I {
-            let mut map: Bitmap<LAYER_SIZE_BITS> = Bitmap::new();
-            // Generate the bitmap
-            for u in 0..CHUNK_SIZE_I {
-                for v in 0..CHUNK_SIZE_I {
-                    match dir {
-                        QuadDir::Top => if self.get_at(Vector3::new(u, layer, v)).is_air() || !self.get_at(Vector3::new(u, layer-1, v)).is_air() {
-                                            map.set((u + v * CHUNK_SIZE_I) as usize);
-                                        },
-                        QuadDir::Bottom => if self.get_at(Vector3::new(u, layer, v)).is_air() || !self.get_at(Vector3::new(u, layer+1, v)).is_air() {
-                                            map.set((u + v * CHUNK_SIZE_I) as usize);
-                                        },
-                        QuadDir::Front => if self.get_at(Vector3::new(u, v, layer)).is_air() || !self.get_at(Vector3::new(u, v, layer-1)).is_air() {
-                                            map.set((u + v * CHUNK_SIZE_I) as usize);
-                                        },
-                        QuadDir::Back => if self.get_at(Vector3::new(u, v, layer)).is_air() || !self.get_at(Vector3::new(u, v, layer+1)).is_air() {
-                                            map.set((u + v * CHUNK_SIZE_I) as usize);
-                                        },
-                        QuadDir::Right => if self.get_at(Vector3::new(layer, v, u)).is_air() || !self.get_at(Vector3::new(layer, v, u)).is_air() {
-                                            map.set((u + v * CHUNK_SIZE_I) as usize);
-                                        },
-                        QuadDir::Left => if self.get_at(Vector3::new(layer, v, u)).is_air() || !self.get_at(Vector3::new(layer, v, u)).is_air() {
-                                            map.set((u + v * CHUNK_SIZE_I) as usize);
-                                        },
+            for layer in 0..CHUNK_SIZE_I {
+                let mut map: Bitmap<LAYER_SIZE_BITS> = Bitmap::new();
+                // Generate the bitmap
+                for u in 0..CHUNK_SIZE_I {
+                    for v in 0..CHUNK_SIZE_I {
+                        let can_render = match dir {
+                            QuadDir::Top => {
+                                !self.get_at(Vector3::new(u, layer, v)).is_air()
+                                    && self.get_at(Vector3::new(u, layer - 1, v)).is_air()
+                            }
+                            QuadDir::Bottom => {
+                                !self.get_at(Vector3::new(u, layer, v)).is_air()
+                                    && self.get_at(Vector3::new(u, layer + 1, v)).is_air()
+                            }
+                            QuadDir::Front => {
+                                !self.get_at(Vector3::new(u, v, layer)).is_air()
+                                    && self.get_at(Vector3::new(u, v, layer - 1)).is_air()
+                            }
+                            QuadDir::Back => {
+                                !self.get_at(Vector3::new(u, v, layer)).is_air()
+                                    && self.get_at(Vector3::new(u, v, layer + 1)).is_air()
+                            }
+                            QuadDir::Right => {
+                                !self.get_at(Vector3::new(layer, v, u)).is_air()
+                                    && self.get_at(Vector3::new(layer + 1, v, u)).is_air()
+                            }
+                            QuadDir::Left => {
+                                !self.get_at(Vector3::new(layer, v, u)).is_air()
+                                    && self.get_at(Vector3::new(layer - 1, v, u)).is_air()
+                            }
+                        };
+                        if can_render {
+                            map.set((u + v * CHUNK_SIZE_I) as usize);
+                        }
                     }
                 }
-            }
-            // Do the optimisation
-            let rectangles = optimise_plane(&mut map);
+                // Do the optimisation
+                let rectangles = optimise_plane(&mut map);
 
-            for rect in rectangles {
-                self.mesh.push(Quad {
-                    pos: Vector3::new(rect.0, layer, rect.1),
-                    scale: Vector2::new(rect.2 as i8, rect.3 as i8),
-                    dir,
-                    color: Color {
-                        rgb565: 0b1111111111111111,
-                    },
-                });
+                // Add the quads
+                for rect in rectangles {
+                    let pos = match dir {
+                        QuadDir::Top | QuadDir::Bottom => Vector3::new(rect.0, layer, rect.1),
+                        QuadDir::Front | QuadDir::Back => Vector3::new(rect.0, rect.1, layer),
+                        QuadDir::Right | QuadDir::Left => Vector3::new(layer, rect.1, rect.0),
+                    };
+                    self.mesh.push(Quad {
+                        pos: pos + self.pos * CHUNK_SIZE_I,
+                        scale: Vector2::new(rect.2 as i8, rect.3 as i8),
+                        dir,
+                        color: Color {
+                            rgb565: 0b1111111111111111,
+                        },
+                    });
+                }
             }
         }
-    }
     }
 }
 
@@ -173,10 +157,10 @@ fn optimise_plane(map: &mut Bitmap<LAYER_SIZE_BITS>) -> Vec<(isize, isize, isize
                     x += 1;
                     lenght += 1;
                 }
-                
+
                 // next, start counting up.
                 let mut height = 0;
-                'count_up: while y+height < CHUNK_SIZE_I {
+                'count_up: while y + height < CHUNK_SIZE_I {
                     // Check if we have the same space at this level
                     for i in x - lenght..x {
                         // If we encounter a 0, we stop counting up
