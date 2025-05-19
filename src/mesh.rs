@@ -6,8 +6,8 @@ use crate::eadk;
 pub enum QuadDir {
     Front = 1,
     Back = 2,
-    Up = 3,
-    Down = 4,
+    Top = 3,
+    Bottom = 4,
     Right = 5,
     Left = 6,
 }
@@ -90,7 +90,7 @@ impl Quad {
                     color: self.color,
                 },
             ),
-            QuadDir::Up => (
+            QuadDir::Top => (
                 Triangle {
                     p3: Vector3::new(
                         self.pos.x as f32,
@@ -124,7 +124,7 @@ impl Quad {
                     color: self.color,
                 },
             ),
-            QuadDir::Down => (
+            QuadDir::Bottom => (
                 Triangle {
                     p1: Vector3::new(
                         self.pos.x as f32,

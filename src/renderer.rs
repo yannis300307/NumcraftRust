@@ -1,5 +1,6 @@
-use alloc::vec::Vec;
-use cbitmap::bitmap::{self, Bitmap, BitsManage};
+#[cfg(target_os = "none")]
+use alloc::{format, vec::Vec};
+
 use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
 use core::{cmp::Ordering, f32, mem::swap};
@@ -22,10 +23,6 @@ const SCREEN_TILE_HEIGHT: usize = SCREEN_HEIGHT.div_ceil(SCREEN_TILE_SUBDIVISION
 
 const HALF_SCREEN_TILE_WIDTH: f32 = SCREEN_WIDTH as f32 / 2.0;
 const HALF_SCREEN_TILE_HEIGHT: f32 = SCREEN_HEIGHT as f32 / 2.2;
-
-// z_buffer constants
-const SCREEN_PIXELS_COUNT: usize = SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT;
-const Z_BUFFER_SIZE: usize = SCREEN_PIXELS_COUNT.div_ceil(8);
 
 // Projection parameters
 const ASPECT_RATIO: f32 = SCREEN_WIDTHF / SCREEN_HEIGHTF;
@@ -74,8 +71,8 @@ fn fill_triangle(
 
     let triangle_height = t2.y - t0.y;
 
-    'height_iter: for i in 0..triangle_height as isize {
-        let second_half = i > (t1.y - t0.y) as isize || (t1.y == t0.y);
+    'height_iter: for i in 0..triangle_height {
+        let second_half = i > (t1.y - t0.y) || (t1.y == t0.y);
         let segment_height = if second_half {
             t2.y - t1.y
         } else {
@@ -100,7 +97,6 @@ fn fill_triangle(
             swap(&mut a, &mut b);
         }
 
-
         let y = t0.y + i;
         if y < 0 {
             continue 'height_iter;
@@ -109,13 +105,25 @@ fn fill_triangle(
             break 'height_iter;
         }
 
-        if (b as usize) < 1 { // prevent line bug
+        if (b as usize) < 1 {
+            // prevent line bug
             continue;
         }
 
         for j in (a as usize)..=(b as usize) {
-            if j >= SCREEN_TILE_WIDTH {continue 'height_iter;}
-            frame_buffer[(j + y as usize * SCREEN_TILE_WIDTH) as usize] = color;
+            if j >= SCREEN_TILE_WIDTH {
+                continue 'height_iter;
+            }
+            frame_buffer[j + y as usize * SCREEN_TILE_WIDTH] = color;
+        }
+    }
+}
+
+
+fn draw_line(pos1: (isize, isize), pos2: (isize, isize), frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT], color: Color) {
+    for point in bresenham::Bresenham::new(pos1, pos2) {
+        if point.0 >= 0 && point.0 < SCREEN_TILE_WIDTH as isize && point.1 >= 0 && point.1 < SCREEN_TILE_HEIGHT as isize {
+            frame_buffer[(point.0+point.1*SCREEN_TILE_WIDTH as isize) as usize] = color;
         }
     }
 }
@@ -130,6 +138,25 @@ fn draw_2d_triangle(
         Vector2::new(tri.p3.x as isize, tri.p3.y as isize),
         frame_buffer,
         tri.color,
+    );
+
+    draw_line(
+        (tri.p1.x as isize, tri.p1.y as isize),
+        (tri.p2.x as isize, tri.p2.y as isize),
+        frame_buffer,
+        get_color(0b11111, 0b0, 0b0),
+    );
+    draw_line(
+        (tri.p2.x as isize, tri.p2.y as isize),
+        (tri.p3.x as isize, tri.p3.y as isize),
+        frame_buffer,
+        get_color(0b11111, 0b0, 0b0),
+    );
+    draw_line(
+        (tri.p3.x as isize, tri.p3.y as isize),
+        (tri.p1.x as isize, tri.p1.y as isize),
+        frame_buffer,
+        get_color(0b11111, 0b0, 0b0),
     );
 }
 
@@ -374,7 +401,7 @@ impl Renderer {
                 let z1 = (tri1.p1.z + tri1.p2.z + tri1.p3.z) / 3.0;
                 let z2 = (tri2.p1.z + tri2.p2.z + tri2.p3.z) / 3.0;
 
-                z1.partial_cmp(&z2).unwrap()
+                z1.total_cmp(&z2)
             });
 
         for tri in self.triangles_to_render.iter_mut() {
@@ -423,10 +450,7 @@ impl Renderer {
                 tri_to_draw.p3.x -= (SCREEN_TILE_WIDTH * tile_x) as f32;
                 tri_to_draw.p3.y -= (SCREEN_TILE_HEIGHT * tile_y) as f32;
 
-                draw_2d_triangle(
-                    &tri_to_draw,
-                    &mut self.tile_frame_buffer,
-                );
+                draw_2d_triangle(&tri_to_draw, &mut self.tile_frame_buffer);
             }
         }
     }
@@ -483,12 +507,12 @@ impl Renderer {
 
                 if x == 0 && y == 0 {
                     self.draw_string(
-                        alloc::format!("FPS:{fps_count:.2}").as_str(),
+                        format!("FPS:{fps_count:.2}").as_str(),
                         &Vector2::new(10, 10),
                     );
 
                     self.draw_string(
-                        alloc::format!("Quads:{quad_count}").as_str(),
+                        format!("Quads:{quad_count}").as_str(),
                         &Vector2::new(10, 30),
                     );
                 }
@@ -504,5 +528,6 @@ impl Renderer {
                 );
             }
         }
+        eadk::display::wait_for_vblank();
     }
 }

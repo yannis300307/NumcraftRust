@@ -1,11 +1,13 @@
 use crate::chunk::{self, Chunk};
 use crate::mesh::Quad;
+#[cfg(target_os = "none")]
 use alloc::vec::Vec;
+
 use fastnoise_lite::FastNoiseLite;
 use nalgebra::Vector3;
 
 pub struct World {
-    chunks: Vec<chunk::Chunk>,
+    pub chunks: Vec<chunk::Chunk>,
     gen_noise: FastNoiseLite,
 }
 
