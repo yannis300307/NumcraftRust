@@ -1,5 +1,6 @@
-use alloc::vec::Vec;
-use cbitmap::bitmap::{self, Bitmap, BitsManage};
+#[cfg(target_os = "none")]
+use alloc::{format, vec::Vec};
+
 use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
 use core::{cmp::Ordering, f32, mem::swap};
@@ -8,7 +9,7 @@ use crate::{
     camera::Camera,
     constants::rendering::*,
     eadk::{self, Color, Rect},
-    mesh::{BlockFace, Triangle},
+    mesh::{Quad, Triangle},
 };
 
 // Screen size related constants
@@ -22,10 +23,6 @@ const SCREEN_TILE_HEIGHT: usize = SCREEN_HEIGHT.div_ceil(SCREEN_TILE_SUBDIVISION
 
 const HALF_SCREEN_TILE_WIDTH: f32 = SCREEN_WIDTH as f32 / 2.0;
 const HALF_SCREEN_TILE_HEIGHT: f32 = SCREEN_HEIGHT as f32 / 2.2;
-
-// z_buffer constants
-const SCREEN_PIXELS_COUNT: usize = SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT;
-const Z_BUFFER_SIZE: usize = SCREEN_PIXELS_COUNT.div_ceil(8);
 
 // Projection parameters
 const ASPECT_RATIO: f32 = SCREEN_WIDTHF / SCREEN_HEIGHTF;
@@ -56,85 +53,110 @@ fn rgb565_from_888(r: u16, g: u16, b: u16) -> Color {
 }
 
 fn fill_triangle(
-    t0: Vector2<f32>,
-    t1: Vector2<f32>,
-    t2: Vector2<f32>,
-    color: eadk::Color,
-    z_buffer: &mut Bitmap<Z_BUFFER_SIZE>,
+    mut t0: Vector2<isize>,
+    mut t1: Vector2<isize>,
+    mut t2: Vector2<isize>,
     frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    color: Color,
 ) {
-    let mut t0 = t0;
-    let mut t1 = t1;
-    let mut t2 = t2;
-    if t0.y == t1.y && t0.y == t2.y {
-        return;
-    }; // I dont care about degenerate triangles
-    // sort the vertices, t0, t1, t2 lower−to−upper (bubblesort yay!)
     if t0.y > t1.y {
-        swap(&mut t0, &mut t1)
-    };
+        swap(&mut t0, &mut t1);
+    }
     if t0.y > t2.y {
-        swap(&mut t0, &mut t2)
-    };
+        swap(&mut t0, &mut t2);
+    }
     if t1.y > t2.y {
-        swap(&mut t1, &mut t2)
-    };
-    let total_height = t2.y - t0.y + 1.0;
-    for i in 0..(total_height as isize) {
-        let second_half = i > ((t1.y - t0.y) as isize) || t1.y == t0.y;
+        swap(&mut t1, &mut t2);
+    }
+
+    let triangle_height = t2.y - t0.y;
+
+    'height_iter: for i in 0..triangle_height {
+        let second_half = i > (t1.y - t0.y) || (t1.y == t0.y);
         let segment_height = if second_half {
             t2.y - t1.y
         } else {
             t1.y - t0.y
         };
-        let alpha = (i as f32) / total_height;
-        let beta = (i as f32 - (if second_half { t1.y - t0.y } else { 0.0 })) / segment_height; // be careful: with above conditions no division by zero here
-        let mut a: Vector2<f32> = t0 + (t2 - t0) * alpha;
-        let mut b: Vector2<f32> = if second_half {
-            t1 + (t2 - t1) * beta
+
+        let alpha = i as f32 / triangle_height as f32;
+        let beta = if second_half {
+            (i as f32 - (t1.y - t0.y) as f32) / segment_height as f32
         } else {
-            t0 + (t1 - t0) * beta
-        };
-        if a.x > b.x {
-            swap(&mut a, &mut b)
+            i as f32 / segment_height as f32
         };
 
-        let y = (t0.y as isize) + i;
-        if y < 0
-            || y >= SCREEN_TILE_HEIGHT as isize
-            || a.x as usize >= SCREEN_TILE_WIDTH
-            || b.x < 0.0
-        {
+        let mut a = t0.x as f32 + ((t2 - t0).x as f32 * alpha);
+        let mut b = if second_half {
+            t1.x as f32 + ((t2 - t1).x as f32 * beta)
+        } else {
+            t0.x as f32 + ((t1 - t0).x as f32 * beta)
+        };
+
+        if a > b {
+            swap(&mut a, &mut b);
+        }
+
+        let y = t0.y + i;
+        if y < 0 {
+            continue 'height_iter;
+        }
+        if y >= SCREEN_TILE_HEIGHT as isize {
+            break 'height_iter;
+        }
+
+        if (b as usize) < 1 {
+            // prevent line bug
             continue;
         }
 
-        let frame_buffer_start =
-            ((a.x as isize).max(0) + y * (SCREEN_TILE_WIDTH as isize)) as usize;
-
-        let frame_buffer_end = (((b.x as isize + 1).min(SCREEN_TILE_WIDTH as isize))
-            + y * (SCREEN_TILE_WIDTH as isize)) as usize;
-
-        for i in frame_buffer_start..frame_buffer_end {
-            if !z_buffer.get_bool(i) {
-                frame_buffer[i] = color;
-                z_buffer.set(i);
+        for j in (a as usize)..=(b as usize) {
+            if j >= SCREEN_TILE_WIDTH {
+                continue 'height_iter;
             }
+            frame_buffer[j + y as usize * SCREEN_TILE_WIDTH] = color;
+        }
+    }
+}
+
+
+fn draw_line(pos1: (isize, isize), pos2: (isize, isize), frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT], color: Color) {
+    for point in bresenham::Bresenham::new(pos1, pos2) {
+        if point.0 >= 0 && point.0 < SCREEN_TILE_WIDTH as isize && point.1 >= 0 && point.1 < SCREEN_TILE_HEIGHT as isize {
+            frame_buffer[(point.0+point.1*SCREEN_TILE_WIDTH as isize) as usize] = color;
         }
     }
 }
 
 fn draw_2d_triangle(
     tri: &Triangle,
-    z_buffer: &mut Bitmap<Z_BUFFER_SIZE>,
     frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 ) {
     fill_triangle(
-        tri.p1.xy(),
-        tri.p2.xy(),
-        tri.p3.xy(),
-        tri.color,
-        z_buffer,
+        Vector2::new(tri.p1.x as isize, tri.p1.y as isize),
+        Vector2::new(tri.p2.x as isize, tri.p2.y as isize),
+        Vector2::new(tri.p3.x as isize, tri.p3.y as isize),
         frame_buffer,
+        tri.color,
+    );
+
+    draw_line(
+        (tri.p1.x as isize, tri.p1.y as isize),
+        (tri.p2.x as isize, tri.p2.y as isize),
+        frame_buffer,
+        get_color(0b11111, 0b0, 0b0),
+    );
+    draw_line(
+        (tri.p2.x as isize, tri.p2.y as isize),
+        (tri.p3.x as isize, tri.p3.y as isize),
+        frame_buffer,
+        get_color(0b11111, 0b0, 0b0),
+    );
+    draw_line(
+        (tri.p3.x as isize, tri.p3.y as isize),
+        (tri.p1.x as isize, tri.p1.y as isize),
+        frame_buffer,
+        get_color(0b11111, 0b0, 0b0),
     );
 }
 
@@ -178,7 +200,7 @@ fn vector_intersect_plane(
     let line_start_to_end = line_end - line_start;
     let line_to_intersect = line_start_to_end * t;
     let coords = line_start + line_to_intersect;
-    Vector3::new(coords.x, coords.y, coords.z)
+    coords
 }
 
 fn triangle_clip_against_plane(
@@ -279,7 +301,6 @@ pub struct Renderer {
     pub camera: Camera,
     math_tools: MathTools,
     triangles_to_render: heapless::Vec<Triangle, MAX_TRIANGLES>,
-    z_buffer: bitmap::Bitmap<Z_BUFFER_SIZE>,
     tile_frame_buffer: [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 }
 
@@ -289,7 +310,6 @@ impl Renderer {
             camera: Camera::new(),
             math_tools: MathTools::new(),
             triangles_to_render: heapless::Vec::new(),
-            z_buffer: bitmap::Bitmap::new(),
             tile_frame_buffer: [Color { rgb565: 0 }; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
         };
 
@@ -302,7 +322,6 @@ impl Renderer {
 
     fn clear_screen(&mut self, color: eadk::Color) {
         self.tile_frame_buffer.fill(color);
-        self.z_buffer.reset_all();
     }
 
     fn add_3d_triangle_to_render(&mut self, tri: Triangle) {
@@ -380,9 +399,10 @@ impl Renderer {
         self.triangles_to_render
             .sort_by(|tri1: &Triangle, tri2: &Triangle| -> Ordering {
                 let z1 = (tri1.p1.z + tri1.p2.z + tri1.p3.z) / 3.0;
-                let z2 = (tri2.p1.z + tri2.p2.z + tri2.p3.z) / 3.0;
+                let z2 = (tri2.p1.z + tri2.p2.z + tri2.p3.z) / 3.0; // TODO: Fix here: The Z component seems to be lost somewhere
+                
 
-                z1.partial_cmp(&z2).unwrap()
+                z1.total_cmp(&z2)
             });
 
         for tri in self.triangles_to_render.iter_mut() {
@@ -410,7 +430,7 @@ impl Renderer {
 
             clip_triangle(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 1.0, 0.0));
             clip_triangle(
-                Vector3::new(0.0, SCREEN_HEIGHTF - 1.0, 0.0),
+                Vector3::new(0.0, SCREEN_HEIGHTF, 0.0),
                 Vector3::new(0.0, -1.0, 0.0),
             );
             clip_triangle(Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 0.0, 0.0));
@@ -431,11 +451,7 @@ impl Renderer {
                 tri_to_draw.p3.x -= (SCREEN_TILE_WIDTH * tile_x) as f32;
                 tri_to_draw.p3.y -= (SCREEN_TILE_HEIGHT * tile_y) as f32;
 
-                draw_2d_triangle(
-                    &tri_to_draw,
-                    &mut self.z_buffer,
-                    &mut self.tile_frame_buffer,
-                );
+                draw_2d_triangle(&tri_to_draw, &mut self.tile_frame_buffer);
             }
         }
     }
@@ -467,30 +483,38 @@ impl Renderer {
         }
     }
 
-    fn add_quad_to_render(&mut self, quad: &BlockFace) {
+    fn add_quad_to_render(&mut self, quad: &Quad) {
         let quad_triangles = quad.get_triangles();
         self.add_3d_triangle_to_render(quad_triangles.0);
         self.add_3d_triangle_to_render(quad_triangles.1);
     }
 
-    pub fn update(&mut self, world_mesh: &Vec<&Vec<BlockFace>>, fps_count: f32) {
+    pub fn update(&mut self, world_mesh: &Vec<&Vec<Quad>>, fps_count: f32) {
         self.triangles_to_render.clear();
+
+        let mut quad_count: usize = 0;
 
         for chunk_mech in world_mesh.iter() {
             for quad in chunk_mech.iter() {
                 self.add_quad_to_render(quad);
+                quad_count += 1;
             }
         }
 
         for x in 0..SCREEN_TILE_SUBDIVISION {
             for y in 0..SCREEN_TILE_SUBDIVISION {
-                self.clear_screen(get_color(0, 0, 0));
+                self.clear_screen(get_color(0b01110, 0b110110, 0b11111));
                 self.draw_triangles(x, y);
 
                 if x == 0 && y == 0 {
                     self.draw_string(
-                        alloc::format!("FPS:{fps_count:.2}").as_str(),
+                        format!("FPS:{fps_count:.2}").as_str(),
                         &Vector2::new(10, 10),
+                    );
+
+                    self.draw_string(
+                        format!("Quads:{quad_count}").as_str(),
+                        &Vector2::new(10, 30),
                     );
                 }
 
@@ -505,5 +529,6 @@ impl Renderer {
                 );
             }
         }
+        eadk::display::wait_for_vblank();
     }
 }

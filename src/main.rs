@@ -2,15 +2,18 @@
 #![no_main]
 
 
-use alloc::format;
 #[allow(unused_imports)]
+#[cfg(target_os = "none")]
 use cortex_m;
 
+#[cfg(target_os = "none")]
 use embedded_alloc::LlffHeap as Heap;
 
 #[global_allocator]
+#[cfg(target_os = "none")]
 static HEAP: Heap = Heap::empty();
 
+#[cfg(target_os = "none")]
 extern crate alloc;
 
 pub mod eadk;
@@ -41,6 +44,7 @@ pub static EADK_APP_ICON: [u8; 4250] = *include_bytes!("../target/icon.nwi");
 
 #[unsafe(no_mangle)]
 fn main() {
+    #[cfg(target_os = "none")]
     {
         const HEAP_SIZE: usize = 100000;
         unsafe { HEAP.init(eadk::HEAP_START as usize, HEAP_SIZE) }

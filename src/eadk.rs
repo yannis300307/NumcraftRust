@@ -1,5 +1,5 @@
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Color {
     pub rgb565: u16,
 }
@@ -517,14 +517,28 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
         } else {
             write_wrapped(message, 42);
         };
+    } else if let Some(loc) = _panic.location() {
+        let mut buf = [0u8; 512];
+        let f = format_no_std::show(
+            &mut buf,
+            format_args!(
+                "Error occured at {} line {} col {}",
+                loc.file(),
+                loc.line(),
+                loc.column(),
+            ),
+        )
+        .unwrap();
+
+        write_wrapped(f, 42);
     } else {
         display::draw_string(
-            "Unknow Error Occured",
-            Point { x: 10, y: 10 },
-            false,
-            Color { rgb565: 65503 },
-            Color { rgb565: 63488 },
-        );
+        "Unknow Error Occured",
+        Point { x: 10, y: 10 },
+        false,
+        Color { rgb565: 65503 },
+        Color { rgb565: 63488 },
+    );
     }
     loop {} // FIXME: Do something better. Exit the app maybe?
 }

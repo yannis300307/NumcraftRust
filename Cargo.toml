@@ -19,11 +19,6 @@ opt-level= 3
 lto = true
 codegen-units = 1
 
-[profile.dev.package."renderer::fill_triangle"]
-opt-level = 3
-
-[profile.release.package."renderer::fill_triangle"]
-opt-level = 3
 
 [dependencies]
 nalgebra = {version = "0.33.2", default-features = false, features = [ "libm" ]}
@@ -34,6 +29,8 @@ cbitmap = "0.3.2"
 cortex-m = {version="0.7.7", features=["critical-section-single-core"]}
 embedded-alloc = "0.6.0"
 fastnoise-lite = { version="1.1.1", default-features=false, features = ["libm"] }
+bresenham = "0.1.1"
+strum = {version= "0.27.1", default-features=false, features = ["derive"] }
 
 
 [target.'cfg(any(windows, unix))'.dependencies]

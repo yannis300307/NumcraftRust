@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 
-use crate::{eadk, renderer::Renderer, world::World};
+use crate::{constants::world, eadk, renderer::Renderer, world::World};
 
 pub struct Game {
     renderer: Renderer,
@@ -19,10 +19,10 @@ impl Game {
         let mut last = eadk::timing::millis();
 
         self.world.add_chunk(Vector3::new(0, 0, 0)).unwrap();
-        self.world.add_chunk(Vector3::new(1, 0, 0)).unwrap();
-        self.world.add_chunk(Vector3::new(1, 0, 1)).unwrap();
-        self.world.add_chunk(Vector3::new(0, 0, 1)).unwrap();
-
+        //self.world.add_chunk(Vector3::new(1, 0, 0)).unwrap();
+        //self.world.add_chunk(Vector3::new(1, 0, 1)).unwrap();
+        //self.world.add_chunk(Vector3::new(0, 0, 1)).unwrap();
+        
         self.world.generate_world();
 
         self.world.generate_mesh();
