@@ -22,7 +22,7 @@ codegen-units = 1
 
 [dependencies]
 nalgebra = {version = "0.33.2", default-features = false, features = [ "libm" ]}
-libm = "0.2.13"
+libm = "0.2.15"
 format_no_std = "1.2.0"
 heapless = "0.8.0"
 cbitmap = "0.3.2"
