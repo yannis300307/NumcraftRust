@@ -15,7 +15,6 @@ pub enum QuadDir {
 
 pub struct Quad {
     pub pos: Vector3<isize>,
-    pub scale: Vector2<i8>,
     pub dir: QuadDir,
     pub color: eadk::Color,
 }
@@ -27,13 +26,13 @@ impl Quad {
                 Triangle {
                     p3: Vector3::new(self.pos.x as f32, self.pos.y as f32, self.pos.z as f32),
                     p2: Vector3::new(
-                        (self.pos.x + self.scale.x as isize) as f32,
+                        (self.pos.x + 1) as f32,
                         self.pos.y as f32,
                         self.pos.z as f32,
                     ),
                     p1: Vector3::new(
-                        (self.pos.x + self.scale.x as isize) as f32,
-                        (self.pos.y + self.scale.y as isize) as f32,
+                        (self.pos.x + 1) as f32,
+                        (self.pos.y + 1) as f32,
                         self.pos.z as f32,
                     ),
                     color: self.color,
@@ -42,12 +41,12 @@ impl Quad {
                     p1: Vector3::new(self.pos.x as f32, self.pos.y as f32, self.pos.z as f32),
                     p2: Vector3::new(
                         self.pos.x as f32,
-                        (self.pos.y + self.scale.y as isize) as f32,
+                        (self.pos.y + 1) as f32,
                         self.pos.z as f32,
                     ),
                     p3: Vector3::new(
-                        (self.pos.x + self.scale.x as isize) as f32,
-                        (self.pos.y + self.scale.y as isize) as f32,
+                        (self.pos.x + 1) as f32,
+                        (self.pos.y + 1) as f32,
                         self.pos.z as f32,
                     ),
                     color: self.color,
@@ -58,17 +57,17 @@ impl Quad {
                     p1: Vector3::new(
                         self.pos.x as f32,
                         self.pos.y as f32,
-                        (self.pos.z + self.scale.y as isize) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p2: Vector3::new(
-                        (self.pos.x + self.scale.x as isize) as f32,
+                        (self.pos.x + 1) as f32,
                         self.pos.y as f32,
-                        (self.pos.z + self.scale.y as isize) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p3: Vector3::new(
-                        (self.pos.x + self.scale.x as isize) as f32,
-                        (self.pos.y + self.scale.y as isize) as f32,
-                        (self.pos.z + self.scale.y as isize) as f32,
+                        (self.pos.x + 1) as f32,
+                        (self.pos.y + 1) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     color: self.color,
                 },
@@ -76,17 +75,17 @@ impl Quad {
                     p3: Vector3::new(
                         self.pos.x as f32,
                         self.pos.y as f32,
-                        (self.pos.z + self.scale.y as isize) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p2: Vector3::new(
                         self.pos.x as f32,
-                        (self.pos.y + self.scale.y as isize) as f32,
-                        (self.pos.z + self.scale.y as isize) as f32,
+                        (self.pos.y + 1) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p1: Vector3::new(
-                        (self.pos.x + self.scale.x as isize) as f32,
-                        (self.pos.y + self.scale.y as isize) as f32,
-                        (self.pos.z + self.scale.y as isize) as f32,
+                        (self.pos.x + 1) as f32,
+                        (self.pos.y + 1) as f32,
+                        (self.pos.z + 1) as f32,
                     ), // TODO sort points from p1 to p3
                     color: self.color,
                 },
@@ -96,15 +95,15 @@ impl Quad {
                     p3: Vector3::new(
                         self.pos.x as f32,
                         self.pos.y as f32,
-                        (self.pos.z + self.scale.y as isize) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p2: Vector3::new(
-                        (self.pos.x + self.scale.x as isize) as f32,
+                        (self.pos.x + 1) as f32,
                         self.pos.y as f32,
-                        (self.pos.z + self.scale.y as isize) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p1: Vector3::new(
-                        (self.pos.x + self.scale.x as isize) as f32,
+                        (self.pos.x + 1) as f32,
                         self.pos.y as f32,
                         self.pos.z as f32,
                     ),
@@ -114,11 +113,11 @@ impl Quad {
                     p1: Vector3::new(
                         self.pos.x as f32,
                         self.pos.y as f32,
-                        (self.pos.z + self.scale.y as isize) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p2: Vector3::new(self.pos.x as f32, self.pos.y as f32, self.pos.z as f32),
                     p3: Vector3::new(
-                        (self.pos.x + self.scale.x as isize) as f32,
+                        (self.pos.x + 1) as f32,
                         self.pos.y as f32,
                         self.pos.z as f32,
                     ),
@@ -130,15 +129,15 @@ impl Quad {
                     p1: Vector3::new(
                         self.pos.x as f32,
                         (self.pos.y + 1) as f32,
-                        (self.pos.z + self.scale.y as isize) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p2: Vector3::new(
-                        (self.pos.x + self.scale.x as isize) as f32,
+                        (self.pos.x + 1) as f32,
                         (self.pos.y + 1) as f32,
-                        (self.pos.z + self.scale.y as isize) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p3: Vector3::new(
-                        (self.pos.x + self.scale.x as isize) as f32,
+                        (self.pos.x + 1) as f32,
                         (self.pos.y + 1) as f32,
                         self.pos.z as f32,
                     ),
@@ -148,7 +147,7 @@ impl Quad {
                     p3: Vector3::new(
                         self.pos.x as f32,
                         (self.pos.y + 1) as f32,
-                        (self.pos.z + self.scale.y as isize) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p2: Vector3::new(
                         self.pos.x as f32,
@@ -156,7 +155,7 @@ impl Quad {
                         self.pos.z as f32,
                     ),
                     p1: Vector3::new(
-                        (self.pos.x + self.scale.x as isize) as f32,
+                        (self.pos.x + 1) as f32,
                         (self.pos.y + 1) as f32,
                         self.pos.z as f32,
                     ),
@@ -167,13 +166,13 @@ impl Quad {
                 Triangle {
                     p1: Vector3::new(
                         (self.pos.x + 1) as f32,
-                        (self.pos.y + self.scale.y as isize) as f32,
+                        (self.pos.y + 1) as f32,
                         self.pos.z as f32,
                     ),
                     p2: Vector3::new(
                         (self.pos.x + 1) as f32,
-                        (self.pos.y + self.scale.y as isize) as f32,
-                        (self.pos.z + self.scale.x as isize) as f32,
+                        (self.pos.y + 1) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p3: Vector3::new(
                         (self.pos.x + 1) as f32,
@@ -186,12 +185,12 @@ impl Quad {
                     p3: Vector3::new(
                         (self.pos.x + 1) as f32,
                         self.pos.y as f32,
-                        (self.pos.z + self.scale.x as isize) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p2: Vector3::new(
                         (self.pos.x + 1) as f32,
-                        (self.pos.y + self.scale.y as isize) as f32,
-                        (self.pos.z + self.scale.x as isize) as f32,
+                        (self.pos.y + 1) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p1: Vector3::new(
                         (self.pos.x + 1) as f32,
@@ -205,13 +204,13 @@ impl Quad {
                 Triangle {
                     p3: Vector3::new(
                         self.pos.x as f32,
-                        (self.pos.y + self.scale.y as isize) as f32,
+                        (self.pos.y + 1) as f32,
                         self.pos.z as f32,
                     ),
                     p2: Vector3::new(
                         self.pos.x as f32,
-                        (self.pos.y + self.scale.y as isize) as f32,
-                        (self.pos.z + self.scale.x as isize) as f32,
+                        (self.pos.y + 1) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p1: Vector3::new(
                         self.pos.x as f32,
@@ -224,12 +223,12 @@ impl Quad {
                     p1: Vector3::new(
                         self.pos.x as f32,
                         self.pos.y as f32,
-                        (self.pos.z + self.scale.x as isize) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p2: Vector3::new(
                         self.pos.x as f32,
-                        (self.pos.y + self.scale.y as isize) as f32,
-                        (self.pos.z + self.scale.x as isize) as f32,
+                        (self.pos.y + 1) as f32,
+                        (self.pos.z + 1) as f32,
                     ),
                     p3: Vector3::new(
                         self.pos.x as f32,

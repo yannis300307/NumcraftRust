@@ -1,7 +1,7 @@
 #[cfg(target_os = "none")]
 use alloc::{format, vec::Vec};
 
-use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
+use nalgebra::{distance, Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
 use core::{cmp::Ordering, f32, mem::swap};
 
@@ -396,15 +396,6 @@ impl Renderer {
     }
 
     fn draw_triangles(&mut self, tile_x: usize, tile_y: usize) {
-        self.triangles_to_render
-            .sort_by(|tri1: &Triangle, tri2: &Triangle| -> Ordering {
-                let z1 = (tri1.p1.z + tri1.p2.z + tri1.p3.z) / 3.0;
-                let z2 = (tri2.p1.z + tri2.p2.z + tri2.p3.z) / 3.0; // TODO: Fix here: The Z component seems to be lost somewhere
-                
-
-                z1.total_cmp(&z2)
-            });
-
         for tri in self.triangles_to_render.iter_mut() {
             let mut clip_buffer: heapless::Deque<Triangle, 16> = heapless::Deque::new(); // 2^4
 
@@ -494,11 +485,29 @@ impl Renderer {
 
         let mut quad_count: usize = 0;
 
+        let mut quads: Vec<&Quad> = Vec::new();
+
         for chunk_mech in world_mesh.iter() {
             for quad in chunk_mech.iter() {
-                self.add_quad_to_render(quad);
+                quads.push(quad);
                 quad_count += 1;
             }
+        }
+
+        quads.sort_by(|a, b| -> Ordering {
+            let avec = Vector3::new(a.pos.x as f32 + 0.5,
+             a.pos.y as f32 + 0.5,
+            a.pos.z as f32 + 0.5);
+
+            let bvec = Vector3::new(b.pos.x as f32 + 0.5,
+             b.pos.y as f32 + 0.5,
+            b.pos.z as f32 + 0.5);
+
+            bvec.metric_distance(self.camera.get_pos()).total_cmp(&avec.metric_distance(self.camera.get_pos()))
+        });
+
+        for quad in quads {
+            self.add_quad_to_render(quad);
         }
 
         for x in 0..SCREEN_TILE_SUBDIVISION {
