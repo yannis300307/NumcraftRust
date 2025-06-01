@@ -45,27 +45,39 @@ impl World {
     }
 
     pub fn generate_world_around_pos(&mut self, pos: Vector3<f32>, render_distance: isize) {
+        let pos_chunk_coords = Vector3::new(
+            roundf(pos.x / CHUNK_SIZE as f32) as isize,
+            roundf(pos.y / CHUNK_SIZE as f32) as isize,
+            roundf(pos.z / CHUNK_SIZE as f32) as isize,
+        );
         self.chunks.retain(|chunk| {
-            let chunk_pos = chunk.get_pos();
-            if chunk_pos.x < -render_distance || chunk_pos.x >= render_distance 
-            || chunk_pos.y < -render_distance || chunk_pos.y >= render_distance
-            || chunk_pos.z < -render_distance || chunk_pos.z >= render_distance {
+            let relative_chunk_pos = chunk.get_pos() - pos_chunk_coords;
+            if relative_chunk_pos.x < -render_distance
+                || relative_chunk_pos.x >= render_distance
+                || relative_chunk_pos.y < -render_distance
+                || relative_chunk_pos.y >= render_distance
+                || relative_chunk_pos.z < -render_distance
+                || relative_chunk_pos.z >= render_distance
+            {
                 false
-            } else 
-            {true}
+            } else {
+                true
+            }
         });
         for x in -render_distance..render_distance {
             for y in -render_distance..render_distance {
                 for z in -render_distance..render_distance {
-                    let chunk_pos: Vector3<isize> = Vector3::new(
-                        roundf(pos.x / CHUNK_SIZE as f32) as isize + x,
-                        roundf(pos.y / CHUNK_SIZE as f32) as isize + y,
-                        roundf(pos.z / CHUNK_SIZE as f32) as isize + z,
-                    );
+                    let chunk_pos: Vector3<isize> = Vector3::new(x, y, z) + pos_chunk_coords;
 
                     if !self.get_chunk_exists_at(chunk_pos) {
-                        if self.add_chunk(chunk_pos).is_none() {continue;};
-                        self.chunks.last_mut().unwrap().generate_chunk(&self.gen_noise);
+                        if self.add_chunk(chunk_pos).is_none() {
+                            continue;
+                        };
+                        self.chunks
+                            .last_mut()
+                            .unwrap()
+                            .generate_chunk(&self.gen_noise);
+                        self.chunks.last_mut().unwrap().generate_mesh();
                     }
                 }
             }

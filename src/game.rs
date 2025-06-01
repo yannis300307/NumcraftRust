@@ -23,7 +23,7 @@ impl Game {
                 self.world.add_chunk(Vector3::new(x, 0, z)).unwrap();
             }
         }
-        
+
         self.world.generate_world_around_pos(*self.renderer.camera.get_pos(), 1);
 
         self.world.generate_mesh();
@@ -43,6 +43,9 @@ impl Game {
         if keyboard_state.key_down(eadk::input::Key::Home) {
             return false;
         }
+        
+        self.world.generate_world_around_pos(*self.renderer.camera.get_pos(), 1);
+
         self.renderer.update(&self.world.get_mesh(), 1.0/delta);
         self.renderer.camera.update(delta, keyboard_state);
 
