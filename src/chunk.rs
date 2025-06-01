@@ -41,6 +41,10 @@ impl Chunk {
         }
     }
 
+    pub fn get_pos(&self) -> &Vector3<isize> {
+        &self.pos
+    }
+
     pub fn get_at(&self, pos: Vector3<isize>) -> BlockType {
         if pos.x < CHUNK_SIZE_I
             && pos.y < CHUNK_SIZE_I
@@ -57,15 +61,14 @@ impl Chunk {
     }
 
     pub fn generate_chunk(&mut self, noise: &FastNoiseLite) {
-        for x in 0..CHUNK_SIZE {
-            for z in 0..CHUNK_SIZE {
-                let negative_1_to_1 = noise.get_noise_2d(x as f32, z as f32);
-                let height = (negative_1_to_1 + 1.) / 2. * 4.0;
-                if x == 3 && z == 4 {
-                    continue;
-                }
+        let chunk_block_pos = self.pos*CHUNK_SIZE_I;
+        for x in 0..CHUNK_SIZE_I {
+            for z in 0..CHUNK_SIZE_I {
+                let negative_1_to_1 = noise.get_noise_2d((x + chunk_block_pos.x) as f32, (z + chunk_block_pos.z) as f32);
+                let height = (negative_1_to_1 + 1.) / 2. * 8.0;
+
                 self.set_at(
-                    Vector3::new(x, height as usize, z),
+                    Vector3::new(x as usize, height as usize, z as usize),
                     crate::constants::BlockType::Stone,
                 );
             }

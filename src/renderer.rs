@@ -140,7 +140,7 @@ fn draw_2d_triangle(
         tri.color,
     );
 
-    draw_line(
+    /*draw_line(
         (tri.p1.x as isize, tri.p1.y as isize),
         (tri.p2.x as isize, tri.p2.y as isize),
         frame_buffer,
@@ -157,7 +157,7 @@ fn draw_2d_triangle(
         (tri.p1.x as isize, tri.p1.y as isize),
         frame_buffer,
         get_color(0b11111, 0b0, 0b0),
-    );
+    );*/
 }
 
 fn matrix_point_at(pos: &Vector3<f32>, target: &Vector3<f32>, up: &Vector3<f32>) -> Matrix4<f32> {

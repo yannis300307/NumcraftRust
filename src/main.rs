@@ -6,6 +6,7 @@
 #[cfg(target_os = "none")]
 use cortex_m;
 
+use eadk::heap_size;
 #[cfg(target_os = "none")]
 use embedded_alloc::LlffHeap as Heap;
 
@@ -46,8 +47,8 @@ pub static EADK_APP_ICON: [u8; 4250] = *include_bytes!("../target/icon.nwi");
 fn main() {
     #[cfg(target_os = "none")]
     {
-        const HEAP_SIZE: usize = 100000;
-        unsafe { HEAP.init(eadk::HEAP_START as usize, HEAP_SIZE) }
+        let heap_size: usize = heap_size();
+        unsafe { HEAP.init(eadk::HEAP_START as usize, heap_size) }
     }
 
     let mut game = Game::new();
