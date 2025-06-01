@@ -1,4 +1,3 @@
-use core::ptr::drop_in_place;
 use libm::roundf;
 
 use crate::chunk::{self, Chunk};
@@ -65,10 +64,8 @@ impl World {
                     );
 
                     if !self.get_chunk_exists_at(chunk_pos) {
-                        if self.add_chunk(chunk_pos).is_some() {
-                            //self.chunks.last().unwrap().generate_chunk(&self.gen_noise);
-                        }
-                        
+                        if self.add_chunk(chunk_pos).is_none() {continue;};
+                        self.chunks.last_mut().unwrap().generate_chunk(&self.gen_noise);
                     }
                 }
             }

@@ -61,6 +61,8 @@ impl Chunk {
     }
 
     pub fn generate_chunk(&mut self, noise: &FastNoiseLite) {
+        if self.pos.y != 0 {return} // TODO : Remake this function
+
         let chunk_block_pos = self.pos*CHUNK_SIZE_I;
         for x in 0..CHUNK_SIZE_I {
             for z in 0..CHUNK_SIZE_I {
