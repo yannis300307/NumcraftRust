@@ -18,12 +18,13 @@ impl Game {
     pub fn start(&mut self) {
         let mut last = eadk::timing::millis();
 
-        self.world.add_chunk(Vector3::new(0, 0, 0)).unwrap();
-        //self.world.add_chunk(Vector3::new(1, 0, 0)).unwrap();
-        //self.world.add_chunk(Vector3::new(1, 0, 1)).unwrap();
-        //self.world.add_chunk(Vector3::new(0, 0, 1)).unwrap();
+        for x in 0..2 {
+            for z in 0..2 {
+                self.world.add_chunk(Vector3::new(x, 0, z)).unwrap();
+            }
+        }
         
-        self.world.generate_world();
+        self.world.generate_world_around_pos(*self.renderer.camera.get_pos(), 1);
 
         self.world.generate_mesh();
 

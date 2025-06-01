@@ -1,4 +1,8 @@
+use core::ptr::drop_in_place;
+use libm::roundf;
+
 use crate::chunk::{self, Chunk};
+use crate::constants::world::CHUNK_SIZE;
 use crate::mesh::Quad;
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
@@ -32,10 +36,41 @@ impl World {
         self.chunks.last_mut()
     }
 
-    pub fn generate_world(&mut self) {
-        for chunk in self.chunks.iter_mut() {
-            if !chunk.generated {
-                chunk.generate_chunk(&self.gen_noise);
+    fn get_chunk_exists_at(&self, pos: Vector3<isize>) -> bool {
+        for chunk in &self.chunks {
+            if *chunk.get_pos() == pos {
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn generate_world_around_pos(&mut self, pos: Vector3<f32>, render_distance: isize) {
+        self.chunks.retain(|chunk| {
+            let chunk_pos = chunk.get_pos();
+            if chunk_pos.x < -render_distance || chunk_pos.x >= render_distance 
+            || chunk_pos.y < -render_distance || chunk_pos.y >= render_distance
+            || chunk_pos.z < -render_distance || chunk_pos.z >= render_distance {
+                false
+            } else 
+            {true}
+        });
+        for x in -render_distance..render_distance {
+            for y in -render_distance..render_distance {
+                for z in -render_distance..render_distance {
+                    let chunk_pos: Vector3<isize> = Vector3::new(
+                        roundf(pos.x / CHUNK_SIZE as f32) as isize + x,
+                        roundf(pos.y / CHUNK_SIZE as f32) as isize + y,
+                        roundf(pos.z / CHUNK_SIZE as f32) as isize + z,
+                    );
+
+                    if !self.get_chunk_exists_at(chunk_pos) {
+                        if self.add_chunk(chunk_pos).is_some() {
+                            //self.chunks.last().unwrap().generate_chunk(&self.gen_noise);
+                        }
+                        
+                    }
+                }
             }
         }
     }
