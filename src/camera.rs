@@ -1,7 +1,7 @@
 use core::f32::{self, consts::PI};
 
-use libm::{cosf, sincosf, sinf};
-use nalgebra::{Matrix4, Vector3};
+use libm::sincosf;
+use nalgebra::{Matrix4, UnitQuaternion, Vector3};
 
 use crate::eadk;
 
@@ -17,7 +17,7 @@ impl Camera {
     pub fn new() -> Self {
         Camera {
             pos: Vector3::new(0., 0., -5.0),
-            rotation: Vector3::new(0., 0.0, 0.),
+            rotation: Vector3::new(0., 0., 0.),
         }
     }
 
@@ -79,45 +79,10 @@ impl Camera {
     }
 
     pub fn get_rotation_matrix(&self) -> Matrix4<f32> {
-        let mat_rot_x = Matrix4::new(
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            cosf(self.rotation.x),
-            -sinf(self.rotation.x),
-            0.0,
-            0.0,
-            sinf(self.rotation.x),
-            cosf(self.rotation.x),
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-        );
-
-        let mat_rot_y = Matrix4::new(
-            cosf(self.rotation.y),
-            0.0,
-            sinf(self.rotation.y),
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            -sinf(self.rotation.y),
-            0.0,
-            cosf(self.rotation.y),
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-        );
-
-        mat_rot_x * mat_rot_y
+        let yaw = UnitQuaternion::from_axis_angle(&Vector3::y_axis(), self.rotation.y);
+        let pitch = UnitQuaternion::from_axis_angle(&Vector3::x_axis(), self.rotation.x);
+        let orientation = yaw * pitch;
+        orientation.to_homogeneous()
     }
 
     pub fn get_pos(&self) -> &Vector3<f32> {
