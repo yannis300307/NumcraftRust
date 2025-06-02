@@ -324,8 +324,7 @@ impl Renderer {
         self.tile_frame_buffer.fill(color);
     }
 
-    fn add_3d_triangle_to_render(&mut self, tri: Triangle) {
-        let mut tri = tri;
+    fn get_mat_view(&self) -> Matrix4<f32> {
         let up: Vector3<f32> = Vector3::new(0.0, 1.0, 0.0);
         let target: Vector3<f32> = Vector3::new(0.0, 0.0, 1.0);
         let look_dir = self.camera.get_rotation_matrix() * target.to_homogeneous();
@@ -333,8 +332,12 @@ impl Renderer {
 
         let mat_camera = matrix_point_at(self.camera.get_pos(), &target, &up);
 
-        let mat_view = mat_camera.try_inverse().unwrap();
+        mat_camera.try_inverse().unwrap()
+    }
 
+    fn add_3d_triangle_to_render(&mut self, tri: Triangle, mat_view: &Matrix4<f32>) {
+        let mut tri = tri;
+        
         let camera_ray = tri.p1 - self.camera.get_pos();
 
         if tri.get_normal().dot(&camera_ray) < 0.0 {
@@ -474,10 +477,10 @@ impl Renderer {
         }
     }
 
-    fn add_quad_to_render(&mut self, quad: &Quad) {
+    fn add_quad_to_render(&mut self, quad: &Quad, mat_view: &Matrix4<f32>) {
         let quad_triangles = quad.get_triangles();
-        self.add_3d_triangle_to_render(quad_triangles.0);
-        self.add_3d_triangle_to_render(quad_triangles.1);
+        self.add_3d_triangle_to_render(quad_triangles.0, mat_view);
+        self.add_3d_triangle_to_render(quad_triangles.1, mat_view);
     }
 
     pub fn update(&mut self, world_mesh: &Vec<&Vec<Quad>>, fps_count: f32) {
@@ -506,8 +509,10 @@ impl Renderer {
             bvec.metric_distance(self.camera.get_pos()).total_cmp(&avec.metric_distance(self.camera.get_pos()))
         });
 
+        let mat_view = self.get_mat_view();
+
         for quad in quads {
-            self.add_quad_to_render(quad);
+            self.add_quad_to_render(quad, &mat_view);
         }
 
         for x in 0..SCREEN_TILE_SUBDIVISION {
