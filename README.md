@@ -8,7 +8,7 @@ The program runs at a stable 40 FPS on both N110 and N120 models (the max framer
 
 ## Support
 
-NumcraftRust should run on both N120, N115 and N110 models. You will get better performances with the N120 model (N110 and N115 have the same CPU).
+NumcraftRust should run on both N120, N115 and N110 models. You will get better performances with the N120 model (N110 and N115 have the same CPU clock speed and same RAM).
 
 ## Build the app
 
