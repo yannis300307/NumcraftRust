@@ -1,25 +1,24 @@
 use crate::{
-    constants::{BlockType, world::*},
+    constants::{world::*, BlockType},
     eadk::Color,
-    mesh::{Quad, QuadDir},
+    mesh::{Mesh, Quad, QuadDir}, world::{ChunkNeighbors, World},
 };
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
 
-use cbitmap::bitmap::{Bitmap, BitsManage};
 use fastnoise_lite::FastNoiseLite;
-use nalgebra::{Vector2, Vector3};
-use strum::IntoEnumIterator;
+use libm::roundf;
+use nalgebra::{Vector3};
 
 const BLOCK_COUNT: usize = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
-const LAYER_SIZE_BITS: usize = (CHUNK_SIZE * CHUNK_SIZE).div_ceil(8);
 
 pub struct Chunk {
     blocks: [BlockType; BLOCK_COUNT],
     pos: Vector3<isize>,
-    mesh: Vec<Quad>,
+    pub mesh: Mesh,
     pub generated: bool,
+    pub need_new_mesh: bool
 }
 
 impl Chunk {
@@ -27,8 +26,9 @@ impl Chunk {
         Chunk {
             blocks: [BlockType::Air; BLOCK_COUNT],
             pos,
-            mesh: Vec::new(),
+            mesh: Mesh::new(),
             generated: false,
+            need_new_mesh: true
         }
     }
 
@@ -41,7 +41,7 @@ impl Chunk {
         }
     }
 
-    pub fn get_at(&self, pos: Vector3<isize>) -> BlockType {
+    pub fn get_at(&self, pos: Vector3<isize>) -> Option<BlockType> {
         if pos.x < CHUNK_SIZE_I
             && pos.y < CHUNK_SIZE_I
             && pos.z < CHUNK_SIZE_I
@@ -49,11 +49,14 @@ impl Chunk {
             && pos.y >= 0
             && pos.z >= 0
         {
-            self.blocks
-                [(pos.x + pos.y * CHUNK_SIZE_I + pos.z * CHUNK_SIZE_I * CHUNK_SIZE_I) as usize]
+            Some(self.blocks[(pos.x + pos.y * CHUNK_SIZE_I + pos.z * CHUNK_SIZE_I * CHUNK_SIZE_I) as usize])
         } else {
-            BlockType::Air
+            None
         }
+    }
+
+    pub fn get_at_unchecked(&self, pos: Vector3<isize>) -> BlockType {
+        self.blocks[(pos.x + pos.y * CHUNK_SIZE_I + pos.z * CHUNK_SIZE_I * CHUNK_SIZE_I) as usize]
     }
 
     pub fn get_pos(&self) -> &Vector3<isize> {
@@ -61,97 +64,47 @@ impl Chunk {
     }
 
     pub fn generate_chunk(&mut self, noise: &FastNoiseLite) {
-        if self.pos.y != 0 {return} // TODO : Remake this function
+        if self.generated {return}
 
-        let chunk_block_pos = self.pos*CHUNK_SIZE_I;
+        let chunk_block_pos = self.pos * CHUNK_SIZE_I;
         for x in 0..CHUNK_SIZE_I {
             for z in 0..CHUNK_SIZE_I {
-                let negative_1_to_1 = noise.get_noise_2d((x + chunk_block_pos.x) as f32, (z + chunk_block_pos.z) as f32);
-                let height = (negative_1_to_1 + 1.) / 2. * 8.0;
-
-                self.set_at(
-                    Vector3::new(x as usize, height as usize, z as usize),
-                    crate::constants::BlockType::Stone,
+                let negative_1_to_1 = noise.get_noise_2d(
+                    (x + chunk_block_pos.x) as f32,
+                    (z + chunk_block_pos.z) as f32,
                 );
+                let height = roundf((negative_1_to_1 + 1.) / 2. * 8.0) as isize;
+
+                for y in 0..CHUNK_SIZE_I {
+                    if chunk_block_pos.y+y >= height {
+                        self.set_at(
+                            Vector3::new(x as usize, y as usize, z as usize),
+                            crate::constants::BlockType::Stone,
+                        );
+                    }
+                }
             }
         }
         self.generated = true
     }
 
-    pub fn get_mesh(&self) -> &Vec<Quad> {
+    pub fn get_mesh(&self) -> &Mesh {
         &self.mesh
     }
 
-    pub fn generate_mesh(&mut self) {
-        self.mesh.clear();
+    pub fn set_mesh(&mut self, new_mesh: Mesh) {
+        self.mesh = new_mesh;
+        self.need_new_mesh = false;
+    }
 
-        for x in 0..CHUNK_SIZE as isize {
-            for y in 0..CHUNK_SIZE as isize {
-                for z in 0..CHUNK_SIZE as isize {
-                    if self.get_at(Vector3::new(x, y, z)) != BlockType::Air {
-                        let bloc_pos = Vector3::new(x, y, z) + self.pos * CHUNK_SIZE_I;
-
-                        if self.get_at(Vector3::new(x, y, z - 1)) == BlockType::Air {
-                            self.mesh.push(Quad {
-                                pos: bloc_pos,
-                                dir: QuadDir::Front,
-                                color: Color {
-                                    rgb565: 0b1111111111111111,
-                                },
-                            });
-                        }
-
-                        if self.get_at(Vector3::new(x, y, z + 1)) == BlockType::Air {
-                            self.mesh.push(Quad {
-                                pos: bloc_pos,
-                                dir: QuadDir::Back,
-                                color: Color {
-                                    rgb565: 0b1111111111111111,
-                                },
-                            });
-                        }
-
-                        if self.get_at(Vector3::new(x + 1, y, z)) == BlockType::Air {
-                            self.mesh.push(Quad {
-                                pos: bloc_pos,
-                                dir: QuadDir::Right,
-                                color: Color {
-                                    rgb565: 0b1111111111111111,
-                                },
-                            });
-                        }
-                        if self.get_at(Vector3::new(x - 1, y, z)) == BlockType::Air {
-                            self.mesh.push(Quad {
-                                pos: bloc_pos,
-                                dir: QuadDir::Left,
-                                color: Color {
-                                    rgb565: 0b1111111111111111,
-                                },
-                            });
-                        }
-
-                        if self.get_at(Vector3::new(x, y - 1, z)) == BlockType::Air {
-                            self.mesh.push(Quad {
-                                pos: bloc_pos,
-                                dir: QuadDir::Top,
-                                color: Color {
-                                    rgb565: 0b1111111111111111,
-                                },
-                            });
-                        }
-
-                        if self.get_at(Vector3::new(x, y + 1, z)) == BlockType::Air {
-                            self.mesh.push(Quad {
-                                pos: bloc_pos,
-                                dir: QuadDir::Bottom,
-                                color: Color {
-                                    rgb565: 0b1111111111111111,
-                                },
-                            });
-                        }
-                    }
-                }
-            }
+    fn get_at_local_or_adjacent(&self, pos: Vector3<isize>, world: &World) {
+        if pos.x < 0
+        || pos.x >= CHUNK_SIZE_I
+        ||pos.y < 0
+        || pos.y >= CHUNK_SIZE_I
+        ||pos.z < 0
+        || pos.z >= CHUNK_SIZE_I {
+            
         }
     }
 }

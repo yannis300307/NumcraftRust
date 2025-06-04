@@ -1,7 +1,6 @@
 #![cfg_attr(target_os = "none", no_std)]
 #![no_main]
 
-
 #[allow(unused_imports)]
 #[cfg(target_os = "none")]
 use cortex_m;
@@ -17,12 +16,12 @@ static HEAP: Heap = Heap::empty();
 #[cfg(target_os = "none")]
 extern crate alloc;
 
-pub mod eadk;
-pub mod constants;
-pub mod mesh;
 mod camera;
 mod chunk;
+pub mod constants;
+pub mod eadk;
 mod game;
+pub mod mesh;
 mod renderer;
 mod world;
 use game::Game;
@@ -42,7 +41,6 @@ pub static EADK_APP_API_LEVEL: u32 = 0;
 #[unsafe(link_section = ".rodata.eadk_app_icon")]
 pub static EADK_APP_ICON: [u8; 4250] = *include_bytes!("../target/icon.nwi");
 
-
 #[unsafe(no_mangle)]
 fn main() {
     #[cfg(target_os = "none")]
@@ -52,9 +50,6 @@ fn main() {
     }
 
     let mut game = Game::new();
-
-    #[cfg(not(target_os = "none"))]
-    eadk::init_window();
 
     game.start();
 }
