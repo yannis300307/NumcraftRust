@@ -5,11 +5,8 @@ use nalgebra::Vector3;
 use strum::EnumIter;
 
 use crate::{
-    chunk::{self, Chunk},
-    constants::{
-        BlockType,
-        world::{self, CHUNK_SIZE},
-    },
+    chunk::Chunk,
+    constants::{BlockType, world::CHUNK_SIZE},
     eadk::{self, Color},
     world::World,
 };

@@ -4,13 +4,6 @@ pub struct Color {
     pub rgb565: u16,
 }
 
-fn to_rgb888(color: &Color) -> usize {
-    let r = ((color.rgb565 >> 11) as usize) << 3;
-    let g = (((color.rgb565 >> 5) & 0b111111) as usize) << 2;
-    let b = ((color.rgb565 & 0b11111) as usize) << 3;
-    (r << 16) | (g << 8) | b
-}
-
 #[repr(C)]
 pub struct Rect {
     pub x: u16,
@@ -103,7 +96,13 @@ pub mod display {
 
         let c_string = ffi::CString::new(text).unwrap();
         unsafe {
-            eadk_display_draw_string(c_string.as_ptr(), point, large_font, text_color, background_color)
+            eadk_display_draw_string(
+                c_string.as_ptr(),
+                point,
+                large_font,
+                text_color,
+                background_color,
+            )
         }
     }
 
@@ -526,12 +525,12 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
         write_wrapped(f, 42);
     } else {
         display::draw_string(
-        "Unknow Error Occured",
-        Point { x: 10, y: 10 },
-        false,
-        Color { rgb565: 65503 },
-        Color { rgb565: 63488 },
-    );
+            "Unknow Error Occured",
+            Point { x: 10, y: 10 },
+            false,
+            Color { rgb565: 65503 },
+            Color { rgb565: 63488 },
+        );
     }
     loop {} // FIXME: Do something better. Exit the app maybe?
 }
@@ -545,5 +544,5 @@ pub static mut HEAP_START: *mut u8 = core::ptr::addr_of_mut!(_heap_start);
 pub static mut HEAP_END: *mut u8 = core::ptr::addr_of_mut!(_heap_end);
 
 pub fn heap_size() -> usize {
-    (unsafe {HEAP_END.offset_from(HEAP_START)}) as usize
+    (unsafe { HEAP_END.offset_from(HEAP_START) }) as usize
 }

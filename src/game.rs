@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 
-use crate::{constants::world, eadk, renderer::Renderer, world::World};
+use crate::{eadk, renderer::Renderer, world::World};
 
 pub struct Game {
     renderer: Renderer,
@@ -39,10 +39,11 @@ impl Game {
         if keyboard_state.key_down(eadk::input::Key::Home) {
             return false;
         }
-        
-        self.world.generate_world_around_pos(*self.renderer.camera.get_pos(), 2);
 
-        self.renderer.update(&self.world.get_mesh(), 1.0/delta);
+        self.world
+            .generate_world_around_pos(*self.renderer.camera.get_pos(), 2);
+
+        self.renderer.update(&self.world.get_mesh(), 1.0 / delta);
         self.renderer.camera.update(delta, keyboard_state);
 
         //eadk::timing::msleep(20);

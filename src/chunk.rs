@@ -1,14 +1,11 @@
 use crate::{
-    constants::{world::*, BlockType},
-    eadk::Color,
-    mesh::{Mesh, Quad, QuadDir}, world::{ChunkNeighbors, World},
+    constants::{BlockType, world::*},
+    mesh::Mesh,
 };
-#[cfg(target_os = "none")]
-use alloc::vec::Vec;
 
 use fastnoise_lite::FastNoiseLite;
 use libm::roundf;
-use nalgebra::{Vector3};
+use nalgebra::Vector3;
 
 const BLOCK_COUNT: usize = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
@@ -18,7 +15,7 @@ pub struct Chunk {
     pos: Vector3<isize>,
     pub mesh: Mesh,
     pub generated: bool,
-    pub need_new_mesh: bool
+    pub need_new_mesh: bool,
 }
 
 impl Chunk {
@@ -28,7 +25,7 @@ impl Chunk {
             pos,
             mesh: Mesh::new(),
             generated: false,
-            need_new_mesh: true
+            need_new_mesh: true,
         }
     }
 
@@ -49,7 +46,10 @@ impl Chunk {
             && pos.y >= 0
             && pos.z >= 0
         {
-            Some(self.blocks[(pos.x + pos.y * CHUNK_SIZE_I + pos.z * CHUNK_SIZE_I * CHUNK_SIZE_I) as usize])
+            Some(
+                self.blocks
+                    [(pos.x + pos.y * CHUNK_SIZE_I + pos.z * CHUNK_SIZE_I * CHUNK_SIZE_I) as usize],
+            )
         } else {
             None
         }
@@ -64,7 +64,9 @@ impl Chunk {
     }
 
     pub fn generate_chunk(&mut self, noise: &FastNoiseLite) {
-        if self.generated {return}
+        if self.generated {
+            return;
+        }
 
         let chunk_block_pos = self.pos * CHUNK_SIZE_I;
         for x in 0..CHUNK_SIZE_I {
@@ -76,7 +78,7 @@ impl Chunk {
                 let height = roundf((negative_1_to_1 + 1.) / 2. * 8.0) as isize;
 
                 for y in 0..CHUNK_SIZE_I {
-                    if chunk_block_pos.y+y >= height {
+                    if chunk_block_pos.y + y >= height {
                         self.set_at(
                             Vector3::new(x as usize, y as usize, z as usize),
                             crate::constants::BlockType::Stone,
@@ -95,16 +97,5 @@ impl Chunk {
     pub fn set_mesh(&mut self, new_mesh: Mesh) {
         self.mesh = new_mesh;
         self.need_new_mesh = false;
-    }
-
-    fn get_at_local_or_adjacent(&self, pos: Vector3<isize>, world: &World) {
-        if pos.x < 0
-        || pos.x >= CHUNK_SIZE_I
-        ||pos.y < 0
-        || pos.y >= CHUNK_SIZE_I
-        ||pos.z < 0
-        || pos.z >= CHUNK_SIZE_I {
-            
-        }
     }
 }

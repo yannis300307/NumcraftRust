@@ -119,11 +119,19 @@ fn fill_triangle(
     }
 }
 
-
-fn draw_line(pos1: (isize, isize), pos2: (isize, isize), frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT], color: Color) {
+fn draw_line(
+    pos1: (isize, isize),
+    pos2: (isize, isize),
+    frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    color: Color,
+) {
     for point in bresenham::Bresenham::new(pos1, pos2) {
-        if point.0 >= 0 && point.0 < SCREEN_TILE_WIDTH as isize && point.1 >= 0 && point.1 < SCREEN_TILE_HEIGHT as isize {
-            frame_buffer[(point.0+point.1*SCREEN_TILE_WIDTH as isize) as usize] = color;
+        if point.0 >= 0
+            && point.0 < SCREEN_TILE_WIDTH as isize
+            && point.1 >= 0
+            && point.1 < SCREEN_TILE_HEIGHT as isize
+        {
+            frame_buffer[(point.0 + point.1 * SCREEN_TILE_WIDTH as isize) as usize] = color;
         }
     }
 }
@@ -337,7 +345,7 @@ impl Renderer {
 
     fn add_3d_triangle_to_render(&mut self, tri: Triangle, mat_view: &Matrix4<f32>) {
         let mut tri = tri;
-        
+
         let camera_ray = tri.p1 - self.camera.get_pos();
 
         if tri.get_normal().dot(&camera_ray) < 0.0 {
@@ -498,15 +506,20 @@ impl Renderer {
         }
 
         quads.sort_by(|a, b| -> Ordering {
-            let avec = Vector3::new(a.pos.x as f32 + 0.5,
-             a.pos.y as f32 + 0.5,
-            a.pos.z as f32 + 0.5);
+            let avec = Vector3::new(
+                a.pos.x as f32 + 0.5,
+                a.pos.y as f32 + 0.5,
+                a.pos.z as f32 + 0.5,
+            );
 
-            let bvec = Vector3::new(b.pos.x as f32 + 0.5,
-             b.pos.y as f32 + 0.5,
-            b.pos.z as f32 + 0.5);
+            let bvec = Vector3::new(
+                b.pos.x as f32 + 0.5,
+                b.pos.y as f32 + 0.5,
+                b.pos.z as f32 + 0.5,
+            );
 
-            bvec.metric_distance(self.camera.get_pos()).total_cmp(&avec.metric_distance(self.camera.get_pos()))
+            bvec.metric_distance(self.camera.get_pos())
+                .total_cmp(&avec.metric_distance(self.camera.get_pos()))
         });
 
         let mat_view = self.get_mat_view();

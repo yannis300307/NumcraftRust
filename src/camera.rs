@@ -74,10 +74,6 @@ impl Camera {
         }
     }
 
-    pub fn get_rotation(&self) -> &Vector3<f32> {
-        &self.rotation
-    }
-
     pub fn get_rotation_matrix(&self) -> Matrix4<f32> {
         let yaw = UnitQuaternion::from_axis_angle(&Vector3::y_axis(), self.rotation.y);
         let pitch = UnitQuaternion::from_axis_angle(&Vector3::x_axis(), self.rotation.x);
