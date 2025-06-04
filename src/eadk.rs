@@ -45,7 +45,7 @@ pub mod backlight {
 #[cfg(not(target_os = "none"))]
 pub mod backlight {
     pub fn set_brightness(brightness: u8) {
-        println!("Brightness set to {}", brightness)
+        // println!("Brightness set to {}", brightness)
     }
     pub fn brightness() -> u8 {
         0
@@ -66,10 +66,7 @@ pub mod display {
 
     #[cfg(not(target_os = "none"))]
     pub fn push_rect(rect: Rect, pixels: &[Color]) {
-        todo!("implement push_rect")
-        //use super::WindowOperation;
-        //let mut global_tx = super::WINDOW_MANAGER_TX.lock().unwrap();
-        //global_tx.as_mut().unwrap().send(WindowOperation::PushRect(rect, *pixels));
+        // println!("Push rect call");
     }
 
     #[cfg(target_os = "none")]
@@ -81,12 +78,7 @@ pub mod display {
 
     #[cfg(not(target_os = "none"))]
     pub fn push_rect_uniform(rect: Rect, color: Color) {
-        use super::WindowOperation;
-        let mut global_tx = super::WINDOW_MANAGER_TX.lock().unwrap();
-        global_tx
-            .as_mut()
-            .unwrap()
-            .send(WindowOperation::PushRectUniform(rect, color));
+        // println!("Push rect uniform call");
     }
 
     #[cfg(target_os = "none")]
@@ -274,7 +266,8 @@ pub mod input {
 
         #[cfg(not(target_os = "none"))]
         pub fn scan() -> Self {
-            Self::from_raw(0) // TODO : change this
+            // println!("Scan call");
+            KeyboardState::from_raw(0)
         }
 
         pub fn from_raw(state: EadkKeyboardState) -> Self {
@@ -541,66 +534,6 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
     );
     }
     loop {} // FIXME: Do something better. Exit the app maybe?
-}
-
-#[cfg(not(target_os = "none"))]
-enum WindowOperation<'a> {
-    PushRectUniform(Rect, Color),
-    PushRect(Rect, &'a [Color]),
-}
-
-#[cfg(not(target_os = "none"))]
-static WINDOW_MANAGER_TX: std::sync::Mutex<Option<std::sync::mpsc::Sender<WindowOperation>>> =
-    std::sync::Mutex::new(None);
-
-#[cfg(not(target_os = "none"))]
-pub fn init_window() {
-    use minifb::{Key, Window, WindowOptions};
-    use std::sync::mpsc;
-    use std::thread;
-
-    let (tx, rx) = mpsc::channel();
-
-    let mut global_tx = WINDOW_MANAGER_TX.lock().unwrap();
-    *global_tx = Some(tx.clone());
-
-    thread::spawn(move || {
-        let mut buffer: Vec<u32> = vec![0; 320 * 240];
-
-        let mut window = Window::new("Test - ESC to exit", 320, 240, WindowOptions::default())
-            .unwrap_or_else(|e| {
-                panic!("{}", e);
-            });
-
-        window.set_target_fps(300);
-
-        while window.is_open() && !window.is_key_down(Key::Escape) {
-            while true {
-                let message = rx.try_recv();
-                if message.is_err() {
-                    break;
-                }
-                match message.unwrap() {
-                    WindowOperation::PushRectUniform(rect, color) => {
-                        for x in (rect.x as usize)..((rect.x as usize) + (rect.width as usize)) {
-                            for y in (rect.y as usize)..((rect.y as usize) + (rect.height as usize))
-                            {
-                                if x > 0 && x < 320 && y > 0 && y < 240 {
-                                    buffer[(x as usize) + (y as usize) * 320] =
-                                        to_rgb888(&color) as u32;
-                                }
-                            }
-                        }
-                    }
-                    WindowOperation::PushRect(_, _) => {
-                        println!("push")
-                    }
-                }
-            }
-
-            window.update_with_buffer(&buffer, 320, 240).unwrap();
-        }
-    });
 }
 
 unsafe extern "C" {
