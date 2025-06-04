@@ -1,7 +1,7 @@
 #[cfg(target_os = "none")]
 use alloc::{format, vec::Vec};
 
-use nalgebra::{distance, Matrix4, Perspective3, Vector2, Vector3, Vector4};
+use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
 use core::{cmp::Ordering, f32, mem::swap};
 
@@ -363,7 +363,7 @@ impl Renderer {
                     p3: self.project_point(to_project.p3),
                     color: get_color(
                         ((0b11111 as f32) * light) as u16,
-                        ((0b111111 as f32) * light) as u16, // Why is my white green?
+                        ((0b111111 as f32) * light) as u16,
                         ((0b11111 as f32) * light) as u16,
                     ),
                 };
