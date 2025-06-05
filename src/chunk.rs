@@ -75,7 +75,7 @@ impl Chunk {
                     (x + chunk_block_pos.x) as f32,
                     (z + chunk_block_pos.z) as f32,
                 );
-                let height = roundf((negative_1_to_1 + 1.) / 2. * 8.0) as isize;
+                let height = roundf((negative_1_to_1 + 1.) / 2. * 20.0) as isize;
 
                 for y in 0..CHUNK_SIZE_I {
                     if chunk_block_pos.y + y >= height {

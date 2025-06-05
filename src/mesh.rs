@@ -1,7 +1,7 @@
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
 
-use nalgebra::Vector3;
+use nalgebra::{Vector2, Vector3};
 use strum::EnumIter;
 
 use crate::{
@@ -249,6 +249,14 @@ pub struct Triangle {
     pub p1: Vector3<f32>,
     pub p2: Vector3<f32>,
     pub p3: Vector3<f32>,
+    pub color: eadk::Color,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct Triangle2D {
+    pub p1: Vector2<i16>,
+    pub p2: Vector2<i16>,
+    pub p3: Vector2<i16>,
     pub color: eadk::Color,
 }
 

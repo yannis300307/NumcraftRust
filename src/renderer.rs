@@ -9,7 +9,7 @@ use crate::{
     camera::Camera,
     constants::rendering::*,
     eadk::{self, Color, Rect},
-    mesh::{Quad, Triangle},
+    mesh::{Quad, Triangle, Triangle2D},
 };
 
 // Screen size related constants
@@ -137,7 +137,7 @@ fn draw_line(
 }
 
 fn draw_2d_triangle(
-    tri: &Triangle,
+    tri: &Triangle2D,
     frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 ) {
     fill_triangle(
@@ -207,8 +207,108 @@ fn vector_intersect_plane(
     let t = (-plane_d - ad) / (bd - ad);
     let line_start_to_end = line_end - line_start;
     let line_to_intersect = line_start_to_end * t;
+    line_start + line_to_intersect
+}
+
+fn vector_intersect_line(
+    line_p: &Vector2<f32>,
+    line_n: &Vector2<f32>,
+    line_start: &Vector2<f32>,
+    line_end: &Vector2<f32>,
+) -> Vector2<i16> {
+    let line_n = line_n.normalize();
+    let line_d = -line_n.dot(line_p);
+    let ad = line_start.dot(&line_n);
+    let bd = line_end.dot(&line_n);
+    let t = (-line_d - ad) / (bd - ad);
+    let line_start_to_end = line_end - line_start;
+    let line_to_intersect = line_start_to_end * t;
     let coords = line_start + line_to_intersect;
-    coords
+    coords.map(|x| x as i16)
+}
+
+fn triangle_clip_against_line(
+    line_p: &Vector2<f32>,
+    line_n: &Vector2<f32>,
+    in_tri: &Triangle2D,
+) -> (Option<Triangle2D>, Option<Triangle2D>) {
+    let line_n = line_n.normalize();
+
+    let dist = |p: Vector2<f32>| line_n.x * p.x + line_n.y * p.y - line_n.dot(line_p);
+
+    let binding = Default::default();
+    let mut inside_points: [&Vector2<f32>; 3] = [&binding; 3];
+    let mut n_inside_point_count = 0;
+    let binding = Default::default();
+    let mut outside_points: [&Vector2<f32>; 3] = [&binding; 3];
+    let mut n_outside_point_count = 0;
+
+    let p1 = in_tri.p1.map(|x| x as f32);
+    let p2 = in_tri.p2.map(|x| x as f32);
+    let p3 = in_tri.p3.map(|x| x as f32);
+
+    let d0 = dist(p1);
+    let d1 = dist(p2);
+    let d2 = dist(p3);
+
+    if d0 >= 0.0 {
+        inside_points[n_inside_point_count] = &p1;
+        n_inside_point_count += 1;
+    } else {
+        outside_points[n_outside_point_count] = &p1;
+        n_outside_point_count += 1;
+    }
+    if d1 >= 0.0 {
+        inside_points[n_inside_point_count] = &p2;
+        n_inside_point_count += 1;
+    } else {
+        outside_points[n_outside_point_count] = &p2;
+        n_outside_point_count += 1;
+    }
+    if d2 >= 0.0 {
+        inside_points[n_inside_point_count] = &p3;
+        n_inside_point_count += 1;
+    } else {
+        outside_points[n_outside_point_count] = &p3;
+        n_outside_point_count += 1;
+    }
+
+    if n_inside_point_count == 0 {
+        return (None, None);
+    }
+
+    if n_inside_point_count == 3 {
+        return (Some(*in_tri), None);
+    }
+
+    if n_inside_point_count == 1 && n_outside_point_count == 2 {
+        let out_tri = Triangle2D {
+            p1: inside_points[0].map(|x| x as i16),
+            p2: vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[0]),
+            p3: vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[1]),
+            color: in_tri.color,
+        };
+
+        return (Some(out_tri), None);
+    }
+
+    if n_inside_point_count == 2 && n_outside_point_count == 1 {
+        let out_tri1 = Triangle2D {
+            p1: inside_points[0].map(|x| x as i16),
+            p2: inside_points[1].map(|x| x as i16),
+            p3: vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[0]),
+            color: in_tri.color,
+        };
+
+        let out_tri2 = Triangle2D {
+            p1: inside_points[1].map(|x| x as i16),
+            p2: out_tri1.p3,
+            p3: vector_intersect_line(line_p, &line_n, inside_points[1], outside_points[0]),
+            color: in_tri.color,
+        };
+        return (Some(out_tri1), Some(out_tri2));
+    }
+    (None, None)
 }
 
 fn triangle_clip_against_plane(
@@ -308,7 +408,7 @@ impl MathTools {
 pub struct Renderer {
     pub camera: Camera,
     math_tools: MathTools,
-    triangles_to_render: heapless::Vec<Triangle, MAX_TRIANGLES>,
+    triangles_to_render: heapless::Vec<Triangle2D, MAX_TRIANGLES>,
     tile_frame_buffer: [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 }
 
@@ -324,8 +424,12 @@ impl Renderer {
         renderer
     }
 
-    fn project_point(&self, point: Vector3<f32>) -> Vector3<f32> {
-        self.math_tools.projection_matrix.project_vector(&point) * -1.0
+    fn project_point(&self, point: Vector3<f32>) -> Vector2<f32> {
+        self.math_tools
+            .projection_matrix
+            .project_vector(&point)
+            .xy()
+            * -1.0
     }
 
     fn clear_screen(&mut self, color: eadk::Color) {
@@ -365,34 +469,16 @@ impl Renderer {
             );
 
             let mut project_and_add = |to_project: Triangle| {
-                let mut projected_triangle = Triangle {
-                    p1: self.project_point(to_project.p1),
-                    p2: self.project_point(to_project.p2),
-                    p3: self.project_point(to_project.p3),
+                let mut projected_triangle = Triangle2D {
+                    p1: ((self.project_point(to_project.p1) + Vector2::new(1., 1.)).component_mul(&Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT))).map(|x| x as i16),
+                    p2: ((self.project_point(to_project.p2) + Vector2::new(1., 1.)).component_mul(&Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT))).map(|x| x as i16),
+                    p3: ((self.project_point(to_project.p3) + Vector2::new(1., 1.)).component_mul(&Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT))).map(|x| x as i16),
                     color: get_color(
                         ((0b11111 as f32) * light) as u16,
                         ((0b111111 as f32) * light) as u16,
                         ((0b11111 as f32) * light) as u16,
                     ),
                 };
-
-                // Center
-                projected_triangle.p1.x += 1.0;
-                projected_triangle.p2.x += 1.0;
-                projected_triangle.p3.x += 1.0;
-
-                projected_triangle.p1.y += 1.0;
-                projected_triangle.p2.y += 1.0;
-                projected_triangle.p3.y += 1.0;
-
-                // Multiply by size on screen
-                projected_triangle.p1.x *= HALF_SCREEN_TILE_WIDTH;
-                projected_triangle.p2.x *= HALF_SCREEN_TILE_WIDTH;
-                projected_triangle.p3.x *= HALF_SCREEN_TILE_WIDTH;
-
-                projected_triangle.p1.y *= HALF_SCREEN_TILE_HEIGHT;
-                projected_triangle.p2.y *= HALF_SCREEN_TILE_HEIGHT;
-                projected_triangle.p3.y *= HALF_SCREEN_TILE_HEIGHT;
 
                 let _ = self.triangles_to_render.push(projected_triangle); // Do nothing if overflow
             };
@@ -408,17 +494,17 @@ impl Renderer {
 
     fn draw_triangles(&mut self, tile_x: usize, tile_y: usize) {
         for tri in self.triangles_to_render.iter_mut() {
-            let mut clip_buffer: heapless::Deque<Triangle, 16> = heapless::Deque::new(); // 2^4
+            let mut clip_buffer: heapless::Deque<Triangle2D, 16> = heapless::Deque::new(); // 2^4
 
             clip_buffer.push_back(*tri).unwrap();
             let mut new_tris = 1;
 
-            let mut clip_triangle = |plane_p, plane_n| {
+            let mut clip_triangle = |line_p, line_n| {
                 while new_tris > 0 {
                     let test = clip_buffer.pop_front().unwrap();
                     new_tris -= 1;
 
-                    let clipped = triangle_clip_against_plane(&plane_p, &plane_n, &test);
+                    let clipped = triangle_clip_against_line(&line_p, &line_n, &test);
 
                     if let Some(clipped_tri) = clipped.0 {
                         clip_buffer.push_back(clipped_tri).unwrap();
@@ -430,28 +516,28 @@ impl Renderer {
                 new_tris = clip_buffer.len();
             };
 
-            clip_triangle(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 1.0, 0.0));
+            clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(0.0, 1.0));
             clip_triangle(
-                Vector3::new(0.0, SCREEN_HEIGHTF, 0.0),
-                Vector3::new(0.0, -1.0, 0.0),
+                Vector2::new(0.0, SCREEN_HEIGHTF),
+                Vector2::new(0.0, -1.0),
             );
-            clip_triangle(Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 0.0, 0.0));
+            clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(1.0, 0.0));
             clip_triangle(
-                Vector3::new(SCREEN_WIDTHF - 1.0, 0.0, 0.0),
-                Vector3::new(-1.0, 0.0, 0.0),
+                Vector2::new(SCREEN_WIDTHF - 1.0, 0.0),
+                Vector2::new(-1.0, 0.0),
             );
 
             while !clip_buffer.is_empty() {
                 let mut tri_to_draw = clip_buffer.pop_front().unwrap();
 
-                tri_to_draw.p1.x -= (SCREEN_TILE_WIDTH * tile_x) as f32;
-                tri_to_draw.p1.y -= (SCREEN_TILE_HEIGHT * tile_y) as f32;
+                tri_to_draw.p1.x -= (SCREEN_TILE_WIDTH * tile_x) as i16;
+                tri_to_draw.p1.y -= (SCREEN_TILE_HEIGHT * tile_y) as i16;
 
-                tri_to_draw.p2.x -= (SCREEN_TILE_WIDTH * tile_x) as f32;
-                tri_to_draw.p2.y -= (SCREEN_TILE_HEIGHT * tile_y) as f32;
+                tri_to_draw.p2.x -= (SCREEN_TILE_WIDTH * tile_x) as i16;
+                tri_to_draw.p2.y -= (SCREEN_TILE_HEIGHT * tile_y) as i16;
 
-                tri_to_draw.p3.x -= (SCREEN_TILE_WIDTH * tile_x) as f32;
-                tri_to_draw.p3.y -= (SCREEN_TILE_HEIGHT * tile_y) as f32;
+                tri_to_draw.p3.x -= (SCREEN_TILE_WIDTH * tile_x) as i16;
+                tri_to_draw.p3.y -= (SCREEN_TILE_HEIGHT * tile_y) as i16;
 
                 draw_2d_triangle(&tri_to_draw, &mut self.tile_frame_buffer);
             }
@@ -556,6 +642,6 @@ impl Renderer {
                 );
             }
         }
-        eadk::display::wait_for_vblank();
+        //eadk::display::wait_for_vblank();
     }
 }

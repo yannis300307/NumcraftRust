@@ -41,7 +41,7 @@ impl Game {
         }
 
         self.world
-            .generate_world_around_pos(*self.renderer.camera.get_pos(), 2);
+            .generate_world_around_pos(*self.renderer.camera.get_pos(), 1);
 
         self.renderer.update(&self.world.get_mesh(), 1.0 / delta);
         self.renderer.camera.update(delta, keyboard_state);
