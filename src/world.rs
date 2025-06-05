@@ -84,17 +84,11 @@ impl World {
         );
         self.chunks.retain(|chunk| {
             let relative_chunk_pos = chunk.get_pos() - pos_chunk_coords;
-            if relative_chunk_pos.x < -render_distance
+            !(relative_chunk_pos.x < -render_distance
                 || relative_chunk_pos.x >= render_distance
                 || relative_chunk_pos.y < -render_distance
                 || relative_chunk_pos.y >= render_distance
-                || relative_chunk_pos.z < -render_distance
-                || relative_chunk_pos.z >= render_distance
-            {
-                false
-            } else {
-                true
-            }
+                || relative_chunk_pos.z < -render_distance || relative_chunk_pos.z >= render_distance)
         });
         for x in -render_distance..render_distance {
             for y in -render_distance..render_distance {
@@ -131,10 +125,6 @@ impl World {
     }
 
     pub fn get_block_in_world(&self, pos: Vector3<isize>) -> Option<BlockType> {
-        if let Some(chunk) = self.get_chunk_at_pos(pos / CHUNK_SIZE_I) {
-            Some(chunk.get_at_unchecked(get_chunk_local_coords(pos)))
-        } else {
-            None
-        }
+        self.get_chunk_at_pos(pos / CHUNK_SIZE_I).map(|chunk| chunk.get_at_unchecked(get_chunk_local_coords(pos)))
     }
 }

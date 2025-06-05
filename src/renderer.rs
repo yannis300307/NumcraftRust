@@ -469,7 +469,7 @@ impl Renderer {
             );
 
             let mut project_and_add = |to_project: Triangle| {
-                let mut projected_triangle = Triangle2D {
+                let projected_triangle = Triangle2D {
                     p1: ((self.project_point(to_project.p1) + Vector2::new(1., 1.)).component_mul(&Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT))).map(|x| x as i16),
                     p2: ((self.project_point(to_project.p2) + Vector2::new(1., 1.)).component_mul(&Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT))).map(|x| x as i16),
                     p3: ((self.project_point(to_project.p3) + Vector2::new(1., 1.)).component_mul(&Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT))).map(|x| x as i16),

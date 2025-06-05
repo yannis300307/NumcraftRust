@@ -456,7 +456,7 @@ use core::panic::PanicInfo;
 use core::cmp::min;
 
 fn write_wrapped(text: &str, limit: usize) {
-    let lines = (text.len() + limit - 1) / limit; // Calcul du nombre de lignes
+    let lines = text.len().div_ceil(limit); // Calcul du nombre de lignes
 
     if !text.is_empty() {
         for i in 0..lines {
