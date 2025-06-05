@@ -1,4 +1,4 @@
-cargo-features = ["profile-rustflags", "edition2024"]
+cargo-features = ["profile-rustflags"]
 [package]
 name = "Numcraft"
 version = "0.1.0"
