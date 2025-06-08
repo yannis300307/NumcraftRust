@@ -37,6 +37,12 @@ fn get_chunk_local_coords(pos: Vector3<isize>) -> Vector3<isize> {
     )
 }
 
+impl Default for World {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl World {
     pub fn new() -> Self {
         let mut world = World {
@@ -68,12 +74,7 @@ impl World {
     }
 
     fn get_chunk_at_pos(&self, pos: Vector3<isize>) -> Option<&Chunk> {
-        for chunk in &self.chunks {
-            if *chunk.get_pos() == pos {
-                return Some(chunk);
-            }
-        }
-        None
+        self.chunks.iter().find(|&chunk| *chunk.get_pos() == pos)
     }
 
     pub fn generate_world_around_pos(&mut self, pos: Vector3<f32>, render_distance: isize) {
@@ -88,7 +89,8 @@ impl World {
                 || relative_chunk_pos.x >= render_distance
                 || relative_chunk_pos.y < -render_distance
                 || relative_chunk_pos.y >= render_distance
-                || relative_chunk_pos.z < -render_distance || relative_chunk_pos.z >= render_distance)
+                || relative_chunk_pos.z < -render_distance
+                || relative_chunk_pos.z >= render_distance)
         });
         for x in -render_distance..render_distance {
             for y in -render_distance..render_distance {
@@ -125,6 +127,7 @@ impl World {
     }
 
     pub fn get_block_in_world(&self, pos: Vector3<isize>) -> Option<BlockType> {
-        self.get_chunk_at_pos(pos / CHUNK_SIZE_I).map(|chunk| chunk.get_at_unchecked(get_chunk_local_coords(pos)))
+        self.get_chunk_at_pos(pos / CHUNK_SIZE_I)
+            .map(|chunk| chunk.get_at_unchecked(get_chunk_local_coords(pos)))
     }
 }

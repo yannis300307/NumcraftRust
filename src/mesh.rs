@@ -290,6 +290,12 @@ pub struct Mesh {
     pub quads: Vec<Quad>,
 }
 
+impl Default for Mesh {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Mesh {
     pub fn new() -> Self {
         Mesh { quads: Vec::new() }
@@ -380,6 +386,6 @@ impl Mesh {
             }
         }
 
-        Mesh { quads: quads }
+        Mesh { quads }
     }
 }
