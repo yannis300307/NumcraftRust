@@ -4,6 +4,38 @@ pub struct Color {
     pub rgb565: u16,
 }
 
+impl Color {
+    #[inline]
+    pub fn from_components(r: u16, g: u16, b: u16) -> Self {
+        Color {
+            rgb565: r << 11 | g << 5 | b,
+        }
+    }
+    pub fn from_888(r: u16, g: u16, b: u16) -> Self {
+        Color {
+            rgb565: ((r & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (b >> 3),
+        }
+    }
+
+    pub fn apply_light(&self, light_level: u8) -> Self {
+        let light_level = light_level as u16;
+        let rgb = self.get_components();
+        Color::from_components(
+            rgb.0 * light_level / 255,
+            rgb.1 * light_level / 255,
+            rgb.2 * light_level / 255,
+        )
+    }
+
+    pub fn get_components(&self) -> (u16, u16, u16) {
+        let r = self.rgb565 >> 11;
+        let g = (self.rgb565 & 0b0000011111100000) >> 5;
+        let b = self.rgb565 & 0b0000000000011111;
+
+        (r, g, b)
+    }
+}
+
 #[repr(C)]
 pub struct Rect {
     pub x: u16,

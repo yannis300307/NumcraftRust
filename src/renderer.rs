@@ -1,5 +1,5 @@
 #[cfg(target_os = "none")]
-use alloc::{format, vec::Vec};
+use alloc::format;
 
 use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
@@ -7,7 +7,6 @@ use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
     camera::Camera,
-    chunk,
     constants::{rendering::*, world::CHUNK_SIZE},
     eadk::{self, Color, Rect},
     mesh::{Quad, Triangle, Triangle2D},
@@ -42,18 +41,6 @@ const FONT_HEIGHT: usize = 15;
 const FONT_CHAR_WIDTH: usize = 11;
 static FONT_ORDER: &str = "!\" $%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^+`abcdefghijklmnopqrstuvwxyz{|}~€";
 
-#[inline]
-fn get_color(r: u16, g: u16, b: u16) -> eadk::Color {
-    eadk::Color {
-        rgb565: r << 11 | g << 5 | b,
-    }
-}
-
-fn rgb565_from_888(r: u16, g: u16, b: u16) -> Color {
-    Color {
-        rgb565: ((r & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (b >> 3),
-    }
-}
 
 fn fill_triangle(
     mut t0: Vector2<isize>,
@@ -148,26 +135,26 @@ fn draw_2d_triangle(
         Vector2::new(tri.p2.x as isize, tri.p2.y as isize),
         Vector2::new(tri.p3.x as isize, tri.p3.y as isize),
         frame_buffer,
-        get_color(0b11111, 0b111111, 0b11111),
+        Color::from_components(0b11111, 0b111111, 0b11111).apply_light(tri.light*17),
     );
 
     draw_line(
         (tri.p1.x as isize, tri.p1.y as isize),
         (tri.p2.x as isize, tri.p2.y as isize),
         frame_buffer,
-        get_color(0b11111, 0b0, 0b0),
+        Color::from_components(0b11111, 0b0, 0b0),
     );
     draw_line(
         (tri.p2.x as isize, tri.p2.y as isize),
         (tri.p3.x as isize, tri.p3.y as isize),
         frame_buffer,
-        get_color(0b11111, 0b0, 0b0),
+        Color::from_components(0b11111, 0b0, 0b0),
     );
     draw_line(
         (tri.p3.x as isize, tri.p3.y as isize),
         (tri.p1.x as isize, tri.p1.y as isize),
         frame_buffer,
-        get_color(0b11111, 0b0, 0b0),
+        Color::from_components(0b11111, 0b0, 0b0),
     );
 }
 
@@ -462,11 +449,6 @@ impl Renderer {
         let camera_ray = tri.p1 - self.camera.get_pos();
 
         if tri.get_normal().dot(&camera_ray) < 0.0 {
-            let light = GLOBAL_LIGHT
-                .normalize()
-                .dot(&tri.get_normal().normalize())
-                .max(0.2);
-
             tri.p1 = (mat_view * Vector4::new(tri.p1.x, tri.p1.y, tri.p1.z, 1.0)).xyz(); // try to_homogenous here
             tri.p2 = (mat_view * Vector4::new(tri.p2.x, tri.p2.y, tri.p2.z, 1.0)).xyz();
             tri.p3 = (mat_view * Vector4::new(tri.p3.x, tri.p3.y, tri.p3.z, 1.0)).xyz();
@@ -492,7 +474,7 @@ impl Renderer {
                     ))
                     .map(|x| x as i16),
                     texture_id: to_project.texture_id,
-                    light: (light * 255.) as u8,
+                    light: to_project.light,
                 };
 
                 let _ = self.triangles_to_render.push(projected_triangle); // Do nothing if overflow
@@ -568,7 +550,7 @@ impl Renderer {
                     let pixel_value = FONT_DATA[(font_pixel_index + x) + y * FONT_WIDTH];
 
                     let rgb565 =
-                        rgb565_from_888(pixel_value as u16, pixel_value as u16, pixel_value as u16);
+                        Color::from_888(pixel_value as u16, pixel_value as u16, pixel_value as u16);
 
                     let pix_x = pos.x + x + text_cursor;
 
@@ -630,7 +612,7 @@ impl Renderer {
 
         for x in 0..SCREEN_TILE_SUBDIVISION {
             for y in 0..SCREEN_TILE_SUBDIVISION {
-                self.clear_screen(get_color(0b01110, 0b110110, 0b11111));
+                self.clear_screen(Color::from_components(0b01110, 0b110110, 0b11111));
                 self.draw_triangles(x, y);
 
                 if x == 0 && y == 0 {
