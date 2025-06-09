@@ -57,6 +57,18 @@ impl World {
         world
     }
 
+    pub fn get_chunks_sorted_by_distance(&self, pos: Vector3<f32>) -> Vec<&Chunk> {
+        let mut chunks: Vec<&Chunk> = self.chunks.iter().collect();
+        
+        chunks.sort_by(|a, b|{
+            let a_dist = a.get_pos().map(|x| (x * CHUNK_SIZE_I) as f32 + CHUNK_SIZE_I as f32/ 2.).metric_distance(&pos);
+            let b_dist = b.get_pos().map(|x| (x * CHUNK_SIZE_I) as f32 + CHUNK_SIZE_I as f32/ 2.).metric_distance(&pos);
+            b_dist.total_cmp(&a_dist)
+        });
+
+        chunks
+    }
+
     pub fn add_chunk(&mut self, pos: Vector3<isize>) -> Option<&mut Chunk> {
         let chunk = Chunk::new(pos);
         self.chunks.push(chunk);

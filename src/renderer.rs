@@ -7,9 +7,11 @@ use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
     camera::Camera,
-    constants::rendering::*,
+    chunk,
+    constants::{rendering::*, world::CHUNK_SIZE},
     eadk::{self, Color, Rect},
     mesh::{Quad, Triangle, Triangle2D},
+    world::World,
 };
 
 // Screen size related constants
@@ -32,6 +34,7 @@ const ZFAR: f32 = 1000.0;
 
 // Other
 const GLOBAL_LIGHT: Vector3<f32> = Vector3::new(0.5, 0.0, -1.0);
+const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 
 static FONT_DATA: &[u8] = include_bytes!("../target/font.bin");
 const FONT_WIDTH: usize = 1045;
@@ -145,7 +148,7 @@ fn draw_2d_triangle(
         Vector2::new(tri.p2.x as isize, tri.p2.y as isize),
         Vector2::new(tri.p3.x as isize, tri.p3.y as isize),
         frame_buffer,
-        tri.color,
+        get_color(0b11111, 0b111111, 0b11111),
     );
 
     draw_line(
@@ -286,7 +289,8 @@ fn triangle_clip_against_line(
             p1: inside_points[0].map(|x| x as i16),
             p2: vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[0]),
             p3: vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[1]),
-            color: in_tri.color,
+            texture_id: in_tri.texture_id,
+            light: in_tri.light,
         };
 
         return (Some(out_tri), None);
@@ -297,14 +301,16 @@ fn triangle_clip_against_line(
             p1: inside_points[0].map(|x| x as i16),
             p2: inside_points[1].map(|x| x as i16),
             p3: vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[0]),
-            color: in_tri.color,
+            texture_id: in_tri.texture_id,
+            light: in_tri.light,
         };
 
         let out_tri2 = Triangle2D {
             p1: inside_points[1].map(|x| x as i16),
             p2: out_tri1.p3,
             p3: vector_intersect_line(line_p, &line_n, inside_points[1], outside_points[0]),
-            color: in_tri.color,
+            texture_id: in_tri.texture_id,
+            light: in_tri.light,
         };
         return (Some(out_tri1), Some(out_tri2));
     }
@@ -368,7 +374,8 @@ fn triangle_clip_against_plane(
             p1: *inside_points[0],
             p2: vector_intersect_plane(plane_p, &plane_n, inside_points[0], outside_points[0]),
             p3: vector_intersect_plane(plane_p, &plane_n, inside_points[0], outside_points[1]),
-            color: in_tri.color,
+            texture_id: in_tri.texture_id,
+            light: in_tri.light,
         };
 
         return (Some(out_tri), None);
@@ -379,14 +386,16 @@ fn triangle_clip_against_plane(
             p1: *inside_points[0],
             p2: *inside_points[1],
             p3: vector_intersect_plane(plane_p, &plane_n, inside_points[0], outside_points[0]),
-            color: in_tri.color,
+            texture_id: in_tri.texture_id,
+            light: in_tri.light,
         };
 
         let out_tri2 = Triangle {
             p1: *inside_points[1],
             p2: out_tri1.p3,
             p3: vector_intersect_plane(plane_p, &plane_n, inside_points[1], outside_points[0]),
-            color: in_tri.color,
+            texture_id: in_tri.texture_id,
+            light: in_tri.light,
         };
         return (Some(out_tri1), Some(out_tri2));
     }
@@ -470,14 +479,20 @@ impl Renderer {
 
             let mut project_and_add = |to_project: Triangle| {
                 let projected_triangle = Triangle2D {
-                    p1: ((self.project_point(to_project.p1) + Vector2::new(1., 1.)).component_mul(&Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT))).map(|x| x as i16),
-                    p2: ((self.project_point(to_project.p2) + Vector2::new(1., 1.)).component_mul(&Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT))).map(|x| x as i16),
-                    p3: ((self.project_point(to_project.p3) + Vector2::new(1., 1.)).component_mul(&Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT))).map(|x| x as i16),
-                    color: get_color(
-                        ((0b11111 as f32) * light) as u16,
-                        ((0b111111 as f32) * light) as u16,
-                        ((0b11111 as f32) * light) as u16,
-                    ),
+                    p1: ((self.project_point(to_project.p1) + Vector2::new(1., 1.)).component_mul(
+                        &Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT),
+                    ))
+                    .map(|x| x as i16),
+                    p2: ((self.project_point(to_project.p2) + Vector2::new(1., 1.)).component_mul(
+                        &Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT),
+                    ))
+                    .map(|x| x as i16),
+                    p3: ((self.project_point(to_project.p3) + Vector2::new(1., 1.)).component_mul(
+                        &Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT),
+                    ))
+                    .map(|x| x as i16),
+                    texture_id: to_project.texture_id,
+                    light: (light * 255.) as u8,
                 };
 
                 let _ = self.triangles_to_render.push(projected_triangle); // Do nothing if overflow
@@ -517,10 +532,7 @@ impl Renderer {
             };
 
             clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(0.0, 1.0));
-            clip_triangle(
-                Vector2::new(0.0, SCREEN_HEIGHTF),
-                Vector2::new(0.0, -1.0),
-            );
+            clip_triangle(Vector2::new(0.0, SCREEN_HEIGHTF), Vector2::new(0.0, -1.0));
             clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(1.0, 0.0));
             clip_triangle(
                 Vector2::new(SCREEN_WIDTHF - 1.0, 0.0),
@@ -571,47 +583,49 @@ impl Renderer {
         }
     }
 
-    fn add_quad_to_render(&mut self, quad: &Quad, mat_view: &Matrix4<f32>) {
-        let quad_triangles = quad.get_triangles();
+    fn add_quad_to_render(
+        &mut self,
+        quad: &Quad,
+        mat_view: &Matrix4<f32>,
+        chunk_pos: Vector3<isize>,
+    ) {
+        let quad_triangles = quad.get_triangles(chunk_pos);
         self.add_3d_triangle_to_render(quad_triangles.0, mat_view);
         self.add_3d_triangle_to_render(quad_triangles.1, mat_view);
     }
 
-    pub fn update(&mut self, world_mesh: &Vec<&Vec<Quad>>, fps_count: f32) {
+    pub fn update(&mut self, world: &World, fps_count: f32) {
         self.triangles_to_render.clear();
 
         let mut quad_count: usize = 0;
 
-        let mut quads: Vec<&Quad> = Vec::new();
-
-        for chunk_mech in world_mesh.iter() {
-            for quad in chunk_mech.iter() {
-                quads.push(quad);
-                quad_count += 1;
-            }
-        }
-
-        quads.sort_by(|a, b| -> Ordering {
-            let avec = Vector3::new(
-                a.pos.x as f32 + 0.5,
-                a.pos.y as f32 + 0.5,
-                a.pos.z as f32 + 0.5,
-            );
-
-            let bvec = Vector3::new(
-                b.pos.x as f32 + 0.5,
-                b.pos.y as f32 + 0.5,
-                b.pos.z as f32 + 0.5,
-            );
-
-            bvec.metric_distance(self.camera.get_pos())
-                .total_cmp(&avec.metric_distance(self.camera.get_pos()))
-        });
-
         let mat_view = self.get_mat_view();
 
-        for quad in quads {
-            self.add_quad_to_render(quad, &mat_view);
+        for chunk in world.get_chunks_sorted_by_distance(*self.camera.get_pos()) {
+            let mut quads = chunk.get_mesh().get_reference_vec();
+            quad_count += quads.len();
+
+            quads.sort_by(|a, b| -> Ordering {
+                let a_pos = a.get_pos().map(|x| x as isize) + chunk.get_pos() * CHUNK_SIZE_I;
+                let b_pos = b.get_pos().map(|x| x as isize) + chunk.get_pos() * CHUNK_SIZE_I;
+                let avec = Vector3::new(
+                    a_pos.x as f32 + 0.5,
+                    a_pos.y as f32 + 0.5,
+                    a_pos.z as f32 + 0.5,
+                );
+
+                let bvec = Vector3::new(
+                    b_pos.x as f32 + 0.5,
+                    b_pos.y as f32 + 0.5,
+                    b_pos.z as f32 + 0.5,
+                );
+
+                bvec.metric_distance(self.camera.get_pos())
+                    .total_cmp(&avec.metric_distance(self.camera.get_pos()))
+            });
+            for quad in quads {
+                self.add_quad_to_render(quad, &mat_view, *chunk.get_pos());
+            }
         }
 
         for x in 0..SCREEN_TILE_SUBDIVISION {

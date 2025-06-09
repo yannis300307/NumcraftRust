@@ -23,221 +23,152 @@ pub enum QuadDir {
     Left = 6,
 }
 
-pub struct Quad {
+impl QuadDir {
+    pub fn from_id(id: u8) -> Self {
+        match id {
+            1 => QuadDir::Front,
+            2 => QuadDir::Back,
+            3 => QuadDir::Top,
+            4 => QuadDir::Bottom,
+            5 => QuadDir::Right,
+            6 => QuadDir::Left,
+            _ => panic!("Unknown quad direction."),
+        }
+    }
+}
+
+/*pub struct Quad {
     pub pos: Vector3<i16>,
     pub dir: QuadDir,
     pub color: eadk::Color,
+}*/
+
+pub struct Quad {
+    data: u16,
+    texture_id: u8,
 }
 
 impl Quad {
-    pub fn get_triangles(&self) -> (Triangle, Triangle) {
-        match self.dir {
+    pub fn new(pos: Vector3<u16>, dir: QuadDir, texture_id: u8) -> Self {
+        let x = pos.x;
+        let y = pos.y;
+        let z = pos.z;
+        let dir = dir as u16;
+        let data = x << 12 | y << 8 | z << 4 | dir;
+        Quad { data, texture_id }
+    }
+
+    pub fn get_pos(&self) -> nalgebra::Vector3<u16> {
+        let x = (self.data & 0b1111000000000000) >> 12;
+        let y = (self.data & 0b0000111100000000) >> 8;
+        let z = (self.data & 0b0000000011110000) >> 4;
+        nalgebra::Vector3::new(x, y, z)
+    }
+
+    pub fn get_dir(&self) -> QuadDir {
+        let dir = self.data & 0b0000000000001111;
+        QuadDir::from_id(dir as u8)
+    }
+}
+
+impl Quad {
+    pub fn get_triangles(&self, chunk_pos: Vector3<isize>) -> (Triangle, Triangle) {
+        let pos = self.get_pos().map(|x| x as isize) + chunk_pos * CHUNK_SIZE_I;
+        match self.get_dir() {
             QuadDir::Front => (
                 Triangle {
-                    p3: Vector3::new(self.pos.x as f32, self.pos.y as f32, self.pos.z as f32),
-                    p2: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        self.pos.y as f32,
-                        self.pos.z as f32,
-                    ),
-                    p1: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        (self.pos.y + 1) as f32,
-                        self.pos.z as f32,
-                    ),
-                    color: self.color,
+                    p3: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
+                    p2: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
+                    p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
+                    texture_id: self.texture_id,
+                    light: 0,
                 },
                 Triangle {
-                    p1: Vector3::new(self.pos.x as f32, self.pos.y as f32, self.pos.z as f32),
-                    p2: Vector3::new(
-                        self.pos.x as f32,
-                        (self.pos.y + 1) as f32,
-                        self.pos.z as f32,
-                    ),
-                    p3: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        (self.pos.y + 1) as f32,
-                        self.pos.z as f32,
-                    ),
-                    color: self.color,
+                    p1: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
+                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, pos.z as f32),
+                    p3: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
+                    texture_id: self.texture_id,
+                    light: 0,
                 },
             ),
             QuadDir::Back => (
                 Triangle {
-                    p1: Vector3::new(
-                        self.pos.x as f32,
-                        self.pos.y as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p2: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        self.pos.y as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p3: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        (self.pos.y + 1) as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    color: self.color,
+                    p1: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p2: Vector3::new((pos.x + 1) as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p3: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    texture_id: self.texture_id,
+                    light: 0,
                 },
                 Triangle {
-                    p3: Vector3::new(
-                        self.pos.x as f32,
-                        self.pos.y as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p2: Vector3::new(
-                        self.pos.x as f32,
-                        (self.pos.y + 1) as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p1: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        (self.pos.y + 1) as f32,
-                        (self.pos.z + 1) as f32,
-                    ), // TODO sort points from p1 to p3
-                    color: self.color,
+                    p3: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32), // TODO sort points from p1 to p3
+                    texture_id: self.texture_id,
+                    light: 0,
                 },
             ),
             QuadDir::Top => (
                 Triangle {
-                    p3: Vector3::new(
-                        self.pos.x as f32,
-                        self.pos.y as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p2: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        self.pos.y as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p1: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        self.pos.y as f32,
-                        self.pos.z as f32,
-                    ),
-                    color: self.color,
+                    p3: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p2: Vector3::new((pos.x + 1) as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p1: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
+                    texture_id: self.texture_id,
+                    light: 0,
                 },
                 Triangle {
-                    p1: Vector3::new(
-                        self.pos.x as f32,
-                        self.pos.y as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p2: Vector3::new(self.pos.x as f32, self.pos.y as f32, self.pos.z as f32),
-                    p3: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        self.pos.y as f32,
-                        self.pos.z as f32,
-                    ),
-                    color: self.color,
+                    p1: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p2: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
+                    p3: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
+                    texture_id: self.texture_id,
+                    light: 0,
                 },
             ),
             QuadDir::Bottom => (
                 Triangle {
-                    p1: Vector3::new(
-                        self.pos.x as f32,
-                        (self.pos.y + 1) as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p2: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        (self.pos.y + 1) as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p3: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        (self.pos.y + 1) as f32,
-                        self.pos.z as f32,
-                    ),
-                    color: self.color,
+                    p1: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p2: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p3: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
+                    texture_id: self.texture_id,
+                    light: 0,
                 },
                 Triangle {
-                    p3: Vector3::new(
-                        self.pos.x as f32,
-                        (self.pos.y + 1) as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p2: Vector3::new(
-                        self.pos.x as f32,
-                        (self.pos.y + 1) as f32,
-                        self.pos.z as f32,
-                    ),
-                    p1: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        (self.pos.y + 1) as f32,
-                        self.pos.z as f32,
-                    ),
-                    color: self.color,
+                    p3: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, pos.z as f32),
+                    p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
+                    texture_id: self.texture_id,
+                    light: 0,
                 },
             ),
             QuadDir::Right => (
                 Triangle {
-                    p1: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        (self.pos.y + 1) as f32,
-                        self.pos.z as f32,
-                    ),
-                    p2: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        (self.pos.y + 1) as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p3: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        self.pos.y as f32,
-                        self.pos.z as f32,
-                    ),
-                    color: self.color,
+                    p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
+                    p2: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p3: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
+                    texture_id: self.texture_id,
+                    light: 0,
                 },
                 Triangle {
-                    p3: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        self.pos.y as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p2: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        (self.pos.y + 1) as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p1: Vector3::new(
-                        (self.pos.x + 1) as f32,
-                        self.pos.y as f32,
-                        self.pos.z as f32,
-                    ),
-                    color: self.color,
+                    p3: Vector3::new((pos.x + 1) as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p2: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p1: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
+                    texture_id: self.texture_id,
+                    light: 0,
                 },
             ),
             QuadDir::Left => (
                 Triangle {
-                    p3: Vector3::new(
-                        self.pos.x as f32,
-                        (self.pos.y + 1) as f32,
-                        self.pos.z as f32,
-                    ),
-                    p2: Vector3::new(
-                        self.pos.x as f32,
-                        (self.pos.y + 1) as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p1: Vector3::new(self.pos.x as f32, self.pos.y as f32, self.pos.z as f32),
-                    color: self.color,
+                    p3: Vector3::new(pos.x as f32, (pos.y + 1) as f32, pos.z as f32),
+                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p1: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
+                    texture_id: self.texture_id,
+                    light: 0,
                 },
                 Triangle {
-                    p1: Vector3::new(
-                        self.pos.x as f32,
-                        self.pos.y as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p2: Vector3::new(
-                        self.pos.x as f32,
-                        (self.pos.y + 1) as f32,
-                        (self.pos.z + 1) as f32,
-                    ),
-                    p3: Vector3::new(self.pos.x as f32, self.pos.y as f32, self.pos.z as f32),
-                    color: self.color,
+                    p1: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p3: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
+                    texture_id: self.texture_id,
+                    light: 0,
                 },
             ),
         }
@@ -249,7 +180,8 @@ pub struct Triangle {
     pub p1: Vector3<f32>,
     pub p2: Vector3<f32>,
     pub p3: Vector3<f32>,
-    pub color: eadk::Color,
+    pub texture_id: u8,
+    pub light: u8,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -257,7 +189,8 @@ pub struct Triangle2D {
     pub p1: Vector2<i16>,
     pub p2: Vector2<i16>,
     pub p3: Vector2<i16>,
-    pub color: eadk::Color,
+    pub texture_id: u8,
+    pub light: u8,
 }
 
 impl Triangle {
@@ -301,6 +234,10 @@ impl Mesh {
         Mesh { quads: Vec::new() }
     }
 
+    pub fn get_reference_vec(&self) -> Vec<&Quad> {
+        self.quads.iter().collect()
+    }
+
     pub fn generate_chunk(world: &World, chunk: &Chunk) -> Self {
         let mut quads = Vec::new();
 
@@ -308,78 +245,41 @@ impl Mesh {
             for y in 0..CHUNK_SIZE as isize {
                 for z in 0..CHUNK_SIZE as isize {
                     if chunk.get_at(Vector3::new(x, y, z)).unwrap() != BlockType::Air {
-                        let bloc_pos = Vector3::new(x, y, z) + *chunk.get_pos() * CHUNK_SIZE_I;
-                        let bloc_pos = bloc_pos.map(|x| x as i16);
+                        let bloc_pos = Vector3::new(x as u16, y as u16, z as u16);
 
                         if get_block_in_chunk_or_world(Vector3::new(x, y, z - 1), world, chunk)
                             .is_some_and(|block| block.is_air())
                         {
-                            quads.push(Quad {
-                                pos: bloc_pos,
-                                dir: QuadDir::Front,
-                                color: Color {
-                                    rgb565: 0b1111111111111111,
-                                },
-                            });
+                            quads.push(Quad::new(bloc_pos, QuadDir::Front, 1));
                         }
 
                         if get_block_in_chunk_or_world(Vector3::new(x, y, z + 1), world, chunk)
                             .is_some_and(|block| block.is_air())
                         {
-                            quads.push(Quad {
-                                pos: bloc_pos,
-                                dir: QuadDir::Back,
-                                color: Color {
-                                    rgb565: 0b1111111111111111,
-                                },
-                            });
+                            quads.push(Quad::new(bloc_pos, QuadDir::Back, 1));
                         }
 
                         if get_block_in_chunk_or_world(Vector3::new(x + 1, y, z), world, chunk)
                             .is_some_and(|block| block.is_air())
                         {
-                            quads.push(Quad {
-                                pos: bloc_pos,
-                                dir: QuadDir::Right,
-                                color: Color {
-                                    rgb565: 0b1111111111111111,
-                                },
-                            });
+                            quads.push(Quad::new(bloc_pos, QuadDir::Right, 1));
                         }
                         if get_block_in_chunk_or_world(Vector3::new(x - 1, y, z), world, chunk)
                             .is_some_and(|block| block.is_air())
                         {
-                            quads.push(Quad {
-                                pos: bloc_pos,
-                                dir: QuadDir::Left,
-                                color: Color {
-                                    rgb565: 0b1111111111111111,
-                                },
-                            });
+                            quads.push(Quad::new(bloc_pos, QuadDir::Left, 1));
                         }
 
                         if get_block_in_chunk_or_world(Vector3::new(x, y - 1, z), world, chunk)
                             .is_some_and(|block| block.is_air())
                         {
-                            quads.push(Quad {
-                                pos: bloc_pos,
-                                dir: QuadDir::Top,
-                                color: Color {
-                                    rgb565: 0b1111111111111111,
-                                },
-                            });
+                            quads.push(Quad::new(bloc_pos, QuadDir::Top, 1));
                         }
 
                         if get_block_in_chunk_or_world(Vector3::new(x, y + 1, z), world, chunk)
                             .is_some_and(|block| block.is_air())
                         {
-                            quads.push(Quad {
-                                pos: bloc_pos,
-                                dir: QuadDir::Bottom,
-                                color: Color {
-                                    rgb565: 0b1111111111111111,
-                                },
-                            });
+                            quads.push(Quad::new(bloc_pos, QuadDir::Bottom, 1));
                         }
                     }
                 }
