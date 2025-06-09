@@ -2,6 +2,13 @@
 
 Numcraft Rust is a (WIP) cube sandbox game running natively on Numworks calculators.
 
+## Screenshot
+
+<img src="https://github.com/user-attachments/assets/0d386999-08ce-4145-be99-173479376119" width="512">
+
+
+Note that this is not the final result but the current state of the project.
+
 ## Current project state
 At that time, on the main branch, the app is capable of rendering a single chunk (but I can add more of then by adding one single line). The mesh is optimised using greedy meshing.
 The program runs at a stable 40 FPS on both N110 and N120 models (the max framerate the screen can perform but we can go much higher by disabling Vsync)
