@@ -40,6 +40,11 @@ const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 static FONT_DATA: &[u8] = include_bytes!("../target/font.bin");
 const FONT_WIDTH: usize = 1045;
 const FONT_HEIGHT: usize = 15;
+
+static CROSS_DATA: &[u8] = include_bytes!("../target/cross.bin");
+const CROSS_WIDTH: usize = 14;
+const CROSS_HEIGHT: usize = 14;
+
 const FONT_CHAR_WIDTH: usize = 11;
 static FONT_ORDER: &str = "!\"_$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^+`abcdefghijklmnopqrstuvwxyz{|}~€";
 
@@ -139,7 +144,7 @@ fn draw_2d_triangle(
         Color::from_components(0b11111, 0b111111, 0b11111).apply_light(tri.light * 17),
     );
 
-    draw_line(
+    /*draw_line(
         (tri.p1.x as isize, tri.p1.y as isize),
         (tri.p2.x as isize, tri.p2.y as isize),
         frame_buffer,
@@ -156,7 +161,7 @@ fn draw_2d_triangle(
         (tri.p1.x as isize, tri.p1.y as isize),
         frame_buffer,
         Color::from_components(0b11111, 0b0, 0b0),
-    );
+    );*/
 }
 
 fn matrix_point_at(pos: &Vector3<f32>, target: &Vector3<f32>, up: &Vector3<f32>) -> Matrix4<f32> {
@@ -583,7 +588,7 @@ impl Renderer {
         pos: Vector2<isize>,
     ) {
         for y in 0..image_size.y {
-            if pos.y+y < 0 || pos.y+y >= SCREEN_TILE_HEIGHT as isize {
+            if pos.y + y < 0 || pos.y + y >= SCREEN_TILE_HEIGHT as isize {
                 continue;
             }
             for x in 0..image_size.x {
@@ -599,7 +604,11 @@ impl Renderer {
                     let frame_buff_index = (dest.x + dest.y * SCREEN_TILE_WIDTH as isize) as usize;
                     let components = self.tile_frame_buffer[frame_buff_index].get_components();
 
-                    let inverted_color = Color::from_components(0b11111 - components.0, 0b111111 - components.1, 0b11111 - components.2);
+                    let inverted_color = Color::from_components(
+                        0b11111 - components.0,
+                        0b111111 - components.1,
+                        0b11111 - components.2,
+                    );
                     self.tile_frame_buffer[frame_buff_index] = inverted_color;
                 }
             }
@@ -664,6 +673,45 @@ impl Renderer {
                     self.draw_string(
                         format!("cam_z:{:.2}", self.camera.get_pos().z).as_str(),
                         &Vector2::new(10, 90),
+                    );
+
+                    self.draw_image_negate(
+                        CROSS_DATA,
+                        Vector2::new(CROSS_WIDTH as isize, CROSS_HEIGHT as isize),
+                        Vector2::new(
+                            (SCREEN_TILE_WIDTH - CROSS_WIDTH / 2) as isize,
+                            (SCREEN_TILE_HEIGHT - CROSS_HEIGHT / 2) as isize,
+                        ),
+                    );
+                }
+                if x == 1 && y == 0 {
+                    self.draw_image_negate(
+                        CROSS_DATA,
+                        Vector2::new(CROSS_WIDTH as isize, CROSS_HEIGHT as isize),
+                        Vector2::new(
+                            -((CROSS_WIDTH / 2) as isize),
+                            (SCREEN_TILE_HEIGHT - CROSS_HEIGHT / 2) as isize,
+                        ),
+                    );
+                }
+                if x == 1 && y == 1 {
+                    self.draw_image_negate(
+                        CROSS_DATA,
+                        Vector2::new(CROSS_WIDTH as isize, CROSS_HEIGHT as isize),
+                        Vector2::new(
+                            - ((CROSS_WIDTH / 2) as isize),
+                            - ((CROSS_HEIGHT / 2) as isize),
+                        ),
+                    );
+                }
+                if x == 0 && y == 1 {
+                    self.draw_image_negate(
+                        CROSS_DATA,
+                        Vector2::new(CROSS_WIDTH as isize, CROSS_HEIGHT as isize),
+                        Vector2::new(
+                            (SCREEN_TILE_WIDTH - CROSS_WIDTH / 2) as isize,
+                            - ((CROSS_HEIGHT / 2) as isize),
+                        ),
                     );
                 }
 

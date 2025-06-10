@@ -1,6 +1,24 @@
 use image::{self, GenericImageView, ImageReader};
 use std::{fs, process::Command};
 
+
+fn convert_image(file_name: &str) {
+    let img = ImageReader::open(format!("assets/{file_name}.png").as_str())
+        .unwrap()
+        .decode()
+        .unwrap();
+
+    let mut converted_pixels: Vec<u8> = Vec::new();
+
+    for pix in img.pixels() {
+        converted_pixels.push(pix.2.0[0]);
+    }
+
+    let data = converted_pixels.as_slice();
+
+    fs::write(format!("target/{file_name}.bin").as_str(), data).unwrap();
+}
+
 fn main() {
     // Turn icon.png into icon.nwi
     println!("cargo:rerun-if-changed=src/icon.png");
@@ -29,18 +47,10 @@ fn main() {
     // Convert font to usable data
     println!("cargo:rerun-if-changed=assets/font.png");
     println!("Converting font");
-    let img = ImageReader::open("assets/font.png")
-        .unwrap()
-        .decode()
-        .unwrap();
+    convert_image("font");
 
-    let mut converted_pixels: Vec<u8> = Vec::new();
-
-    for pix in img.pixels() {
-        converted_pixels.push(pix.2.0[0]);
-    }
-
-    let data = converted_pixels.as_slice();
-
-    fs::write("target/font.bin", data).unwrap();
+    // Convert other textures
+    println!("cargo:rerun-if-changed=assets/cross.png");
+    println!("Converting cross");
+    convert_image("cross");
 }
