@@ -576,6 +576,36 @@ impl Renderer {
         self.add_3d_triangle_to_render(quad_triangles.1, mat_view);
     }
 
+    pub fn draw_image_negate(
+        &mut self,
+        image: &[u8],
+        image_size: Vector2<isize>,
+        pos: Vector2<isize>,
+    ) {
+        for y in 0..image_size.y {
+            if pos.y+y < 0 || pos.y+y >= SCREEN_TILE_HEIGHT as isize {
+                continue;
+            }
+            for x in 0..image_size.x {
+                let dest = Vector2::new(x, y) + pos;
+
+                if dest.x < 0 || dest.x >= SCREEN_TILE_WIDTH as isize {
+                    continue;
+                }
+
+                let pixel = image[(x + image_size.x * y) as usize];
+
+                if pixel == 0 {
+                    let frame_buff_index = (dest.x + dest.y * SCREEN_TILE_WIDTH as isize) as usize;
+                    let components = self.tile_frame_buffer[frame_buff_index].get_components();
+
+                    let inverted_color = Color::from_components(0b11111 - components.0, 0b111111 - components.1, 0b11111 - components.2);
+                    self.tile_frame_buffer[frame_buff_index] = inverted_color;
+                }
+            }
+        }
+    }
+
     pub fn update(&mut self, world: &World, fps_count: f32) {
         self.triangles_to_render.clear();
 
