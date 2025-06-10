@@ -32,14 +32,13 @@ const ZNEAR: f32 = 1.0;
 const ZFAR: f32 = 1000.0;
 
 // Other
-const GLOBAL_LIGHT: Vector3<f32> = Vector3::new(0.5, 0.0, -1.0);
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 
 static FONT_DATA: &[u8] = include_bytes!("../target/font.bin");
 const FONT_WIDTH: usize = 1045;
 const FONT_HEIGHT: usize = 15;
 const FONT_CHAR_WIDTH: usize = 11;
-static FONT_ORDER: &str = "!\" $%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^+`abcdefghijklmnopqrstuvwxyz{|}~€";
+static FONT_ORDER: &str = "!\"_$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^+`abcdefghijklmnopqrstuvwxyz{|}~€";
 
 
 fn fill_triangle(
@@ -624,6 +623,19 @@ impl Renderer {
                     self.draw_string(
                         format!("Quads:{quad_count}").as_str(),
                         &Vector2::new(10, 30),
+                    );
+
+                    self.draw_string(
+                        format!("cam_x:{:.2}", self.camera.get_pos().x).as_str(),
+                        &Vector2::new(10, 50),
+                    );
+                    self.draw_string(
+                        format!("cam_y:{:.2}", self.camera.get_pos().y).as_str(),
+                        &Vector2::new(10, 70),
+                    );
+                    self.draw_string(
+                        format!("cam_z:{:.2}", self.camera.get_pos().z).as_str(),
+                        &Vector2::new(10, 90),
                     );
                 }
 
