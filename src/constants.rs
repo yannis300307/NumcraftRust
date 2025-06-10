@@ -1,3 +1,5 @@
+use crate::{eadk::Color, mesh::QuadDir};
+
 pub mod rendering {
     pub const SCREEN_WIDTH: usize = 320;
     pub const SCREEN_HEIGHT: usize = 240;
@@ -19,10 +21,31 @@ pub mod world {
 pub enum BlockType {
     Air = 0,
     Stone = 1,
+    Grass = 2,
+    Dirt = 3,
 }
 
 impl BlockType {
     pub fn is_air(&self) -> bool {
         *self == BlockType::Air
+    }
+
+    pub fn get_texture_id(&self, dir: QuadDir) -> u8 {
+        match *self {
+            BlockType::Air => 0,
+            BlockType::Stone => 1,
+            BlockType::Grass => if dir == QuadDir::Top {2} else {3},
+            BlockType::Dirt => 3,
+        }
+    }
+}
+
+pub fn get_quad_color_from_texture_id(id: u8) -> Color {
+    match id {
+        0 => Color::from_888(0, 0, 0),
+        1 => Color::from_888(160, 160, 160),
+        2 => Color::from_888(21, 147, 0),
+        3 => Color::from_888(120, 77, 49),
+        _ => Color::from_888(0, 0, 0),
     }
 }

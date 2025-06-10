@@ -81,7 +81,7 @@ impl Chunk {
                     if chunk_block_pos.y + y >= height {
                         self.set_at(
                             Vector3::new(x as usize, y as usize, z as usize),
-                            crate::constants::BlockType::Stone,
+                            crate::constants::BlockType::Grass,
                         );
                     }
                 }

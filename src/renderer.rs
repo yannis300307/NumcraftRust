@@ -10,7 +10,7 @@ use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
     camera::Camera,
-    constants::{rendering::*, world::CHUNK_SIZE},
+    constants::{get_quad_color_from_texture_id, rendering::*, world::CHUNK_SIZE},
     eadk::{self, Color, Rect},
     mesh::{Quad, Triangle, Triangle2D},
     world::World,
@@ -141,7 +141,7 @@ fn draw_2d_triangle(
         Vector2::new(tri.p2.x as isize, tri.p2.y as isize),
         Vector2::new(tri.p3.x as isize, tri.p3.y as isize),
         frame_buffer,
-        Color::from_components(0b11111, 0b111111, 0b11111).apply_light(tri.light * 17),
+        get_quad_color_from_texture_id(tri.texture_id).apply_light(tri.light * 17),
     );
 
     /*draw_line(

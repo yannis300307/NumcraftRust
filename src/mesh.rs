@@ -286,7 +286,8 @@ impl Mesh {
         for x in 0..CHUNK_SIZE as isize {
             for y in 0..CHUNK_SIZE as isize {
                 for z in 0..CHUNK_SIZE as isize {
-                    if chunk.get_at(Vector3::new(x, y, z)).unwrap() != BlockType::Air {
+                    let block_type = chunk.get_at(Vector3::new(x, y, z)).unwrap();
+                    if block_type != BlockType::Air {
                         let bloc_pos = Vector3::new(x as u16, y as u16, z as u16);
 
                         if get_block_in_chunk_or_world(Vector3::new(x, y, z - 1), world, chunk)
@@ -295,7 +296,7 @@ impl Mesh {
                             quads.push(Quad::new(
                                 bloc_pos,
                                 QuadDir::Front,
-                                1,
+                                block_type.get_texture_id(QuadDir::Front),
                                 Mesh::get_light_level_from_dir(QuadDir::Front),
                             ));
                         }
@@ -306,7 +307,7 @@ impl Mesh {
                             quads.push(Quad::new(
                                 bloc_pos,
                                 QuadDir::Back,
-                                1,
+                                block_type.get_texture_id(QuadDir::Back),
                                 Mesh::get_light_level_from_dir(QuadDir::Back),
                             ));
                         }
@@ -317,7 +318,7 @@ impl Mesh {
                             quads.push(Quad::new(
                                 bloc_pos,
                                 QuadDir::Right,
-                                1,
+                                block_type.get_texture_id(QuadDir::Right),
                                 Mesh::get_light_level_from_dir(QuadDir::Right),
                             ));
                         }
@@ -327,7 +328,7 @@ impl Mesh {
                             quads.push(Quad::new(
                                 bloc_pos,
                                 QuadDir::Left,
-                                1,
+                                block_type.get_texture_id(QuadDir::Left),
                                 Mesh::get_light_level_from_dir(QuadDir::Left),
                             ));
                         }
@@ -338,7 +339,7 @@ impl Mesh {
                             quads.push(Quad::new(
                                 bloc_pos,
                                 QuadDir::Top,
-                                1,
+                                block_type.get_texture_id(QuadDir::Top),
                                 Mesh::get_light_level_from_dir(QuadDir::Top),
                             ));
                         }
@@ -349,7 +350,7 @@ impl Mesh {
                             quads.push(Quad::new(
                                 bloc_pos,
                                 QuadDir::Bottom,
-                                1,
+                                block_type.get_texture_id(QuadDir::Bottom),
                                 Mesh::get_light_level_from_dir(QuadDir::Bottom),
                             ));
                         }
