@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 
-use crate::{eadk, renderer::Renderer, world::World};
+use crate::{constants::rendering::RENDER_DISTANCE, eadk, renderer::Renderer, world::World};
 
 pub struct Game {
     renderer: Renderer,
@@ -17,12 +17,6 @@ impl Game {
 
     pub fn start(&mut self) {
         let mut last = eadk::timing::millis();
-
-        for x in 0..2 {
-            for z in 0..2 {
-                self.world.add_chunk(Vector3::new(x, 0, z)).unwrap();
-            }
-        }
 
         loop {
             let current = eadk::timing::millis();
@@ -41,7 +35,7 @@ impl Game {
         }
 
         self.world
-            .generate_world_around_pos(*self.renderer.camera.get_pos(), 1);
+            .generate_world_around_pos(*self.renderer.camera.get_pos(), RENDER_DISTANCE as isize);
 
         self.renderer.update(&self.world, 1.0 / delta);
         self.renderer.camera.update(delta, keyboard_state);

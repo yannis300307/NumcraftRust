@@ -1,6 +1,9 @@
 #[cfg(target_os = "none")]
 use alloc::format;
 
+#[cfg(target_os = "none")]
+use alloc::vec::Vec;
+
 use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
 use core::{cmp::Ordering, f32, mem::swap};
@@ -9,7 +12,7 @@ use crate::{
     camera::Camera,
     constants::{rendering::*, world::CHUNK_SIZE},
     eadk::{self, Color, Rect},
-    mesh::{Quad, Triangle, Triangle2D},
+    mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D},
     world::World,
 };
 
@@ -39,7 +42,6 @@ const FONT_WIDTH: usize = 1045;
 const FONT_HEIGHT: usize = 15;
 const FONT_CHAR_WIDTH: usize = 11;
 static FONT_ORDER: &str = "!\"_$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^+`abcdefghijklmnopqrstuvwxyz{|}~€";
-
 
 fn fill_triangle(
     mut t0: Vector2<isize>,
@@ -134,7 +136,7 @@ fn draw_2d_triangle(
         Vector2::new(tri.p2.x as isize, tri.p2.y as isize),
         Vector2::new(tri.p3.x as isize, tri.p3.y as isize),
         frame_buffer,
-        Color::from_components(0b11111, 0b111111, 0b11111).apply_light(tri.light*17),
+        Color::from_components(0b11111, 0b111111, 0b11111).apply_light(tri.light * 17),
     );
 
     draw_line(
@@ -403,7 +405,7 @@ impl MathTools {
 pub struct Renderer {
     pub camera: Camera,
     math_tools: MathTools,
-    triangles_to_render: heapless::Vec<Triangle2D, MAX_TRIANGLES>,
+    triangles_to_render: Vec<Triangle2D>,
     tile_frame_buffer: [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 }
 
@@ -412,7 +414,7 @@ impl Renderer {
         let renderer: Renderer = Renderer {
             camera: Camera::new(),
             math_tools: MathTools::new(),
-            triangles_to_render: heapless::Vec::new(),
+            triangles_to_render: Vec::new(),
             tile_frame_buffer: [Color { rgb565: 0 }; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
         };
 
@@ -476,7 +478,39 @@ impl Renderer {
                     light: to_project.light,
                 };
 
-                let _ = self.triangles_to_render.push(projected_triangle); // Do nothing if overflow
+                let mut clip_buffer: heapless::Deque<Triangle2D, 16> = heapless::Deque::new(); // 2^4
+
+                clip_buffer.push_back(projected_triangle).unwrap();
+                let mut new_tris = 1;
+
+                let mut clip_triangle = |line_p, line_n| {
+                    while new_tris > 0 {
+                        let test = clip_buffer.pop_front().unwrap();
+                        new_tris -= 1;
+
+                        let clipped = triangle_clip_against_line(&line_p, &line_n, &test);
+
+                        if let Some(clipped_tri) = clipped.0 {
+                            clip_buffer.push_back(clipped_tri).unwrap();
+                        }
+                        if let Some(clipped_tri) = clipped.1 {
+                            clip_buffer.push_back(clipped_tri).unwrap();
+                        }
+                    }
+                    new_tris = clip_buffer.len();
+                };
+
+                clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(0.0, 1.0));
+                clip_triangle(Vector2::new(0.0, SCREEN_HEIGHTF), Vector2::new(0.0, -1.0));
+                clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(1.0, 0.0));
+                clip_triangle(
+                    Vector2::new(SCREEN_WIDTHF - 1.0, 0.0),
+                    Vector2::new(-1.0, 0.0),
+                );
+
+                for tri in clip_buffer {
+                    self.triangles_to_render.push(tri); // Do nothing if overflow
+                }
             };
 
             if let Some(clipped) = clipped_triangles.0 {
@@ -490,50 +524,17 @@ impl Renderer {
 
     fn draw_triangles(&mut self, tile_x: usize, tile_y: usize) {
         for tri in self.triangles_to_render.iter_mut() {
-            let mut clip_buffer: heapless::Deque<Triangle2D, 16> = heapless::Deque::new(); // 2^4
+            let mut tri_copy = *tri;
+            tri_copy.p1.x -= (SCREEN_TILE_WIDTH * tile_x) as i16;
+            tri_copy.p1.y -= (SCREEN_TILE_HEIGHT * tile_y) as i16;
 
-            clip_buffer.push_back(*tri).unwrap();
-            let mut new_tris = 1;
+            tri_copy.p2.x -= (SCREEN_TILE_WIDTH * tile_x) as i16;
+            tri_copy.p2.y -= (SCREEN_TILE_HEIGHT * tile_y) as i16;
 
-            let mut clip_triangle = |line_p, line_n| {
-                while new_tris > 0 {
-                    let test = clip_buffer.pop_front().unwrap();
-                    new_tris -= 1;
+            tri_copy.p3.x -= (SCREEN_TILE_WIDTH * tile_x) as i16;
+            tri_copy.p3.y -= (SCREEN_TILE_HEIGHT * tile_y) as i16;
 
-                    let clipped = triangle_clip_against_line(&line_p, &line_n, &test);
-
-                    if let Some(clipped_tri) = clipped.0 {
-                        clip_buffer.push_back(clipped_tri).unwrap();
-                    }
-                    if let Some(clipped_tri) = clipped.1 {
-                        clip_buffer.push_back(clipped_tri).unwrap();
-                    }
-                }
-                new_tris = clip_buffer.len();
-            };
-
-            clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(0.0, 1.0));
-            clip_triangle(Vector2::new(0.0, SCREEN_HEIGHTF), Vector2::new(0.0, -1.0));
-            clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(1.0, 0.0));
-            clip_triangle(
-                Vector2::new(SCREEN_WIDTHF - 1.0, 0.0),
-                Vector2::new(-1.0, 0.0),
-            );
-
-            while !clip_buffer.is_empty() {
-                let mut tri_to_draw = clip_buffer.pop_front().unwrap();
-
-                tri_to_draw.p1.x -= (SCREEN_TILE_WIDTH * tile_x) as i16;
-                tri_to_draw.p1.y -= (SCREEN_TILE_HEIGHT * tile_y) as i16;
-
-                tri_to_draw.p2.x -= (SCREEN_TILE_WIDTH * tile_x) as i16;
-                tri_to_draw.p2.y -= (SCREEN_TILE_HEIGHT * tile_y) as i16;
-
-                tri_to_draw.p3.x -= (SCREEN_TILE_WIDTH * tile_x) as i16;
-                tri_to_draw.p3.y -= (SCREEN_TILE_HEIGHT * tile_y) as i16;
-
-                draw_2d_triangle(&tri_to_draw, &mut self.tile_frame_buffer);
-            }
+            draw_2d_triangle(&tri_copy, &mut self.tile_frame_buffer);
         }
     }
 
@@ -578,13 +579,10 @@ impl Renderer {
     pub fn update(&mut self, world: &World, fps_count: f32) {
         self.triangles_to_render.clear();
 
-        let mut quad_count: usize = 0;
-
         let mat_view = self.get_mat_view();
 
         for chunk in world.get_chunks_sorted_by_distance(*self.camera.get_pos()) {
             let mut quads = chunk.get_mesh().get_reference_vec();
-            quad_count += quads.len();
 
             quads.sort_by(|a, b| -> Ordering {
                 let a_pos = a.get_pos().map(|x| x as isize) + chunk.get_pos() * CHUNK_SIZE_I;
@@ -621,7 +619,7 @@ impl Renderer {
                     );
 
                     self.draw_string(
-                        format!("Quads:{quad_count}").as_str(),
+                        format!("Tris:{}", self.triangles_to_render.len()).as_str(),
                         &Vector2::new(10, 30),
                     );
 

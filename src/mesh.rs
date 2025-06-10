@@ -59,7 +59,7 @@ impl Quad {
         let z = (self.data & 0b0000001110000000) >> 7;
         nalgebra::Vector3::new(x, y, z)
     }
-    pub fn get_light_level(&self) -> u16{
+    pub fn get_light_level(&self) -> u16 {
         self.data & 0b0000000000001111
     }
 
@@ -192,6 +192,38 @@ pub struct Triangle2D {
     pub light: u8,
 }
 
+impl Triangle2D {
+    pub fn to_small(&self) -> SmallTriangle2D {
+        SmallTriangle2D {
+            p1: self.p1.map(|x| x as u8),
+            p2: self.p2.map(|x| x as u8),
+            p3: self.p3.map(|x| x as u8),
+            texture_id: self.texture_id,
+            light: self.light,
+        }
+    }
+}
+
+pub struct SmallTriangle2D {
+    pub p1: Vector2<u8>,
+    pub p2: Vector2<u8>,
+    pub p3: Vector2<u8>,
+    pub texture_id: u8,
+    pub light: u8,
+}
+
+impl SmallTriangle2D {
+    pub fn to_tri_2d(&self) -> Triangle2D {
+        Triangle2D {
+            p1: self.p1.map(|x| x as i16),
+            p2: self.p2.map(|x| x as i16),
+            p3: self.p3.map(|x| x as i16),
+            texture_id: self.texture_id,
+            light: self.light,
+        }
+    }
+}
+
 impl Triangle {
     pub fn get_normal(&self) -> Vector3<f32> {
         let a = self.p2 - self.p1;
@@ -260,36 +292,66 @@ impl Mesh {
                         if get_block_in_chunk_or_world(Vector3::new(x, y, z - 1), world, chunk)
                             .is_some_and(|block| block.is_air())
                         {
-                            quads.push(Quad::new(bloc_pos, QuadDir::Front, 1, Mesh::get_light_level_from_dir(QuadDir::Front)));
+                            quads.push(Quad::new(
+                                bloc_pos,
+                                QuadDir::Front,
+                                1,
+                                Mesh::get_light_level_from_dir(QuadDir::Front),
+                            ));
                         }
 
                         if get_block_in_chunk_or_world(Vector3::new(x, y, z + 1), world, chunk)
                             .is_some_and(|block| block.is_air())
                         {
-                            quads.push(Quad::new(bloc_pos, QuadDir::Back, 1, Mesh::get_light_level_from_dir(QuadDir::Back)));
+                            quads.push(Quad::new(
+                                bloc_pos,
+                                QuadDir::Back,
+                                1,
+                                Mesh::get_light_level_from_dir(QuadDir::Back),
+                            ));
                         }
 
                         if get_block_in_chunk_or_world(Vector3::new(x + 1, y, z), world, chunk)
                             .is_some_and(|block| block.is_air())
                         {
-                            quads.push(Quad::new(bloc_pos, QuadDir::Right, 1, Mesh::get_light_level_from_dir(QuadDir::Right)));
+                            quads.push(Quad::new(
+                                bloc_pos,
+                                QuadDir::Right,
+                                1,
+                                Mesh::get_light_level_from_dir(QuadDir::Right),
+                            ));
                         }
                         if get_block_in_chunk_or_world(Vector3::new(x - 1, y, z), world, chunk)
                             .is_some_and(|block| block.is_air())
                         {
-                            quads.push(Quad::new(bloc_pos, QuadDir::Left, 1, Mesh::get_light_level_from_dir(QuadDir::Left)));
+                            quads.push(Quad::new(
+                                bloc_pos,
+                                QuadDir::Left,
+                                1,
+                                Mesh::get_light_level_from_dir(QuadDir::Left),
+                            ));
                         }
 
                         if get_block_in_chunk_or_world(Vector3::new(x, y - 1, z), world, chunk)
                             .is_some_and(|block| block.is_air())
                         {
-                            quads.push(Quad::new(bloc_pos, QuadDir::Top, 1, Mesh::get_light_level_from_dir(QuadDir::Top)));
+                            quads.push(Quad::new(
+                                bloc_pos,
+                                QuadDir::Top,
+                                1,
+                                Mesh::get_light_level_from_dir(QuadDir::Top),
+                            ));
                         }
 
                         if get_block_in_chunk_or_world(Vector3::new(x, y + 1, z), world, chunk)
                             .is_some_and(|block| block.is_air())
                         {
-                            quads.push(Quad::new(bloc_pos, QuadDir::Bottom, 1, Mesh::get_light_level_from_dir(QuadDir::Bottom)));
+                            quads.push(Quad::new(
+                                bloc_pos,
+                                QuadDir::Bottom,
+                                1,
+                                Mesh::get_light_level_from_dir(QuadDir::Bottom),
+                            ));
                         }
                     }
                 }
