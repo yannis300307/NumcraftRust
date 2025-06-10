@@ -91,6 +91,10 @@ impl World {
         false
     }
 
+    fn get_chunk_at_pos_mut(&mut self, pos: Vector3<isize>) -> Option<&mut Chunk> {
+        self.chunks.iter_mut().find(|chunk| *chunk.get_pos() == pos)
+    }
+
     fn get_chunk_at_pos(&self, pos: Vector3<isize>) -> Option<&Chunk> {
         self.chunks.iter().find(|&chunk| *chunk.get_pos() == pos)
     }
@@ -122,6 +126,22 @@ impl World {
                         let chunk = self.chunks.last_mut().unwrap();
 
                         chunk.generate_chunk(&self.gen_noise);
+
+                        let mut request_mesh_regen = |pos: Vector3<isize>| {
+                            if let Some(chunk) =
+                                self.get_chunk_at_pos_mut(chunk_pos + pos)
+                            {
+                                chunk.need_new_mesh = true;
+                            }
+                        };
+
+                        request_mesh_regen(Vector3::new(-1, 0, 0));
+                        request_mesh_regen(Vector3::new(1, 0, 0));
+                        request_mesh_regen(Vector3::new(0, -1, 0));
+                        request_mesh_regen(Vector3::new(0, 1, 0));
+                        request_mesh_regen(Vector3::new(0, 0, -1));
+                        request_mesh_regen(Vector3::new(0, 0, 1));
+
                     }
                 }
             }
