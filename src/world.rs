@@ -128,9 +128,7 @@ impl World {
                         chunk.generate_chunk(&self.gen_noise);
 
                         let mut request_mesh_regen = |pos: Vector3<isize>| {
-                            if let Some(chunk) =
-                                self.get_chunk_at_pos_mut(chunk_pos + pos)
-                            {
+                            if let Some(chunk) = self.get_chunk_at_pos_mut(chunk_pos + pos) {
                                 chunk.need_new_mesh = true;
                             }
                         };
@@ -141,7 +139,6 @@ impl World {
                         request_mesh_regen(Vector3::new(0, 1, 0));
                         request_mesh_regen(Vector3::new(0, 0, -1));
                         request_mesh_regen(Vector3::new(0, 0, 1));
-
                     }
                 }
             }

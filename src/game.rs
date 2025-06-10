@@ -1,5 +1,3 @@
-use nalgebra::Vector3;
-
 use crate::{constants::rendering::RENDER_DISTANCE, eadk, renderer::Renderer, world::World};
 
 pub struct Game {

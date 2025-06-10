@@ -12,7 +12,7 @@ use crate::{
     camera::Camera,
     constants::{rendering::*, world::CHUNK_SIZE},
     eadk::{self, Color, Rect},
-    mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D},
+    mesh::{Quad, Triangle, Triangle2D},
     world::World,
 };
 
@@ -699,8 +699,8 @@ impl Renderer {
                         CROSS_DATA,
                         Vector2::new(CROSS_WIDTH as isize, CROSS_HEIGHT as isize),
                         Vector2::new(
-                            - ((CROSS_WIDTH / 2) as isize),
-                            - ((CROSS_HEIGHT / 2) as isize),
+                            -((CROSS_WIDTH / 2) as isize),
+                            -((CROSS_HEIGHT / 2) as isize),
                         ),
                     );
                 }
@@ -710,7 +710,7 @@ impl Renderer {
                         Vector2::new(CROSS_WIDTH as isize, CROSS_HEIGHT as isize),
                         Vector2::new(
                             (SCREEN_TILE_WIDTH - CROSS_WIDTH / 2) as isize,
-                            - ((CROSS_HEIGHT / 2) as isize),
+                            -((CROSS_HEIGHT / 2) as isize),
                         ),
                     );
                 }
