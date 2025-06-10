@@ -36,12 +36,6 @@ impl QuadDir {
     }
 }
 
-/*pub struct Quad {
-    pub pos: Vector3<i16>,
-    pub dir: QuadDir,
-    pub color: eadk::Color,
-}*/
-
 pub struct Quad {
     data: u16,
     texture_id: u8,
