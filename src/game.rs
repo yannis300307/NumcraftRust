@@ -1,8 +1,11 @@
-use crate::{constants::rendering::RENDER_DISTANCE, eadk, renderer::Renderer, world::World};
+use nalgebra::Vector3;
+
+use crate::{camera, constants::rendering::RENDER_DISTANCE, eadk, player::Player, renderer::Renderer, world::World};
 
 pub struct Game {
     renderer: Renderer,
     world: World,
+    player: Player,
 }
 
 impl Game {
@@ -10,6 +13,7 @@ impl Game {
         Game {
             renderer: Renderer::new(),
             world: World::new(),
+            player: Player::new()
         }
     }
 
@@ -32,11 +36,16 @@ impl Game {
             return false;
         }
 
+        self.player.update(delta, keyboard_state, &self.world);
+
+        self.renderer.camera.update(delta, keyboard_state, self.player.pos-Vector3::new(0., 1.70, 0.));
+        self.player.rotation = *self.renderer.camera.get_rotation();
+        
         self.world
             .generate_world_around_pos(*self.renderer.camera.get_pos(), RENDER_DISTANCE as isize);
 
+
         self.renderer.update(&self.world, 1.0 / delta);
-        self.renderer.camera.update(delta, keyboard_state);
 
         //eadk::timing::msleep(20);
         true

@@ -17,6 +17,13 @@ pub mod world {
     pub const CHUNK_SIZE: usize = 8; // MAX 8
 }
 
+pub mod player {
+    use core::f32::consts::PI;
+
+    pub const ROTATION_SPEED: f32 = PI / 3.0; // rad / sec
+    pub const MOVEMENT_SPEED: f32 = 2.0;
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum BlockType {
     Air = 0,
@@ -34,7 +41,13 @@ impl BlockType {
         match *self {
             BlockType::Air => 0,
             BlockType::Stone => 1,
-            BlockType::Grass => if dir == QuadDir::Top {2} else {3},
+            BlockType::Grass => {
+                if dir == QuadDir::Top {
+                    2
+                } else {
+                    3
+                }
+            }
             BlockType::Dirt => 3,
         }
     }
