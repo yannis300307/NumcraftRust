@@ -17,7 +17,12 @@ impl Camera {
         }
     }
 
-    pub fn update(&mut self, delta: f32, keyboard_state: eadk::input::KeyboardState, position: Vector3<f32>) {
+    pub fn update(
+        &mut self,
+        delta: f32,
+        keyboard_state: eadk::input::KeyboardState,
+        position: Vector3<f32>,
+    ) {
         // Rotation
         if keyboard_state.key_down(eadk::input::Key::Right) {
             self.rotation.y += delta * ROTATION_SPEED;
@@ -27,12 +32,16 @@ impl Camera {
         }
         if keyboard_state.key_down(eadk::input::Key::Up) {
             self.rotation.x += delta * ROTATION_SPEED;
-            if self.rotation.x >= PI / 2.0 {
-                self.rotation.x = PI / 2.0
+            if self.rotation.x >= PI / 2.0 - 0.01 {
+                self.rotation.x = PI / 2.0 - 0.01
             }
         }
         if keyboard_state.key_down(eadk::input::Key::Down) {
             self.rotation.x -= delta * ROTATION_SPEED;
+
+            if self.rotation.x <= -PI / 2.0 + 0.01 {
+                self.rotation.x = -PI / 2.0 + 0.01
+            }
         }
 
         self.pos = position; // Updated from player

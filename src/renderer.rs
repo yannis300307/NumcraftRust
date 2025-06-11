@@ -662,7 +662,7 @@ impl Renderer {
                         &Vector2::new(10, 30),
                     );
 
-                    self.draw_string(
+                    /*self.draw_string(
                         format!("cam_x:{:.2}", self.camera.get_pos().x).as_str(),
                         &Vector2::new(10, 50),
                     );
@@ -673,6 +673,11 @@ impl Renderer {
                     self.draw_string(
                         format!("cam_z:{:.2}", self.camera.get_pos().z).as_str(),
                         &Vector2::new(10, 90),
+                    );*/
+
+                    self.draw_string(
+                        format!("rot_x:{:.2}", self.camera.get_rotation().x).as_str(),
+                        &Vector2::new(10, 50),
                     );
 
                     self.draw_image_negate(
