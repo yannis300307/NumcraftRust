@@ -1,5 +1,6 @@
-use libm::roundf;
+use libm::{cosf, roundf};
 
+use crate::camera::{self, Camera};
 use crate::chunk::{self, Chunk};
 use crate::constants::BlockType;
 use crate::constants::world::CHUNK_SIZE;
@@ -98,7 +99,7 @@ impl World {
     fn get_chunk_at_pos(&self, pos: Vector3<isize>) -> Option<&Chunk> {
         self.chunks.iter().find(|&chunk| *chunk.get_pos() == pos)
     }
-
+    
     pub fn generate_world_around_pos(&mut self, pos: Vector3<f32>, render_distance: isize) {
         let pos_chunk_coords = Vector3::new(
             roundf(pos.x / CHUNK_SIZE as f32) as isize,
@@ -164,5 +165,13 @@ impl World {
     pub fn get_block_in_world(&self, pos: Vector3<isize>) -> Option<BlockType> {
         self.get_chunk_at_pos(pos / CHUNK_SIZE_I)
             .map(|chunk| chunk.get_at_unchecked(get_chunk_local_coords(pos)))
+    }
+
+    pub fn set_block_in_world(&mut self, pos: Vector3<isize>, block_type: BlockType) -> bool {
+        if let Some(chunk) = self.get_chunk_at_pos_mut(pos / CHUNK_SIZE_I) {
+            chunk.set_at(get_chunk_local_coords(pos).map(|x| x as usize), block_type)
+        } else {
+            false
+        }
     }
 }

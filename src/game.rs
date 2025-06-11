@@ -36,10 +36,8 @@ impl Game {
             return false;
         }
 
-        self.player.update(delta, keyboard_state, &self.world);
+        self.player.update(delta, keyboard_state, &mut self.world, &mut self.renderer.camera);
 
-        self.renderer.camera.update(delta, keyboard_state, self.player.pos-Vector3::new(0., 1.70, 0.));
-        self.player.rotation = *self.renderer.camera.get_rotation();
         
         self.world
             .generate_world_around_pos(*self.renderer.camera.get_pos(), RENDER_DISTANCE as isize);
