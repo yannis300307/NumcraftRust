@@ -1,6 +1,5 @@
-use libm::{cosf, roundf};
+use libm::roundf;
 
-use crate::camera::{self, Camera};
 use crate::chunk::{self, Chunk};
 use crate::constants::BlockType;
 use crate::constants::world::CHUNK_SIZE;
@@ -170,25 +169,26 @@ impl World {
     pub fn set_block_in_world(&mut self, pos: Vector3<isize>, block_type: BlockType) -> bool {
         let chunk_pos = pos / CHUNK_SIZE_I;
         if let Some(chunk) = self.get_chunk_at_pos_mut(chunk_pos) {
-            if chunk.set_at(get_chunk_local_coords(pos).map(|x| x as usize), block_type) {
+            let local_pos = get_chunk_local_coords(pos);
+            if chunk.set_at(local_pos.map(|x| x as usize), block_type) {
                 chunk.need_new_mesh = true;
 
-                if pos.x == 0 {
+                if local_pos.x == 0 {
                     self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(-1, 0, 0));
                 }
-                if pos.x == CHUNK_SIZE_I - 1 {
+                if local_pos.x == CHUNK_SIZE_I - 1 {
                     self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(1, 0, 0));
                 }
-                if pos.y == 0 {
+                if local_pos.y == 0 {
                     self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, -1, 0));
                 }
-                if pos.y == CHUNK_SIZE_I - 1 {
+                if local_pos.y == CHUNK_SIZE_I - 1 {
                     self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 1, 0));
                 }
-                if pos.z == 0 {
+                if local_pos.z == 0 {
                     self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 0, -1));
                 }
-                if pos.z == CHUNK_SIZE_I - 1 {
+                if local_pos.z == CHUNK_SIZE_I - 1 {
                     self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 0, 1));
                 }
                 true

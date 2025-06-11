@@ -1,6 +1,4 @@
-use nalgebra::Vector3;
-
-use crate::{camera, constants::rendering::RENDER_DISTANCE, eadk, player::Player, renderer::Renderer, world::World};
+use crate::{constants::rendering::RENDER_DISTANCE, eadk, player::Player, renderer::Renderer, world::World};
 
 pub struct Game {
     renderer: Renderer,
