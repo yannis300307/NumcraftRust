@@ -295,6 +295,10 @@ pub mod input {
             Self::from_raw(unsafe { eadk_keyboard_scan() })
         }
 
+        pub fn new() -> Self {
+            KeyboardState(0)
+        }
+
         #[cfg(not(target_os = "none"))]
         pub fn scan() -> Self {
             // println!("Scan call");
@@ -307,6 +311,10 @@ pub mod input {
 
         pub fn key_down(&self, key: Key) -> bool {
             (self.0 >> (key as u8)) & 1 != 0
+        }
+
+        pub fn get_just_pressed(&self, old: KeyboardState) -> Self {
+            KeyboardState(self.0 & (!old.0))
         }
     }
 
