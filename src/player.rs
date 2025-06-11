@@ -3,7 +3,7 @@ use core::f32::consts::PI;
 use libm::sincosf;
 use nalgebra::Vector3;
 
-use crate::{camera::Camera, constants::{player::MOVEMENT_SPEED, world, BlockType}, eadk, world::World};
+use crate::{camera::Camera, constants::{player::MOVEMENT_SPEED, BlockType}, eadk, world::World};
 
 pub struct Player {
     pub pos: Vector3<f32>,
@@ -63,13 +63,12 @@ impl Player {
     pub fn raycast(&self, camera: &Camera, world: &World, max_lenght: usize) -> Option<Vector3<isize>> {
         let target: Vector3<f32> = Vector3::new(0.0, 0.0, 1.0);
         let look_dir = camera.get_rotation_matrix() * target.to_homogeneous();
-        let target = camera.get_pos() + look_dir.xyz();
 
         let mut current_pos: Vector3<f32> = *camera.get_pos();
 
-        let forward_step = target.normalize()*0.1;
+        let forward_step = look_dir.xyz().normalize()*0.01;
 
-        for _ in 0..max_lenght*10 {
+        for _ in 0..max_lenght*100 {
             current_pos += forward_step;
 
             let block_pos = current_pos.map(|x| x as isize);

@@ -99,7 +99,7 @@ impl World {
     fn get_chunk_at_pos(&self, pos: Vector3<isize>) -> Option<&Chunk> {
         self.chunks.iter().find(|&chunk| *chunk.get_pos() == pos)
     }
-    
+
     pub fn generate_world_around_pos(&mut self, pos: Vector3<f32>, render_distance: isize) {
         let pos_chunk_coords = Vector3::new(
             roundf(pos.x / CHUNK_SIZE as f32) as isize,
@@ -128,18 +128,12 @@ impl World {
 
                         chunk.generate_chunk(&self.gen_noise);
 
-                        let mut request_mesh_regen = |pos: Vector3<isize>| {
-                            if let Some(chunk) = self.get_chunk_at_pos_mut(chunk_pos + pos) {
-                                chunk.need_new_mesh = true;
-                            }
-                        };
-
-                        request_mesh_regen(Vector3::new(-1, 0, 0));
-                        request_mesh_regen(Vector3::new(1, 0, 0));
-                        request_mesh_regen(Vector3::new(0, -1, 0));
-                        request_mesh_regen(Vector3::new(0, 1, 0));
-                        request_mesh_regen(Vector3::new(0, 0, -1));
-                        request_mesh_regen(Vector3::new(0, 0, 1));
+                        self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(-1, 0, 0));
+                        self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(1, 0, 0));
+                        self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, -1, 0));
+                        self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 1, 0));
+                        self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 0, -1));
+                        self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 0, 1));
                     }
                 }
             }
@@ -167,9 +161,40 @@ impl World {
             .map(|chunk| chunk.get_at_unchecked(get_chunk_local_coords(pos)))
     }
 
+    fn request_mesh_regen_if_exists(&mut self, pos: Vector3<isize>) {
+        if let Some(chunk) = self.get_chunk_at_pos_mut(pos) {
+            chunk.need_new_mesh = true;
+        }
+    }
+
     pub fn set_block_in_world(&mut self, pos: Vector3<isize>, block_type: BlockType) -> bool {
-        if let Some(chunk) = self.get_chunk_at_pos_mut(pos / CHUNK_SIZE_I) {
-            chunk.set_at(get_chunk_local_coords(pos).map(|x| x as usize), block_type)
+        let chunk_pos = pos / CHUNK_SIZE_I;
+        if let Some(chunk) = self.get_chunk_at_pos_mut(chunk_pos) {
+            if chunk.set_at(get_chunk_local_coords(pos).map(|x| x as usize), block_type) {
+                chunk.need_new_mesh = true;
+
+                if pos.x == 0 {
+                    self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(-1, 0, 0));
+                }
+                if pos.x == CHUNK_SIZE_I - 1 {
+                    self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(1, 0, 0));
+                }
+                if pos.y == 0 {
+                    self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, -1, 0));
+                }
+                if pos.y == CHUNK_SIZE_I - 1 {
+                    self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 1, 0));
+                }
+                if pos.z == 0 {
+                    self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 0, -1));
+                }
+                if pos.z == CHUNK_SIZE_I - 1 {
+                    self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 0, 1));
+                }
+                true
+            } else {
+                false
+            }
         } else {
             false
         }
