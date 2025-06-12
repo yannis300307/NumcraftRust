@@ -25,7 +25,7 @@ fn main() {
     let output = {
         if let Ok(out) = Command::new("sh")
             .arg("-c")
-            .arg("nwlink png-nwi assets/icon.png target/icon.nwi")
+            .arg("npx --yes -- nwlink@0.0.19 png-nwi assets/icon.png target/icon.nwi")
             .output()
         {
             println!("Unix detected");
