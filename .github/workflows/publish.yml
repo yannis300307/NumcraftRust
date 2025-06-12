@@ -1,0 +1,33 @@
+name: Build and publish
+on:
+  push:
+    branches:
+      - main
+jobs:
+    publish:
+        name: Publish
+        runs-on: ubuntu-latest
+        steps:
+            - name: Get latest code
+              uses: actions/checkout@v4
+            - name: Install nwlink
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+            - run: npm install -g nwlink
+            - run: echo "$HOME/.npm-global/bin" >> $GITHUB_PATH
+            - name: Install Rust toolchain
+              uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: nightly
+                  target: thumbv7em-none-eabihf
+            - name: Run cargo build
+              uses: actions-rs/cargo@v1
+              with:
+                  command: build
+                  args: --release
+            - run: mv target/thumbv7em-none-eabihf/release/Numcraft target/thumbv7em-none-eabihf/release/Numcraft.nwa
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: Numcraft-app
+                  path: target/thumbv7em-none-eabihf/release/Numcraft.nwa
