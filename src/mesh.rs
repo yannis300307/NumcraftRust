@@ -34,6 +34,17 @@ impl QuadDir {
             _ => panic!("Unknown quad direction."),
         }
     }
+
+    pub fn get_normal_vector(&self) -> Vector3<isize> {
+        match *self {
+            QuadDir::Front => Vector3::new(0, 0, -1),
+            QuadDir::Back => Vector3::new(0, 0, 1),
+            QuadDir::Top => Vector3::new(0, -1, 0),
+            QuadDir::Bottom => Vector3::new(0, 1, 0),
+            QuadDir::Right => Vector3::new(1, 0, 0),
+            QuadDir::Left => Vector3::new(-1, 0, 0),
+        }
+    }
 }
 
 pub struct Quad {

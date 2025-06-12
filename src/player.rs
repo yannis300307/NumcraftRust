@@ -1,12 +1,13 @@
 use core::f32::consts::PI;
 
 use libm::sincosf;
-use nalgebra::Vector3;
+use nalgebra::{ComplexField, Vector3};
 
 use crate::{
     camera::Camera,
     constants::{BlockType, player::MOVEMENT_SPEED},
     eadk,
+    mesh::QuadDir,
     world::World,
 };
 
@@ -67,39 +68,125 @@ impl Player {
             self.pos.y += delta * MOVEMENT_SPEED;
         }
 
-        if just_pressed_keyboard_state.key_down(eadk::input::Key::Ok) {
+        if just_pressed_keyboard_state.key_down(eadk::input::Key::Back) {
             // Break Block
-            if let Some(block_pos) = self.raycast(camera, world, 5) {
-                world.set_block_in_world(block_pos, BlockType::Air);
+            if let Some(result) = self.ray_cast(camera, world, 10) {
+                world.set_block_in_world(result.block_pos, BlockType::Air);
+            }
+        }
+
+        if just_pressed_keyboard_state.key_down(eadk::input::Key::Ok) {
+            // Place Block
+            if let Some(result) = self.ray_cast(camera, world, 10) {
+                world.set_block_in_world(
+                    result.block_pos + result.face_dir.get_normal_vector(),
+                    BlockType::Stone,
+                );
             }
         }
     }
 
-    pub fn raycast(
-        &self,
-        camera: &Camera,
-        world: &World,
-        max_lenght: usize,
-    ) -> Option<Vector3<isize>> {
-        let target: Vector3<f32> = Vector3::new(0.0, 0.0, 1.0);
-        let look_dir = camera.get_rotation_matrix() * target.to_homogeneous();
+    fn ray_cast(&self, camera: &Camera, world: &World, max_lenght: usize) -> Option<RaycastResult> {
+        let start_pos = *camera.get_pos();
+        let end_pos = start_pos
+            + (camera.get_rotation_matrix() * Vector3::new(0., 0., 1.).to_homogeneous()).xyz()
+                * max_lenght as f32;
 
-        let mut current_pos: Vector3<f32> = *camera.get_pos();
+        let mut current_voxel_pos = start_pos;
+        let mut step_dir = -1;
 
-        let forward_step = look_dir.xyz().normalize() * 0.01;
+        let dx = (end_pos.x - start_pos.x).signum();
+        let delta_x = if dx != 0. {
+            (dx / (end_pos.x - start_pos.x)).min(10000000.0)
+        } else {
+            10000000.0
+        };
+        let mut max_x = if dx > 0. {
+            delta_x * (1.0 - start_pos.x.fract())
+        } else {
+            delta_x * start_pos.x.fract()
+        };
 
-        for _ in 0..max_lenght * 100 {
-            current_pos += forward_step;
+        let dy = (end_pos.y - start_pos.y).signum();
+        let delta_y = if dy != 0. {
+            (dy / (end_pos.y - start_pos.y)).min(10000000.0)
+        } else {
+            10000000.0
+        };
+        let mut max_y = if dy > 0. {
+            delta_y * (1.0 - start_pos.y.fract())
+        } else {
+            delta_y * start_pos.y.fract()
+        };
 
-            let block_pos = current_pos.map(|x| x as isize);
+        let dz = (end_pos.z - start_pos.z).signum();
+        let delta_z = if dz != 0. {
+            (dz / (end_pos.z - start_pos.z)).min(10000000.0)
+        } else {
+            10000000.0
+        };
+        let mut max_z = if dz > 0. {
+            delta_z * (1.0 - start_pos.z.fract())
+        } else {
+            delta_z * start_pos.z.fract()
+        };
 
-            if world
-                .get_block_in_world(block_pos)
-                .is_some_and(|b| b != BlockType::Air)
-            {
-                return Some(block_pos);
+        while !(max_x > 1.0 && max_y > 1.0 && max_z > 1.0) {
+            let result = world.get_block_in_world(current_voxel_pos.map(|x| x as isize));
+            if !result.is_none_or(|b| b == BlockType::Air) {
+                let block_type = result.unwrap();
+                let voxel_world_pos = current_voxel_pos;
+
+                let voxel_normal = if step_dir == 0 {
+                    if dx < 0. {
+                        QuadDir::Right
+                    } else {
+                        QuadDir::Left
+                    }
+                } else if step_dir == 1 {
+                    if dy < 0. {
+                        QuadDir::Bottom
+                    } else {
+                        QuadDir::Top
+                    }
+                } else if dz < 0. {
+                    QuadDir::Back
+                } else {
+                    QuadDir::Front
+                };
+                return Some(RaycastResult {
+                    block_pos: voxel_world_pos.map(|x| x as isize),
+                    face_dir: voxel_normal,
+                    block_type,
+                });
+            }
+
+            if max_x < max_y {
+                if max_x < max_z {
+                    current_voxel_pos.x += dx;
+                    max_x += delta_x;
+                    step_dir = 0;
+                } else {
+                    current_voxel_pos.z += dz;
+                    max_z += delta_z;
+                    step_dir = 2;
+                }
+            } else if max_y < max_z {
+                current_voxel_pos.y += dy;
+                max_y += delta_y;
+                step_dir = 1;
+            } else {
+                current_voxel_pos.z += dz;
+                max_z += delta_z;
+                step_dir = 2
             }
         }
         None
     }
+}
+
+struct RaycastResult {
+    pub block_pos: Vector3<isize>,
+    pub face_dir: QuadDir,
+    pub block_type: BlockType,
 }
