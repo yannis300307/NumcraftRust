@@ -24,13 +24,11 @@ codegen-units = 1
 nalgebra = {version = "0.33.2", default-features = false, features = [ "libm" ]}
 libm = "0.2.15"
 format_no_std = "1.2.0"
-cbitmap = "0.3.2"
+heapless = "0.8.0"
 cortex-m = {version="0.7.7", features=["critical-section-single-core"]}
 embedded-alloc = "0.6.0"
 fastnoise-lite = { version="1.1.1", default-features=false, features = ["libm"] }
 bresenham = "0.1.1"
-strum = {version= "0.27.1", default-features=false, features = ["derive"] }
-
 
 [target.'cfg(any(windows, unix))'.dependencies]
 minifb = "0.28"
