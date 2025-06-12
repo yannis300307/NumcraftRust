@@ -14,10 +14,11 @@ Note that this is not the final result but the current state of the project.
 
 ## Current project state
 At that time, on the main branch, the app is capable of:
-- rendering multiple chunks
-- loading chunks generated with noise around the camera
+- Rendering multiple chunks
+- Loading chunks generated with noise around the camera
 - Having multiple colors for each blocks
-- setting the light level for each individual quad
+- Setting the light level for each individual quad
+- Breaking and placing blocks (only stone for now)
 
 The program runs at 10-20 FPS on N0110 and 30-50 FPS on N0120.
 
