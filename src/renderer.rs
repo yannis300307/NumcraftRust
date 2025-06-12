@@ -1,3 +1,4 @@
+use alloc::collections::vec_deque::VecDeque;
 #[cfg(target_os = "none")]
 use alloc::format;
 
@@ -483,9 +484,9 @@ impl Renderer {
                     light: to_project.light,
                 };
 
-                let mut clip_buffer: heapless::Deque<Triangle2D, 16> = heapless::Deque::new(); // 2^4
+                let mut clip_buffer: VecDeque<Triangle2D> = VecDeque::new(); // 2^4
 
-                clip_buffer.push_back(projected_triangle).unwrap();
+                clip_buffer.push_back(projected_triangle);
                 let mut new_tris = 1;
 
                 let mut clip_triangle = |line_p, line_n| {
@@ -496,10 +497,10 @@ impl Renderer {
                         let clipped = triangle_clip_against_line(&line_p, &line_n, &test);
 
                         if let Some(clipped_tri) = clipped.0 {
-                            clip_buffer.push_back(clipped_tri).unwrap();
+                            clip_buffer.push_back(clipped_tri);
                         }
                         if let Some(clipped_tri) = clipped.1 {
-                            clip_buffer.push_back(clipped_tri).unwrap();
+                            clip_buffer.push_back(clipped_tri);
                         }
                     }
                     new_tris = clip_buffer.len();
