@@ -2,7 +2,6 @@
 use alloc::vec::Vec;
 
 use nalgebra::{Vector2, Vector3};
-use strum::EnumIter;
 
 use crate::{
     chunk::Chunk,
@@ -12,7 +11,7 @@ use crate::{
 
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 
-#[derive(PartialEq, Eq, EnumIter, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum QuadDir {
     Front = 1,
     Back = 2,
