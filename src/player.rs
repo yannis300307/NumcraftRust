@@ -78,10 +78,10 @@ impl Player {
         if just_pressed_keyboard_state.key_down(eadk::input::Key::Ok) {
             // Place Block
             if let Some(result) = self.ray_cast(camera, world, 10) {
-                world.set_block_in_world(
-                    result.block_pos + result.face_dir.get_normal_vector(),
-                    BlockType::Stone,
-                );
+                let block_pos = result.block_pos + result.face_dir.get_normal_vector();
+                if world.get_block_in_world(block_pos).is_some_and(|b| !b.is_air()) { // Just in case
+                    world.set_block_in_world(block_pos, BlockType::Stone);
+                }
             }
         }
     }
