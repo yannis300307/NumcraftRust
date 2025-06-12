@@ -21,11 +21,11 @@ fn convert_image(file_name: &str) {
 
 fn main() {
     // Turn icon.png into icon.nwi
-    println!("cargo:rerun-if-changed=src/icon.png");
+    println!("cargo:rerun-if-changed=assets/icon.png");
     let output = {
         if let Ok(out) = Command::new("sh")
             .arg("-c")
-            .arg("nwlink png-nwi src/icon.png target/icon.nwi")
+            .arg("nwlink png-nwi assets/icon.png target/icon.nwi")
             .output()
         {
             println!("Unix detected");
@@ -33,7 +33,7 @@ fn main() {
         } else {
             println!("Windows detected");
             Command::new("cmd")
-                .args(["/c", "nwlink", "png-nwi", "src/icon.png", "target/icon.nwi"])
+                .args(["/c", "nwlink", "png-nwi", "assets/icon.png", "target/icon.nwi"])
                 .output()
                 .expect("Unable to convert icon.")
         }
