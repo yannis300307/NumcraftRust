@@ -55,7 +55,7 @@ impl Game {
         self.world
             .generate_world_around_pos(*self.renderer.camera.get_pos(), RENDER_DISTANCE as isize);
 
-        self.renderer.update(&self.world, 1.0 / delta);
+        self.renderer.update(&self.world, &self.player, 1.0 / delta);
 
         //eadk::timing::msleep(20);
         true

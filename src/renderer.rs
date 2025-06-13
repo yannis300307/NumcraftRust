@@ -137,32 +137,34 @@ fn draw_2d_triangle(
     tri: &Triangle2D,
     frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 ) {
-    fill_triangle(
-        Vector2::new(tri.p1.x as isize, tri.p1.y as isize),
-        Vector2::new(tri.p2.x as isize, tri.p2.y as isize),
-        Vector2::new(tri.p3.x as isize, tri.p3.y as isize),
-        frame_buffer,
-        get_quad_color_from_texture_id(tri.texture_id).apply_light(tri.light * 17),
-    );
-
-    /*draw_line(
-        (tri.p1.x as isize, tri.p1.y as isize),
-        (tri.p2.x as isize, tri.p2.y as isize),
-        frame_buffer,
-        Color::from_components(0b11111, 0b0, 0b0),
-    );
-    draw_line(
-        (tri.p2.x as isize, tri.p2.y as isize),
-        (tri.p3.x as isize, tri.p3.y as isize),
-        frame_buffer,
-        Color::from_components(0b11111, 0b0, 0b0),
-    );
-    draw_line(
-        (tri.p3.x as isize, tri.p3.y as isize),
-        (tri.p1.x as isize, tri.p1.y as isize),
-        frame_buffer,
-        Color::from_components(0b11111, 0b0, 0b0),
-    );*/
+    if tri.texture_id == 255 { // Block marker
+        draw_line(
+            (tri.p1.x as isize, tri.p1.y as isize),
+            (tri.p2.x as isize, tri.p2.y as isize),
+            frame_buffer,
+            Color::from_components(0b11111, 0b0, 0b0),
+        );
+        draw_line(
+            (tri.p2.x as isize, tri.p2.y as isize),
+            (tri.p3.x as isize, tri.p3.y as isize),
+            frame_buffer,
+            Color::from_components(0b11111, 0b0, 0b0),
+        );
+        draw_line(
+            (tri.p3.x as isize, tri.p3.y as isize),
+            (tri.p1.x as isize, tri.p1.y as isize),
+            frame_buffer,
+            Color::from_components(0b11111, 0b0, 0b0),
+        );
+    } else {
+        fill_triangle(
+            Vector2::new(tri.p1.x as isize, tri.p1.y as isize),
+            Vector2::new(tri.p2.x as isize, tri.p2.y as isize),
+            Vector2::new(tri.p3.x as isize, tri.p3.y as isize),
+            frame_buffer,
+            get_quad_color_from_texture_id(tri.texture_id).apply_light(tri.light * 17),
+        );
+    }
 }
 
 fn matrix_point_at(pos: &Vector3<f32>, target: &Vector3<f32>, up: &Vector3<f32>) -> Matrix4<f32> {
@@ -616,7 +618,7 @@ impl Renderer {
         }
     }
 
-    pub fn update(&mut self, world: &World, fps_count: f32) {
+    pub fn update(&mut self, world: &World, player: &Player, fps_count: f32) {
         self.triangles_to_render.clear();
 
         let mat_view = self.get_mat_view();
@@ -645,6 +647,12 @@ impl Renderer {
             for quad in quads {
                 self.add_quad_to_render(quad, &mat_view, *chunk.get_pos());
             }
+        }
+
+        // Finally add the player block marker
+        let block_marker = player.get_block_marker();
+        for quad in block_marker.0.get_reference_vec() {
+            self.add_quad_to_render(quad, &mat_view, block_marker.1);
         }
 
         for x in 0..SCREEN_TILE_SUBDIVISION {

@@ -60,5 +60,6 @@ pub fn get_quad_color_from_texture_id(id: u8) -> Color {
         2 => Color::from_888(21, 147, 0),
         3 => Color::from_888(120, 77, 49),
         _ => Color::from_888(0, 0, 0),
+        // 255 is reserved for block outline
     }
 }

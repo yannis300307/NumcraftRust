@@ -5,15 +5,16 @@ use nalgebra::{ComplexField, Vector3};
 
 use crate::{
     camera::Camera,
-    constants::{BlockType, player::MOVEMENT_SPEED},
+    constants::{player::MOVEMENT_SPEED, BlockType},
     eadk,
-    mesh::QuadDir,
-    world::World,
+    mesh::{Mesh, Quad, QuadDir},
+    world::{get_chunk_local_coords, get_chunk_pos_from_block, World},
 };
 
 pub struct Player {
     pub pos: Vector3<f32>,
     pub rotation: Vector3<f32>,
+    ray_cast_result: Option<RaycastResult>,
 }
 
 impl Player {
@@ -21,8 +22,26 @@ impl Player {
         Player {
             pos: Vector3::new(0., 0., 0.),
             rotation: Vector3::new(0., 0., 0.),
+            ray_cast_result: None,
         }
     }
+
+    pub fn get_block_marker(&self) -> (Mesh, Vector3<isize>) {
+        let mut mesh = Mesh::new();
+
+        if let Some(result) = &self.ray_cast_result {
+            mesh.quads.push(Quad::new(
+                get_chunk_local_coords(result.block_pos).map(|x| x as u16),
+                result.face_dir,
+                255,
+                0,
+            ));
+            (mesh, get_chunk_pos_from_block(result.block_pos))
+        } else {
+            (mesh, Vector3::repeat(0))
+        }
+    }
+
     pub fn update(
         &mut self,
         delta: f32,
@@ -33,6 +52,8 @@ impl Player {
     ) {
         camera.update(delta, keyboard_state, self.pos - Vector3::new(0., 1.70, 0.));
         self.rotation = *camera.get_rotation();
+
+        self.ray_cast_result = self.ray_cast(camera, world, 10);
 
         // Movements
         if keyboard_state.key_down(eadk::input::Key::Toolbox) {
@@ -70,16 +91,20 @@ impl Player {
 
         if just_pressed_keyboard_state.key_down(eadk::input::Key::Back) {
             // Break Block
-            if let Some(result) = self.ray_cast(camera, world, 10) {
+            if let Some(result) = &self.ray_cast_result {
                 world.set_block_in_world(result.block_pos, BlockType::Air);
             }
         }
 
         if just_pressed_keyboard_state.key_down(eadk::input::Key::Ok) {
             // Place Block
-            if let Some(result) = self.ray_cast(camera, world, 10) {
+            if let Some(result) = &self.ray_cast_result {
                 let block_pos = result.block_pos + result.face_dir.get_normal_vector();
-                if world.get_block_in_world(block_pos).is_some_and(|b| !b.is_air()) { // Just in case
+                if world
+                    .get_block_in_world(block_pos)
+                    .is_some_and(|b| b.is_air()) // Just in case
+                {
+                    
                     world.set_block_in_world(block_pos, BlockType::Stone);
                 }
             }

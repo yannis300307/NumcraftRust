@@ -18,24 +18,28 @@ pub struct World {
 }
 
 /// Convert the block position from world space to chunk space
-fn get_chunk_local_coords(pos: Vector3<isize>) -> Vector3<isize> {
+pub fn get_chunk_local_coords(pos: Vector3<isize>) -> Vector3<isize> {
     Vector3::new(
         if pos.x < 0 {
-            CHUNK_SIZE_I - 1 + pos.x % CHUNK_SIZE_I
+            CHUNK_SIZE_I - 1 + (pos.x + 1) % CHUNK_SIZE_I
         } else {
             pos.x % CHUNK_SIZE_I
         },
         if pos.y < 0 {
-            CHUNK_SIZE_I - 1 + pos.y % CHUNK_SIZE_I
+            CHUNK_SIZE_I - 1 + (pos.y + 1) % CHUNK_SIZE_I
         } else {
             pos.y % CHUNK_SIZE_I
         },
         if pos.z < 0 {
-            CHUNK_SIZE_I - 1 + pos.z % CHUNK_SIZE_I
+            CHUNK_SIZE_I - 1 + (pos.z + 1) % CHUNK_SIZE_I
         } else {
             pos.z % CHUNK_SIZE_I
         },
     )
+}
+
+pub fn get_chunk_pos_from_block(pos: Vector3<isize>) -> Vector3<isize> {
+    pos / CHUNK_SIZE_I
 }
 
 impl Default for World {
