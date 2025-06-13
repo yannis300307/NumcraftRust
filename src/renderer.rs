@@ -13,6 +13,7 @@ use crate::{
     constants::{get_quad_color_from_texture_id, rendering::*, world::CHUNK_SIZE},
     eadk::{self, Color, Rect},
     mesh::{Quad, Triangle, Triangle2D},
+    player::Player,
     world::World,
 };
 
@@ -662,61 +663,47 @@ impl Renderer {
                         &Vector2::new(10, 30),
                     );
 
-                    /*self.draw_string(
-                        format!("cam_x:{:.2}", self.camera.get_pos().x).as_str(),
+                    self.draw_string(
+                        format!(
+                            "{:.1},{:.1},{:.1}",
+                            self.camera.get_pos().x,
+                            self.camera.get_pos().y,
+                            self.camera.get_pos().y
+                        )
+                        .as_str(),
                         &Vector2::new(10, 50),
                     );
-                    self.draw_string(
-                        format!("cam_y:{:.2}", self.camera.get_pos().y).as_str(),
-                        &Vector2::new(10, 70),
-                    );
-                    self.draw_string(
-                        format!("cam_z:{:.2}", self.camera.get_pos().z).as_str(),
-                        &Vector2::new(10, 90),
-                    );*/
-
-                    self.draw_string(
-                        format!("rot_x:{:.2}", self.camera.get_rotation().x).as_str(),
-                        &Vector2::new(10, 50),
-                    );
-
+                }
+                let mut draw_cross = |x, y| {
                     self.draw_image_negate(
                         CROSS_DATA,
                         Vector2::new(CROSS_WIDTH as isize, CROSS_HEIGHT as isize),
-                        Vector2::new(
-                            (SCREEN_TILE_WIDTH - CROSS_WIDTH / 2) as isize,
-                            (SCREEN_TILE_HEIGHT - CROSS_HEIGHT / 2) as isize,
-                        ),
+                        Vector2::new(x, y),
                     );
+                };
+
+                if x == 0 && y == 0 {
+                    draw_cross(
+                        (SCREEN_TILE_WIDTH - CROSS_WIDTH / 2) as isize,
+                        (SCREEN_TILE_HEIGHT - CROSS_HEIGHT / 2) as isize,
+                    )
                 }
                 if x == 1 && y == 0 {
-                    self.draw_image_negate(
-                        CROSS_DATA,
-                        Vector2::new(CROSS_WIDTH as isize, CROSS_HEIGHT as isize),
-                        Vector2::new(
-                            -((CROSS_WIDTH / 2) as isize),
-                            (SCREEN_TILE_HEIGHT - CROSS_HEIGHT / 2) as isize,
-                        ),
-                    );
+                    draw_cross(
+                        -((CROSS_WIDTH / 2) as isize),
+                        (SCREEN_TILE_HEIGHT - CROSS_HEIGHT / 2) as isize,
+                    )
                 }
                 if x == 1 && y == 1 {
-                    self.draw_image_negate(
-                        CROSS_DATA,
-                        Vector2::new(CROSS_WIDTH as isize, CROSS_HEIGHT as isize),
-                        Vector2::new(
-                            -((CROSS_WIDTH / 2) as isize),
-                            -((CROSS_HEIGHT / 2) as isize),
-                        ),
+                    draw_cross(
+                        -((CROSS_WIDTH / 2) as isize),
+                        -((CROSS_HEIGHT / 2) as isize),
                     );
                 }
                 if x == 0 && y == 1 {
-                    self.draw_image_negate(
-                        CROSS_DATA,
-                        Vector2::new(CROSS_WIDTH as isize, CROSS_HEIGHT as isize),
-                        Vector2::new(
-                            (SCREEN_TILE_WIDTH - CROSS_WIDTH / 2) as isize,
-                            -((CROSS_HEIGHT / 2) as isize),
-                        ),
+                    draw_cross(
+                        (SCREEN_TILE_WIDTH - CROSS_WIDTH / 2) as isize,
+                        -((CROSS_HEIGHT / 2) as isize),
                     );
                 }
 
