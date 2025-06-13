@@ -26,6 +26,32 @@ The program runs at 10-20 FPS on N0110 and 30-50 FPS on N0120.
 
 NumcraftRust should run on both N120, N115 and N110 models. You will get better performances with the N120 model (N110 and N115 have the same CPU clock speed and same RAM).
 
+## Roadmap
+**Here is the current roadmap for the project :**
+- [ ] Fix the raycaster
+- [ ] Add textures
+- [ ] Add a save system with compression
+- [ ] Add collisions
+- [ ] Better world generation
+- [ ] Add a main menu
+- [ ] Add a creative menu to select multiple blocks
+- [ ] Add a menu to select between multiple worlds
+- [ ] Add a lightning engine
+- [ ] Add mobs
+- [ ] Add a survival mode
+
+If I have the time:
+- [ ] Add TNT
+- [ ] Add redstone
+- [ ] Add commands support
+- [ ] Make a tool to convert Minecraft schematics to Numcraft structures
+- [ ] Add structures such as Villages
+- [ ] Upsilon / Omega compatibility
+
+Good ideas but I will never have the time to do that :
+- [ ] Mod support
+- [ ] Multiplayer (impossible at that time)
+
 ## Build the app
 
 To build this app, you will need to install an embedded ARM rust compiler as well as [Node.js](https://nodejs.org/en/). The SDK for Epsilon apps is shipped as an npm module called [nwlink](https://www.npmjs.com/package/nwlink) that will automatically be installed at compile time.
@@ -34,7 +60,7 @@ To build this app, you will need to install an embedded ARM rust compiler as wel
 brew install rustup node # Or equivalent on your OS
 rustup-init
 rustup target add thumbv7em-none-eabihf
-cargo build
+cargo build --release
 ```
 
 ## Run the app
@@ -43,5 +69,5 @@ The app is sent over to the calculator using the DFU protocol over USB.
 
 ```shell
 # Now connect your NumWorks calculator to your computer using the USB cable
-cargo run
+cargo run --release
 ```
