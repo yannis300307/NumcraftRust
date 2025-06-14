@@ -138,7 +138,7 @@ fn draw_2d_triangle(
     frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 ) {
     if tri.texture_id == 255 { // Block marker
-        draw_line(
+        draw_line( // TODO : fix point sorting to avoid weird marker
             (tri.p1.x as isize, tri.p1.y as isize),
             (tri.p2.x as isize, tri.p2.y as isize),
             frame_buffer,
@@ -150,12 +150,12 @@ fn draw_2d_triangle(
             frame_buffer,
             Color::from_components(0b11111, 0b0, 0b0),
         );
-        draw_line(
+        /*draw_line(
             (tri.p3.x as isize, tri.p3.y as isize),
             (tri.p1.x as isize, tri.p1.y as isize),
             frame_buffer,
             Color::from_components(0b11111, 0b0, 0b0),
-        );
+        );*/
     } else {
         fill_triangle(
             Vector2::new(tri.p1.x as isize, tri.p1.y as isize),

@@ -114,7 +114,7 @@ impl Player {
     fn ray_cast(&self, camera: &Camera, world: &World, max_lenght: usize) -> Option<RaycastResult> {
         let start_pos = *camera.get_pos();
         let end_pos = start_pos
-            + (camera.get_rotation_matrix() * Vector3::new(0., 0., 1.).to_homogeneous()).xyz()
+            + (camera.get_rotation_matrix() * Vector3::new(0., 0., 1.).to_homogeneous()).xyz().normalize()
                 * max_lenght as f32;
 
         let mut current_voxel_pos = start_pos;
