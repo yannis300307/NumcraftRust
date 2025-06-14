@@ -32,15 +32,15 @@ impl Camera {
         }
         if keyboard_state.key_down(eadk::input::Key::Up) {
             self.rotation.x += delta * ROTATION_SPEED;
-            if self.rotation.x >= PI / 2.0 - 0.01 {
-                self.rotation.x = PI / 2.0 - 0.01
+            if self.rotation.x >= PI / 2.0 - 0.0001 {
+                self.rotation.x = PI / 2.0 - 0.0001
             }
         }
         if keyboard_state.key_down(eadk::input::Key::Down) {
             self.rotation.x -= delta * ROTATION_SPEED;
 
-            if self.rotation.x <= -PI / 2.0 + 0.01 {
-                self.rotation.x = -PI / 2.0 + 0.01
+            if self.rotation.x <= -PI / 2.0 + 0.0001 {
+                self.rotation.x = -PI / 2.0 + 0.0001
             }
         }
 

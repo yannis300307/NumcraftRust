@@ -1,14 +1,14 @@
 use core::f32::consts::PI;
 
-use libm::sincosf;
+use libm::{cosf, sincosf, sinf};
 use nalgebra::{ComplexField, Vector3};
 
 use crate::{
     camera::Camera,
-    constants::{player::MOVEMENT_SPEED, BlockType},
+    constants::{BlockType, player::MOVEMENT_SPEED},
     eadk,
     mesh::{Mesh, Quad, QuadDir},
-    world::{get_chunk_local_coords, get_chunk_pos_from_block, World},
+    world::{World, get_chunk_local_coords, get_chunk_pos_from_block},
 };
 
 pub struct Player {
@@ -102,9 +102,9 @@ impl Player {
                 let block_pos = result.block_pos + result.face_dir.get_normal_vector();
                 if world
                     .get_block_in_world(block_pos)
-                    .is_some_and(|b| b.is_air()) // Just in case
+                    .is_some_and(|b| b.is_air())
+                // Just in case
                 {
-                    
                     world.set_block_in_world(block_pos, BlockType::Stone);
                 }
             }
@@ -113,9 +113,14 @@ impl Player {
 
     fn ray_cast(&self, camera: &Camera, world: &World, max_lenght: usize) -> Option<RaycastResult> {
         let start_pos = *camera.get_pos();
-        let end_pos = start_pos
-            + (camera.get_rotation_matrix() * Vector3::new(0., 0., 1.).to_homogeneous()).xyz().normalize()
-                * max_lenght as f32;
+        let cam_rot = camera.get_rotation();
+        let forward_vector = Vector3::new(
+            cosf(cam_rot.x) * sinf(cam_rot.y),
+            -sinf(cam_rot.x),
+            cosf(cam_rot.x) * cosf(cam_rot.y),
+        );
+
+        let end_pos = start_pos + forward_vector.normalize() * (max_lenght as f32);
 
         let mut current_voxel_pos = start_pos;
         let mut step_dir = -1;
@@ -157,10 +162,10 @@ impl Player {
         };
 
         while !(max_x > 1.0 && max_y > 1.0 && max_z > 1.0) {
-            let result = world.get_block_in_world(current_voxel_pos.map(|x| x as isize));
+            let current_voxel_pos_isize = current_voxel_pos.map(|x| x as isize);
+            let result = world.get_block_in_world(current_voxel_pos_isize);
             if !result.is_none_or(|b| b == BlockType::Air) {
                 let block_type = result.unwrap();
-                let voxel_world_pos = current_voxel_pos;
 
                 let voxel_normal = if step_dir == 0 {
                     if dx < 0. {
@@ -180,7 +185,7 @@ impl Player {
                     QuadDir::Front
                 };
                 return Some(RaycastResult {
-                    block_pos: voxel_world_pos.map(|x| x as isize),
+                    block_pos: current_voxel_pos_isize,
                     face_dir: voxel_normal,
                     block_type,
                 });

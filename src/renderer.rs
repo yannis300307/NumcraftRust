@@ -25,9 +25,11 @@ const SCREEN_HEIGHTF: f32 = SCREEN_HEIGHT as f32;
 // Screen tiling constants
 const SCREEN_TILE_WIDTH: usize = SCREEN_WIDTH.div_ceil(SCREEN_TILE_SUBDIVISION);
 const SCREEN_TILE_HEIGHT: usize = SCREEN_HEIGHT.div_ceil(SCREEN_TILE_SUBDIVISION);
+const SCREEN_TILE_WIDTHF: f32 = SCREEN_TILE_WIDTH as f32;
+const SCREEN_TILE_HEIGHTF: f32 = SCREEN_TILE_HEIGHT as f32;
 
-const HALF_SCREEN_TILE_WIDTH: f32 = SCREEN_WIDTH as f32 / 2.0;
-const HALF_SCREEN_TILE_HEIGHT: f32 = SCREEN_HEIGHT as f32 / 2.2;
+const HALF_SCREEN_TILE_WIDTH: f32 = SCREEN_TILE_WIDTH as f32 / 2.0;
+const HALF_SCREEN_TILE_HEIGHT: f32 = SCREEN_TILE_HEIGHT as f32 / 2.0;
 
 // Projection parameters
 const ASPECT_RATIO: f32 = SCREEN_WIDTHF / SCREEN_HEIGHTF;
@@ -471,15 +473,15 @@ impl Renderer {
             let mut project_and_add = |to_project: Triangle| {
                 let projected_triangle = Triangle2D {
                     p1: ((self.project_point(to_project.p1) + Vector2::new(1., 1.)).component_mul(
-                        &Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT),
+                        &Vector2::new(SCREEN_TILE_WIDTHF, SCREEN_TILE_HEIGHTF),
                     ))
                     .map(|x| x as i16),
                     p2: ((self.project_point(to_project.p2) + Vector2::new(1., 1.)).component_mul(
-                        &Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT),
+                        &Vector2::new(SCREEN_TILE_WIDTHF, SCREEN_TILE_HEIGHTF),
                     ))
                     .map(|x| x as i16),
                     p3: ((self.project_point(to_project.p3) + Vector2::new(1., 1.)).component_mul(
-                        &Vector2::new(HALF_SCREEN_TILE_WIDTH, HALF_SCREEN_TILE_HEIGHT),
+                        &Vector2::new(SCREEN_TILE_WIDTHF, SCREEN_TILE_HEIGHTF),
                     ))
                     .map(|x| x as i16),
                     texture_id: to_project.texture_id,
@@ -676,7 +678,7 @@ impl Renderer {
                             "{:.1},{:.1},{:.1}",
                             self.camera.get_pos().x,
                             self.camera.get_pos().y,
-                            self.camera.get_pos().y
+                            self.camera.get_pos().z
                         )
                         .as_str(),
                         &Vector2::new(10, 50),
