@@ -28,8 +28,8 @@ const SCREEN_TILE_HEIGHT: usize = SCREEN_HEIGHT.div_ceil(SCREEN_TILE_SUBDIVISION
 const SCREEN_TILE_WIDTHF: f32 = SCREEN_TILE_WIDTH as f32;
 const SCREEN_TILE_HEIGHTF: f32 = SCREEN_TILE_HEIGHT as f32;
 
-const HALF_SCREEN_TILE_WIDTH: f32 = SCREEN_TILE_WIDTH as f32 / 2.0;
-const HALF_SCREEN_TILE_HEIGHT: f32 = SCREEN_TILE_HEIGHT as f32 / 2.0;
+const HALF_SCREEN_TILE_WIDTHF: f32 = SCREEN_TILE_WIDTHF / 2.0;
+const HALF_SCREEN_TILE_HEIGHTF: f32 = SCREEN_TILE_HEIGHTF / 2.0;
 
 // Projection parameters
 const ASPECT_RATIO: f32 = SCREEN_WIDTHF / SCREEN_HEIGHTF;
@@ -139,8 +139,10 @@ fn draw_2d_triangle(
     tri: &Triangle2D,
     frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 ) {
-    if tri.texture_id == 255 { // Block marker
-        draw_line( // TODO : fix point sorting to avoid weird marker
+    if tri.texture_id == 255 {
+        // Block marker
+        draw_line(
+            // TODO : fix point sorting to avoid weird marker
             (tri.p1.x as isize, tri.p1.y as isize),
             (tri.p2.x as isize, tri.p2.y as isize),
             frame_buffer,
@@ -472,17 +474,14 @@ impl Renderer {
 
             let mut project_and_add = |to_project: Triangle| {
                 let projected_triangle = Triangle2D {
-                    p1: ((self.project_point(to_project.p1) + Vector2::new(1., 1.)).component_mul(
-                        &Vector2::new(SCREEN_TILE_WIDTHF, SCREEN_TILE_HEIGHTF),
-                    ))
+                    p1: ((self.project_point(to_project.p1) + Vector2::new(1., 1.))
+                        .component_mul(&Vector2::new(HALF_SCREEN_TILE_WIDTHF, HALF_SCREEN_TILE_HEIGHTF)))
                     .map(|x| x as i16),
-                    p2: ((self.project_point(to_project.p2) + Vector2::new(1., 1.)).component_mul(
-                        &Vector2::new(SCREEN_TILE_WIDTHF, SCREEN_TILE_HEIGHTF),
-                    ))
+                    p2: ((self.project_point(to_project.p2) + Vector2::new(1., 1.))
+                        .component_mul(&Vector2::new(HALF_SCREEN_TILE_WIDTHF, HALF_SCREEN_TILE_HEIGHTF)))
                     .map(|x| x as i16),
-                    p3: ((self.project_point(to_project.p3) + Vector2::new(1., 1.)).component_mul(
-                        &Vector2::new(SCREEN_TILE_WIDTHF, SCREEN_TILE_HEIGHTF),
-                    ))
+                    p3: ((self.project_point(to_project.p3) + Vector2::new(1., 1.))
+                        .component_mul(&Vector2::new(HALF_SCREEN_TILE_WIDTHF, HALF_SCREEN_TILE_HEIGHTF)))
                     .map(|x| x as i16),
                     texture_id: to_project.texture_id,
                     light: to_project.light,
