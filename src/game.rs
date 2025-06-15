@@ -1,3 +1,5 @@
+// In src/game.rs
+
 use crate::{
     constants::{
         rendering::{RENDER_DISTANCE, SCREEN_HEIGHT, SCREEN_WIDTH},
