@@ -86,9 +86,9 @@ impl Quad {
         match self.get_dir() {
             QuadDir::Front => (
                 Triangle {
-                    p3: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
-                    p2: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
                     p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
+                    p2: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
+                    p3: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -109,18 +109,18 @@ impl Quad {
                     light,
                 },
                 Triangle {
-                    p3: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
                     p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
-                    p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32), // TODO sort points from p1 to p3
+                    p3: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
                     texture_id: self.texture_id,
                     light,
                 },
             ),
             QuadDir::Top => (
                 Triangle {
-                    p3: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
-                    p2: Vector3::new((pos.x + 1) as f32, pos.y as f32, (pos.z + 1) as f32),
                     p1: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
+                    p2: Vector3::new((pos.x + 1) as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p3: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -141,41 +141,41 @@ impl Quad {
                     light,
                 },
                 Triangle {
-                    p3: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
-                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, pos.z as f32),
                     p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
+                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, pos.z as f32),
+                    p3: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
                     texture_id: self.texture_id,
                     light,
                 },
             ),
             QuadDir::Right => (
                 Triangle {
-                    p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
-                    p2: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
-                    p3: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
+                    p3: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p2: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
+                    p1: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
                     texture_id: self.texture_id,
                     light,
                 },
                 Triangle {
-                    p3: Vector3::new((pos.x + 1) as f32, pos.y as f32, (pos.z + 1) as f32),
-                    p2: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
-                    p1: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
+                    p3: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
+                    p2: Vector3::new((pos.x + 1) as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
                     texture_id: self.texture_id,
                     light,
                 },
             ),
             QuadDir::Left => (
                 Triangle {
-                    p3: Vector3::new(pos.x as f32, (pos.y + 1) as f32, pos.z as f32),
-                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
-                    p1: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
+                    p1: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, pos.z as f32),
+                    p3: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
                     texture_id: self.texture_id,
                     light,
                 },
                 Triangle {
-                    p1: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
-                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
-                    p3: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
+                    p1: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
+                    p2: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p3: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -279,7 +279,8 @@ impl Mesh {
         self.quads.iter().collect()
     }
 
-    fn get_light_level_from_dir(dir: QuadDir) -> u16 { // Please not bellow 2 to avoid negative light. What is neagative light ?
+    fn get_light_level_from_dir(dir: QuadDir) -> u16 {
+        // Please not bellow 2 to avoid negative light. What is neagative light ?
         match dir {
             QuadDir::Front => 13,
             QuadDir::Back => 10,
