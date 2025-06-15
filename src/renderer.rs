@@ -463,11 +463,15 @@ impl Renderer {
             tri.p2 = (mat_view * Vector4::new(tri.p2.x, tri.p2.y, tri.p2.z, 1.0)).xyz();
             tri.p3 = (mat_view * Vector4::new(tri.p3.x, tri.p3.y, tri.p3.z, 1.0)).xyz();
 
-            let clipped_triangles = triangle_clip_against_plane(
-                &Vector3::new(0.0, 0.0, 0.1),
-                &Vector3::new(0.0, 0.0, 1.0),
-                &tri,
-            );
+            let clipped_triangles: (Option<Triangle>, Option<Triangle>) = if tri.texture_id != 255 {
+                triangle_clip_against_plane(
+                    &Vector3::new(0.0, 0.0, 0.1),
+                    &Vector3::new(0.0, 0.0, 1.0),
+                    &tri,
+                )
+            } else {
+                (Some(tri), None)
+            };
 
             let mut project_and_add = |to_project: Triangle| {
                 let projected_triangle = Triangle2D {
@@ -506,13 +510,15 @@ impl Renderer {
                     new_tris = clip_buffer.len();
                 };
 
-                clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(0.0, 1.0));
-                clip_triangle(Vector2::new(0.0, SCREEN_HEIGHTF), Vector2::new(0.0, -1.0));
-                clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(1.0, 0.0));
-                clip_triangle(
-                    Vector2::new(SCREEN_WIDTHF - 1.0, 0.0),
-                    Vector2::new(-1.0, 0.0),
-                );
+                if tri.texture_id != 255 {
+                    clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(0.0, 1.0));
+                    clip_triangle(Vector2::new(0.0, SCREEN_HEIGHTF), Vector2::new(0.0, -1.0));
+                    clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(1.0, 0.0));
+                    clip_triangle(
+                        Vector2::new(SCREEN_WIDTHF - 1.0, 0.0),
+                        Vector2::new(-1.0, 0.0),
+                    );
+                }
 
                 for tri in clip_buffer {
                     self.triangles_to_render.push(tri); // Do nothing if overflow
