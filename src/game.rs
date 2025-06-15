@@ -1,5 +1,3 @@
-// In src/game.rs
-
 use crate::{
     constants::{
         rendering::{RENDER_DISTANCE, SCREEN_HEIGHT, SCREEN_WIDTH},
@@ -29,9 +27,7 @@ impl Game {
     }
 
     pub fn start(&mut self) {
-        // We no longer create a `Display` instance. Drawing functions are called directly via `eadk::display::...`
-        // Initial scene clear (e.g., loading screen, initial black screen)
-        display::push_rect_uniform( // Corrected: use `display::push_rect_uniform`
+        display::push_rect_uniform(
             Rect {
                 x: 0,
                 y: 0,
@@ -50,14 +46,13 @@ impl Game {
             last_frame_time_millis = current_time_millis;
 
             // Call the update function; if it returns false, break the loop (e.g., Home key pressed)
-            // The `update` function no longer receives a `display` parameter
             if !self.update(delta_time) {
                 break;
             }
         }
     }
 
-    pub fn update(&mut self, delta_time: f32) -> bool { // Corrected: removed `display` parameter
+    pub fn update(&mut self, delta_time: f32) -> bool {
         // Input processing
         let keyboard_state = eadk::input::KeyboardState::scan();
         // Get keys that were just pressed since the last frame
@@ -70,9 +65,6 @@ impl Game {
             return false; // Signal to exit the game loop
         }
 
-        // --- Game Logic Update ---
-        // Update player state, including movement, inventory interaction, and block placement/breaking.
-        // The player's update method will also update the camera's position and rotation within the renderer.
         self.player.update(
             delta_time,
             keyboard_state,
@@ -81,23 +73,12 @@ impl Game {
             &mut self.renderer.camera, // Pass the camera by mutable reference
         );
 
-        // Regenerate or load world chunks around the player's position
         self.world
             .generate_world_around_pos(*self.renderer.camera.get_pos(), RENDER_DISTANCE as isize);
 
-        // Update the renderer (this typically involves drawing the 3D world)
-        // You might need to adjust the `1.0 / delta_time` if your renderer expects FPS directly.
         self.renderer.update(&self.world, &self.player, 1.0 / delta_time);
 
-        // --- UI Rendering ---
-        // Render the player's inventory (hotbar) on top of the 3D world
-        self.player.inventory.draw(); // No longer passing display instance
-
-        // Render any temporary debug messages on top of the UI
-        self.player.draw_debug_message(); // No longer passing display instance
-
-        // Wait for vertical blanking to synchronize with the display refresh rate
-        eadk::display::wait_for_vblank(); // `eadk::display` module is still correctly used here
+        eadk::display::wait_for_vblank();
 
         true // Continue the game loop
     }

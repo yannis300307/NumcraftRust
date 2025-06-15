@@ -1,5 +1,3 @@
-// In src/player.rs
-
 use core::f32::consts::PI;
 
 use libm::{cosf, sincosf, sinf};
@@ -13,9 +11,9 @@ use crate::{
         UI_BLACK,
         QuadDir,
     },
-    eadk::{self, Color, Point, Rect, display}, // Corrected: import `Point` and `Rect` structs, and `display` module
-    inventory::Inventory, // Import Inventory
-    mesh::{Mesh, Quad}, // QuadDir is imported via constants now
+    eadk::{self, Color, Point, Rect, display},
+    inventory::Inventory,
+    mesh::{Mesh, Quad},
     world::{get_chunk_local_coords, get_chunk_pos_from_block, World},
 };
 
@@ -23,8 +21,8 @@ pub struct Player {
     pub pos: Vector3<f32>,
     pub rotation: Vector3<f32>,
     ray_cast_result: Option<RaycastResult>,
-    pub inventory: Inventory, // Player's inventory
-    debug_message: Option<(&'static str, u64)>, // Changed u32 to u64 for end_time (matching eadk::timing::millis)
+    pub inventory: Inventory,
+    debug_message: Option<(&'static str, u64)>,
 }
 
 impl Player {
@@ -33,7 +31,7 @@ impl Player {
             pos: Vector3::new(0., 0., 0.),
             rotation: Vector3::new(0., 0., 0.),
             ray_cast_result: None,
-            inventory: Inventory::new(), // Initialize the player's inventory
+            inventory: Inventory::new(),
             debug_message: None,
         }
     }
@@ -45,8 +43,8 @@ impl Player {
             mesh.quads.push(Quad::new(
                 get_chunk_local_coords(result.block_pos).map(|x| x as u16),
                 result.face_dir,
-                255, // Use 255 for the marker (outline)
-                0,   // Alpha, if used for the marker
+                255,
+                0,
             ));
             (mesh, get_chunk_pos_from_block(result.block_pos))
         } else {
@@ -67,7 +65,6 @@ impl Player {
 
         self.ray_cast_result = self.ray_cast(camera, world, 10);
 
-        // Player movements are handled by individual key checks, not collections
         if keyboard_state.key_down(eadk::input::Key::Toolbox) {
             let translation = sincosf(self.rotation.y);
             self.pos.x += translation.0 * delta * MOVEMENT_SPEED;
@@ -95,7 +92,6 @@ impl Player {
             self.pos.y += delta * MOVEMENT_SPEED;
         }
 
-        // Inventory selection
         if just_pressed_keyboard_state.key_down(eadk::input::Key::Plus) {
             self.inventory.select_next_slot();
         }
@@ -103,7 +99,6 @@ impl Player {
             self.inventory.select_previous_slot();
         }
 
-        // Block interaction (break/place)
         if just_pressed_keyboard_state.key_down(eadk::input::Key::Back) {
             if let Some(result) = &self.ray_cast_result {
                 if result.block_type != BlockType::Air {
@@ -140,7 +135,6 @@ impl Player {
             }
         }
 
-        // Update debug message timer
         if let Some((_, end_time)) = self.debug_message {
             if eadk::timing::millis() >= end_time {
                 self.debug_message = None;
@@ -148,12 +142,10 @@ impl Player {
         }
     }
 
-    // Function to set a temporary debug message
     pub fn set_debug_message(&mut self, message: &'static str, duration_ms: u32) {
         self.debug_message = Some((message, eadk::timing::millis() + duration_ms as u64));
     }
 
-    // Function to draw the debug message
     pub fn draw_debug_message(&self) {
         if let Some((message, _)) = self.debug_message {
             let text_x = (SCREEN_WIDTH as u16 / 2) - (message.len() as u16 * 3);
@@ -164,18 +156,16 @@ impl Player {
                 UI_BLACK
             );
 
-            // Changed to use Color::from_components for runtime calls for consistency
             display::draw_string(
                 message,
                 Point { x: text_x, y: text_y },
-                false, // Assuming false for small font
-                Color::from_components(255, 255, 255), // Use from_components
+                false,
+                Color::from_components(255, 255, 255),
                 UI_BLACK
             );
         }
     }
 
-    // The ray_cast function logic remains unchanged as it's an iterative algorithm, not a collection iteration.
     fn ray_cast(&self, camera: &Camera, world: &World, max_lenght: usize) -> Option<RaycastResult> {
         let start_pos = *camera.get_pos();
         let cam_rot = camera.get_rotation();
