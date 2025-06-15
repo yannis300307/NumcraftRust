@@ -24,25 +24,27 @@ mod game;
 pub mod mesh;
 mod renderer;
 mod world;
-use game::Game;
-mod player;
+mod player; // Add player module
+mod inventory; // Add inventory module
+
+use game::Game; // Your Game struct will now contain the game loop logic
 
 #[used]
 #[cfg(target_os = "none")]
-#[unsafe(link_section = ".rodata.eadk_app_name")]
+#[unsafe(link_section = ".rodata.eadk_app_name")] // Fix: wrap with unsafe
 pub static EADK_APP_NAME: [u8; 9] = *b"Numcraft\0";
 
 #[used]
 #[cfg(target_os = "none")]
-#[unsafe(link_section = ".rodata.eadk_api_level")]
+#[unsafe(link_section = ".rodata.eadk_api_level")] // Fix: wrap with unsafe
 pub static EADK_APP_API_LEVEL: u32 = 0;
 
 #[used]
 #[cfg(target_os = "none")]
-#[unsafe(link_section = ".rodata.eadk_app_icon")]
+#[unsafe(link_section = ".rodata.eadk_app_icon")] // Fix: wrap with unsafe
 pub static EADK_APP_ICON: [u8; 3437] = *include_bytes!("../target/icon.nwi");
 
-#[unsafe(no_mangle)]
+#[unsafe(no_mangle)] // Fix: wrap with unsafe
 fn main() {
     #[cfg(target_os = "none")]
     {
@@ -50,7 +52,8 @@ fn main() {
         unsafe { HEAP.init(eadk::HEAP_START as usize, heap_size) }
     }
 
-    let mut game = Game::new();
+    let mut game = Game::new(); // Create your Game instance
 
-    game.start();
+    game.start(); // Start your game loop
 }
+
