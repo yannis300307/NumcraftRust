@@ -3,7 +3,7 @@
 // Import from the correct constants module
 use crate::constants::{BlockType, rendering::{SCREEN_HEIGHT, SCREEN_WIDTH}, QuadDir};
 // Import Color and the display module, and Rect from eadk
-use crate::eadk::{Color, Rect, display}; // Corrected: import `Rect`
+use crate::eadk::{Color, Rect, display};
 // Import the public function from constants
 use crate::constants::get_quad_color_from_texture_id;
 // Import UI colors from constants
@@ -55,35 +55,33 @@ impl Inventory {
     }
 
     // Drawing the hotbar on the screen
-    // Removed `display: &mut Display` parameter as eadk::display functions are global
     pub fn draw(&self) {
         let slot_size: u16 = 20; // Size of each inventory slot square
         let padding: u16 = 2; // Padding between slots
         let border_thickness: u16 = 1; // Border for slots
 
         // Calculate total width and starting X position to center the hotbar
-        // Cast to u16 for calculations to avoid usize/u16 mismatch
         let total_width = (slot_size + padding) * (INVENTORY_HOTBAR_SIZE as u16) - padding;
-        let start_x = (SCREEN_WIDTH as u16 - total_width) / 2; // Use SCREEN_WIDTH from constants
-        let start_y = SCREEN_HEIGHT as u16 - slot_size - 5; // Use SCREEN_HEIGHT from constants
+        let start_x = (SCREEN_WIDTH as u16 - total_width) / 2;
+        let start_y = SCREEN_HEIGHT as u16 - slot_size - 5;
 
-        for i in 0..INVENTORY_HOTBAR_SIZE {
+        // Refactored to use `enumerate()` for a "foreach" like iteration
+        for (i, &block_type) in self.slots.iter().enumerate() {
             let x = start_x + (i as u16) * (slot_size + padding);
             let y = start_y;
 
-            // Draw background for the slot using `eadk::display::push_rect_uniform`
+            // Draw background for the slot
             display::push_rect_uniform(
                 Rect { x, y, width: slot_size, height: slot_size },
                 UI_LIGHT_GREY
             );
 
             // Draw block if not air
-            let block_type = self.slots[i];
             if block_type != BlockType::Air {
                 let texture_id = block_type.get_texture_id(QuadDir::Top);
                 let block_color = get_quad_color_from_texture_id(texture_id);
 
-                // Draw a smaller rectangle inside for the block color using `eadk::display::push_rect_uniform`
+                // Draw a smaller rectangle inside for the block color
                 display::push_rect_uniform(
                     Rect {
                         x: x + border_thickness,
@@ -95,11 +93,11 @@ impl Inventory {
                 );
             }
 
-            // Draw selection border if this slot is selected using `eadk::display::push_rect_uniform`
+            // Draw selection border if this slot is selected
             if i == self.selected_slot_index {
-                display::push_rect_uniform(Rect { x, y, width: slot_size, height: slot_size }, UI_RED); // Red border for selected
+                display::push_rect_uniform(Rect { x, y, width: slot_size, height: slot_size }, UI_RED);
             } else {
-                display::push_rect_uniform(Rect { x, y, width: slot_size, height: slot_size }, UI_BLACK); // Black border for unselected
+                display::push_rect_uniform(Rect { x, y, width: slot_size, height: slot_size }, UI_BLACK);
             }
         }
     }

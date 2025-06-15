@@ -29,16 +29,25 @@ pub mod player {
     pub const MOVEMENT_SPEED: f32 = 2.0;
 }
 
-// --- UI Colors: Initialized using direct RGB565 u16 values
-// (R5 << 11) | (G6 << 5) | B5
-// R (0-255) -> 5 bits (0-31) = R / 8
-// G (0-255) -> 6 bits (0-63) = G / 4
-// B (0-255) -> 5 bits (0-31) = B / 8
-pub static UI_WHITE: Color = Color { rgb565: 0b11111_111111_11111 }; // R=255, G=255, B=255
-pub static UI_BLACK: Color = Color { rgb565: 0x0000 };                 // R=0, G=0, B=0
-pub static UI_GREY: Color = Color { rgb565: 0b10000_100000_10000 };    // R=160, G=160, B=160 (approx)
-pub static UI_LIGHT_GREY: Color = Color { rgb565: 0b11000_110001_11000 }; // R=198, G=198, B=198 (approx)
-pub static UI_RED: Color = Color { rgb565: 0xF800 };                   // R=255, G=0, B=0
+/// A const function to create a Color from 8-bit R, G, B components.
+/// This is necessary for initializing `static` Color values in a `no_std` environment,
+/// as `Color::from_components` is not a `const fn`.
+const fn const_color_from_888(r: u8, g: u8, b: u8) -> Color {
+    // Convert 8-bit RGB (0-255) to 16-bit RGB565 format:
+    // Red: 5 bits (r / 8) -> shift left 11 bits
+    // Green: 6 bits (g / 4) -> shift left 5 bits
+    // Blue: 5 bits (b / 8)
+    Color {
+        rgb565: ((r as u16 / 8) << 11) | ((g as u16 / 4) << 5) | (b as u16 / 8)
+    }
+}
+
+// --- UI Colors: Now initialized using our custom `const_color_from_888` function
+pub static UI_WHITE: Color = const_color_from_888(255, 255, 255);
+pub static UI_BLACK: Color = const_color_from_888(0, 0, 0);
+pub static UI_GREY: Color = const_color_from_888(160, 160, 160);    // Approx. 160 for 8-bit to 5/6-bit conversion
+pub static UI_LIGHT_GREY: Color = const_color_from_888(198, 198, 198); // Approx. 198 for 8-bit to 5/6-bit conversion
+pub static UI_RED: Color = const_color_from_888(255, 0, 0);
 // --- End UI colors ---
 
 
@@ -74,13 +83,15 @@ impl BlockType {
 
 // Make this function public to be accessible from `inventory.rs`
 pub fn get_quad_color_from_texture_id(id: u8) -> Color {
+    // Changed to use Color::from_components for runtime calls for consistency
+    // Assuming Color::from_components expects 0-255 range for u16 inputs like Color::from_888
     match id {
-        0 => Color { rgb565: 0x0000 },       // Black/Transparent for Air or missing texture
-        1 => Color { rgb565: 0b10000_100000_10000 }, // Stone color (re-using grey approx)
-        2 => Color { rgb565: 0b00001_111011_00000 },    // Grass top color (21, 147, 0)
-        3 => Color { rgb565: 0b01101_011010_10010 },   // Dirt color (120, 77, 49)
+        0 => Color::from_components(0, 0, 0),       // Black/Transparent for Air or missing texture
+        1 => Color::from_components(160, 160, 160), // Stone color
+        2 => Color::from_components(21, 147, 0),    // Grass top color
+        3 => Color::from_components(120, 77, 49),   // Dirt color
         // 255 is reserved for block outline in player.rs
-        255 => Color { rgb565: 0xFFFF }, // White for block marker outline
-        _ => Color { rgb565: 0x0000 },       // Default to black for unknown IDs
+        255 => Color::from_components(255, 255, 255), // White for block marker outline
+        _ => Color::from_components(0, 0, 0),       // Default to black for unknown IDs
     }
 }
