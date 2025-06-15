@@ -4,7 +4,7 @@ use alloc::format;
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
 
-use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
+use nalgebra::{Matrix4, Perspective3, Transform, Vector2, Vector3, Vector4};
 
 use core::{cmp::Ordering, f32, mem::swap};
 
@@ -23,6 +23,7 @@ const SCREEN_WIDTHF: f32 = SCREEN_WIDTH as f32;
 const SCREEN_HEIGHTF: f32 = SCREEN_HEIGHT as f32;
 const HALF_SCREEN_WIDTHF: f32 = SCREEN_WIDTHF / 2.0;
 const HALF_SCREEN_HEIGHTF: f32 = SCREEN_HEIGHTF / 2.0;
+const HALF_SCREEN: Vector2<f32> = Vector2::new(HALF_SCREEN_WIDTHF, HALF_SCREEN_HEIGHTF);
 
 // Screen tiling constants
 const SCREEN_TILE_WIDTH: usize = SCREEN_WIDTH.div_ceil(SCREEN_TILE_SUBDIVISION);
@@ -48,6 +49,7 @@ const CROSS_HEIGHT: usize = 14;
 const FONT_CHAR_WIDTH: usize = 11;
 static FONT_ORDER: &str = "!\"_$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^+`abcdefghijklmnopqrstuvwxyz{|}~€";
 
+/// Fill a triangle in the frame buffer
 fn fill_triangle(
     mut t0: Vector2<isize>,
     mut t1: Vector2<isize>,
@@ -115,6 +117,7 @@ fn fill_triangle(
     }
 }
 
+// Draw a line in the frame buffer
 fn draw_line(
     pos1: (isize, isize),
     pos2: (isize, isize),
@@ -132,6 +135,7 @@ fn draw_line(
     }
 }
 
+// Takes a Triangle2D and draw it as a filled triangle or lines depending of the texture_id
 fn draw_2d_triangle(
     tri: &Triangle2D,
     frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
@@ -139,7 +143,6 @@ fn draw_2d_triangle(
     if tri.texture_id == 255 {
         // Block marker
         draw_line(
-            // TODO : fix point sorting to avoid weird marker
             (tri.p1.x as isize, tri.p1.y as isize),
             (tri.p2.x as isize, tri.p2.y as isize),
             frame_buffer,
@@ -151,13 +154,8 @@ fn draw_2d_triangle(
             frame_buffer,
             Color::from_components(0b11111, 0b0, 0b0),
         );
-        /*draw_line(
-            (tri.p3.x as isize, tri.p3.y as isize),
-            (tri.p1.x as isize, tri.p1.y as isize),
-            frame_buffer,
-            Color::from_components(0b11111, 0b0, 0b0),
-        );*/
     } else {
+        // Normal Triangle
         fill_triangle(
             Vector2::new(tri.p1.x as isize, tri.p1.y as isize),
             Vector2::new(tri.p2.x as isize, tri.p2.y as isize),
@@ -328,7 +326,6 @@ fn triangle_clip_against_plane(
     let binding = Default::default();
     let mut inside_points: [&Vector3<f32>; 3] = [&binding; 3];
     let mut n_inside_point_count = 0;
-    let binding = Default::default();
     let mut outside_points: [&Vector3<f32>; 3] = [&binding; 3];
     let mut n_outside_point_count = 0;
 
@@ -399,30 +396,18 @@ fn triangle_clip_against_plane(
     (None, None)
 }
 
-struct MathTools {
-    projection_matrix: Perspective3<f32>,
-}
-
-impl MathTools {
-    pub fn new() -> Self {
-        MathTools {
-            projection_matrix: Perspective3::new(ASPECT_RATIO, FOV, ZNEAR, ZFAR),
-        }
-    }
-}
-
 pub struct Renderer {
     pub camera: Camera,
-    math_tools: MathTools,
     triangles_to_render: Vec<Triangle2D>,
     tile_frame_buffer: [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    projection_matrix: Perspective3<f32>,
 }
 
 impl Renderer {
     pub fn new() -> Self {
         let renderer: Renderer = Renderer {
             camera: Camera::new(),
-            math_tools: MathTools::new(),
+            projection_matrix: Perspective3::new(ASPECT_RATIO, FOV, ZNEAR, ZFAR),
             triangles_to_render: Vec::new(),
             tile_frame_buffer: [Color { rgb565: 0 }; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
         };
@@ -431,8 +416,7 @@ impl Renderer {
     }
 
     fn project_point(&self, point: Vector3<f32>) -> Vector2<f32> {
-        self.math_tools
-            .projection_matrix
+        self.projection_matrix
             .project_vector(&point)
             .xy()
             * -1.0
@@ -476,13 +460,13 @@ impl Renderer {
             let mut project_and_add = |to_project: Triangle| {
                 let projected_triangle = Triangle2D {
                     p1: ((self.project_point(to_project.p1) + Vector2::new(1., 1.))
-                        .component_mul(&Vector2::new(HALF_SCREEN_WIDTHF, HALF_SCREEN_HEIGHTF)))
+                        .component_mul(&HALF_SCREEN))
                     .map(|x| x as i16),
                     p2: ((self.project_point(to_project.p2) + Vector2::new(1., 1.))
-                        .component_mul(&Vector2::new(HALF_SCREEN_WIDTHF, HALF_SCREEN_HEIGHTF)))
+                        .component_mul(&HALF_SCREEN))
                     .map(|x| x as i16),
                     p3: ((self.project_point(to_project.p3) + Vector2::new(1., 1.))
-                        .component_mul(&Vector2::new(HALF_SCREEN_WIDTHF, HALF_SCREEN_HEIGHTF)))
+                        .component_mul(&HALF_SCREEN))
                     .map(|x| x as i16),
                     texture_id: to_project.texture_id,
                     light: to_project.light,
@@ -535,16 +519,14 @@ impl Renderer {
     }
 
     fn draw_triangles(&mut self, tile_x: usize, tile_y: usize) {
+        let tile_offset = Vector2::new(-((SCREEN_TILE_WIDTH * tile_x) as i16), -((SCREEN_TILE_HEIGHT * tile_y) as i16));
         for tri in self.triangles_to_render.iter_mut() {
             let mut tri_copy = *tri;
-            tri_copy.p1.x -= (SCREEN_TILE_WIDTH * tile_x) as i16;
-            tri_copy.p1.y -= (SCREEN_TILE_HEIGHT * tile_y) as i16;
+            tri_copy.p1 += tile_offset;
 
-            tri_copy.p2.x -= (SCREEN_TILE_WIDTH * tile_x) as i16;
-            tri_copy.p2.y -= (SCREEN_TILE_HEIGHT * tile_y) as i16;
+            tri_copy.p2 += tile_offset;
 
-            tri_copy.p3.x -= (SCREEN_TILE_WIDTH * tile_x) as i16;
-            tri_copy.p3.y -= (SCREEN_TILE_HEIGHT * tile_y) as i16;
+            tri_copy.p3 += tile_offset;
 
             draw_2d_triangle(&tri_copy, &mut self.tile_frame_buffer);
         }
@@ -628,11 +610,12 @@ impl Renderer {
         let mat_view = self.get_mat_view();
 
         for chunk in world.get_chunks_sorted_by_distance(*self.camera.get_pos()) {
+            let chunk_blocks_pos = chunk.get_pos() * CHUNK_SIZE_I;
             let mut quads = chunk.get_mesh().get_reference_vec();
 
             quads.sort_by(|a, b| -> Ordering {
-                let a_pos = a.get_pos().map(|x| x as isize) + chunk.get_pos() * CHUNK_SIZE_I;
-                let b_pos = b.get_pos().map(|x| x as isize) + chunk.get_pos() * CHUNK_SIZE_I;
+                let a_pos = a.get_pos().map(|x| x as isize) + chunk_blocks_pos;
+                let b_pos = b.get_pos().map(|x| x as isize) + chunk_blocks_pos;
                 let avec = Vector3::new(
                     a_pos.x as f32 + 0.5,
                     a_pos.y as f32 + 0.5,

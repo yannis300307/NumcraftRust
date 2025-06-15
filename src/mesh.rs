@@ -82,100 +82,108 @@ impl Quad {
 impl Quad {
     pub fn get_triangles(&self, chunk_pos: Vector3<isize>) -> (Triangle, Triangle) {
         let pos = self.get_pos().map(|x| x as isize) + chunk_pos * CHUNK_SIZE_I;
+
+        let pos_x = (pos.x) as f32;
+        let pos_x_plus_one = pos_x + 1.0;
+        let pos_y = (pos.y) as f32;
+        let pos_y_plus_one = pos_y + 1.0;
+        let pos_z = (pos.z) as f32;
+        let pos_z_plus_one = pos_z + 1.0;
+
         let light = self.get_light_level() as u8;
         match self.get_dir() {
             QuadDir::Front => (
                 Triangle {
-                    p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
-                    p2: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
-                    p3: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
+                    p1: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
+                    p2: Vector3::new(pos_x_plus_one, pos_y, pos_z),
+                    p3: Vector3::new(pos_x, pos_y, pos_z),
                     texture_id: self.texture_id,
                     light,
                 },
                 Triangle {
-                    p1: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
-                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, pos.z as f32),
-                    p3: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
+                    p1: Vector3::new(pos_x, pos_y, pos_z),
+                    p2: Vector3::new(pos_x, pos_y_plus_one, pos_z),
+                    p3: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
                     texture_id: self.texture_id,
                     light,
                 },
             ),
             QuadDir::Back => (
                 Triangle {
-                    p1: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
-                    p2: Vector3::new((pos.x + 1) as f32, pos.y as f32, (pos.z + 1) as f32),
-                    p3: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p1: Vector3::new(pos_x, pos_y, pos_z_plus_one),
+                    p2: Vector3::new(pos_x_plus_one, pos_y, pos_z_plus_one),
+                    p3: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
                     texture_id: self.texture_id,
                     light,
                 },
                 Triangle {
-                    p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
-                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
-                    p3: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p1: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
+                    p2: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
+                    p3: Vector3::new(pos_x, pos_y, pos_z_plus_one),
                     texture_id: self.texture_id,
                     light,
                 },
             ),
             QuadDir::Top => (
                 Triangle {
-                    p1: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
-                    p2: Vector3::new((pos.x + 1) as f32, pos.y as f32, (pos.z + 1) as f32),
-                    p3: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
+                    p1: Vector3::new(pos_x_plus_one, pos_y, pos_z),
+                    p2: Vector3::new(pos_x_plus_one, pos_y, pos_z_plus_one),
+                    p3: Vector3::new(pos_x, pos_y, pos_z_plus_one),
                     texture_id: self.texture_id,
                     light,
                 },
                 Triangle {
-                    p1: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
-                    p2: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
-                    p3: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
+                    p1: Vector3::new(pos_x, pos_y, pos_z_plus_one),
+                    p2: Vector3::new(pos_x, pos_y, pos_z),
+                    p3: Vector3::new(pos_x_plus_one, pos_y, pos_z),
                     texture_id: self.texture_id,
                     light,
                 },
             ),
             QuadDir::Bottom => (
                 Triangle {
-                    p1: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
-                    p2: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
-                    p3: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
+                    p1: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
+                    p2: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
+                    p3: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
                     texture_id: self.texture_id,
                     light,
                 },
                 Triangle {
-                    p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
-                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, pos.z as f32),
-                    p3: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p1: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
+                    p2: Vector3::new(pos_x, pos_y_plus_one, pos_z),
+                    p3: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
                     texture_id: self.texture_id,
                     light,
                 },
             ),
             QuadDir::Right => (
                 Triangle {
-                    p3: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
-                    p2: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, pos.z as f32),
-                    p1: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
+                    p3: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
+                    p2: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
+                    p1: Vector3::new(pos_x_plus_one, pos_y, pos_z),
                     texture_id: self.texture_id,
                     light,
                 },
                 Triangle {
-                    p3: Vector3::new((pos.x + 1) as f32, pos.y as f32, pos.z as f32),
-                    p2: Vector3::new((pos.x + 1) as f32, pos.y as f32, (pos.z + 1) as f32),
-                    p1: Vector3::new((pos.x + 1) as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p3: Vector3::new(pos_x_plus_one, pos_y, pos_z),
+                    p2: Vector3::new(pos_x_plus_one, pos_y, pos_z_plus_one),
+                    p1: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
                     texture_id: self.texture_id,
                     light,
                 },
             ),
             QuadDir::Left => (
                 Triangle {
-                    p1: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
-                    p2: Vector3::new(pos.x as f32, (pos.y + 1) as f32, pos.z as f32),
-                    p3: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
+                    p1: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
+                    p2: Vector3::new(pos_x, pos_y_plus_one, pos_z),
+                    p3: Vector3::new(pos_x, pos_y, pos_z),
                     texture_id: self.texture_id,
                     light,
                 },
                 Triangle {
-                    p1: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
-                    p2: Vector3::new(pos.x as f32, pos.y as f32, (pos.z + 1) as f32),
-                    p3: Vector3::new(pos.x as f32, (pos.y + 1) as f32, (pos.z + 1) as f32),
+                    p1: Vector3::new(pos_x, pos_y, pos_z),
+                    p2: Vector3::new(pos_x, pos_y, pos_z_plus_one),
+                    p3: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
                     texture_id: self.texture_id,
                     light,
                 },
