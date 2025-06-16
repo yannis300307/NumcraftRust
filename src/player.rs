@@ -31,12 +31,12 @@ impl Player {
 
         if let Some(result) = &self.ray_cast_result {
             mesh.quads.push(Quad::new(
-                get_chunk_local_coords(result.block_pos).map(|x| x as u16),
+                Vector3::new(0, 0, 0),
                 result.face_dir,
                 255,
                 0,
             ));
-            (mesh, get_chunk_pos_from_block(result.block_pos))
+            (mesh, result.block_pos)
         } else {
             (mesh, Vector3::repeat(0))
         }
