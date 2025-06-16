@@ -1,7 +1,7 @@
 cargo-features = ["profile-rustflags"]
 [package]
 name = "Numcraft"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Yannis300307"]
 edition = "2024"
 
