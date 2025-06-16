@@ -26,6 +26,7 @@ mod renderer;
 mod world;
 use game::Game;
 mod player;
+mod utils;
 
 #[used]
 #[cfg(target_os = "none")]

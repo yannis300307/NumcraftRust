@@ -113,12 +113,7 @@ impl Player {
 
     fn ray_cast(&self, camera: &Camera, world: &World, max_lenght: usize) -> Option<RaycastResult> {
         let start_pos = *camera.get_pos();
-        let cam_rot = camera.get_rotation();
-        let forward_vector = Vector3::new(
-            cosf(cam_rot.x) * sinf(cam_rot.y),
-            -sinf(cam_rot.x),
-            cosf(cam_rot.x) * cosf(cam_rot.y),
-        );
+        let forward_vector = camera.get_forward_vector();
 
         let end_pos = start_pos + forward_vector.normalize() * (max_lenght as f32);
 

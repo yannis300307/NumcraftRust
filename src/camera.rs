@@ -1,5 +1,6 @@
 use core::f32::{self, consts::PI};
 
+use libm::{cosf, sinf};
 use nalgebra::{Matrix4, UnitQuaternion, Vector3};
 
 use crate::{constants::player::ROTATION_SPEED, eadk};
@@ -14,7 +15,7 @@ impl Camera {
     pub fn new() -> Self {
         Camera {
             pos: Vector3::new(0., 0., 0.),
-            rotation: Vector3::new(0., 0., 0.),
+            rotation: Vector3::new(0.0, 0., 0.),
             has_moved: true,
         }
     }
@@ -45,10 +46,30 @@ impl Camera {
                 self.rotation.x = -PI / 2.0 + 0.0001
             }
         }
-        
+
         self.has_moved = self.pos == self.pos;
 
         self.pos = position; // Updated from player
+    }
+
+    pub fn get_forward_vector(&self) -> Vector3<f32> {
+        Vector3::new(
+            cosf(self.rotation.x) * sinf(self.rotation.y),
+            -sinf(self.rotation.x),
+            cosf(self.rotation.x) * cosf(self.rotation.y),
+        )
+    }
+
+    pub fn get_right_vector(&self) -> Vector3<f32> {
+        Vector3::new(cosf(self.rotation.y), 0.0, -sinf(self.rotation.y))
+    }
+
+    pub fn get_up_vector(&self) -> Vector3<f32> {
+        Vector3::new(
+            sinf(self.rotation.x) * sinf(self.rotation.y),
+            cosf(self.rotation.x),
+            sinf(self.rotation.x) * cosf(self.rotation.y),
+        )
     }
 
     pub fn get_rotation_matrix(&self) -> Matrix4<f32> {

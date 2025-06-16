@@ -4,16 +4,18 @@ use alloc::format;
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
 
+use libm::tanf;
 use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
 use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
-    camera::Camera,
+    camera::{self, Camera},
     constants::{get_quad_color_from_texture_id, rendering::*, world::CHUNK_SIZE},
     eadk::{self, Color, Rect},
     mesh::{Quad, Triangle, Triangle2D},
     player::Player,
+    utils::{self, Frustum},
     world::World,
 };
 
@@ -238,7 +240,6 @@ fn triangle_clip_against_line(
     let binding = Default::default();
     let mut inside_points: [&Vector2<f32>; 3] = [&binding; 3];
     let mut n_inside_point_count = 0;
-    let binding = Default::default();
     let mut outside_points: [&Vector2<f32>; 3] = [&binding; 3];
     let mut n_outside_point_count = 0;
 
@@ -667,8 +668,18 @@ impl Renderer {
 
         let mat_view = self.get_mat_view();
 
+        let frustum = Frustum::new(&self.camera, ASPECT_RATIO, FOV, ZNEAR, ZFAR);
+
         for chunk in world.get_chunks_sorted_by_distance(*self.camera.get_pos()) {
             let chunk_blocks_pos = chunk.get_pos() * CHUNK_SIZE_I;
+            let chunk_blocks_posf = chunk_blocks_pos.map(|x| x as f32);
+            let chunk_blocks_pos_maxf =
+                (chunk_blocks_pos + Vector3::repeat(CHUNK_SIZE_I)).map(|x| x as f32);
+
+            if !(frustum.is_aabb_in_frustum(chunk_blocks_posf, chunk_blocks_pos_maxf)) {
+                continue;
+            }
+
             let quads = chunk.get_mesh().get_reference_vec();
 
             if self.camera.get_has_moved() {
