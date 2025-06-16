@@ -90,8 +90,8 @@ impl Chunk {
         self.generated = true
     }
 
-    pub fn get_mesh(&self) -> &Mesh {
-        &self.mesh
+    pub fn get_mesh(&mut self) -> &mut Mesh {
+        &mut self.mesh
     }
 
     pub fn set_mesh(&mut self, new_mesh: Mesh) {

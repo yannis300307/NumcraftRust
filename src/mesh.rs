@@ -80,8 +80,8 @@ impl Quad {
 }
 
 impl Quad {
-    pub fn get_triangles(&self, chunk_pos: Vector3<isize>) -> (Triangle, Triangle) {
-        let pos = self.get_pos().map(|x| x as isize) + chunk_pos * CHUNK_SIZE_I;
+    pub fn get_triangles(&self, chunk_block_pos: Vector3<isize>) -> (Triangle, Triangle) {
+        let pos = self.get_pos().map(|x| x as isize) + chunk_block_pos;
 
         let pos_x = (pos.x) as f32;
         let pos_x_plus_one = pos_x + 1.0;
@@ -283,8 +283,8 @@ impl Mesh {
         Mesh { quads: Vec::new() }
     }
 
-    pub fn get_reference_vec(&self) -> Vec<&Quad> {
-        self.quads.iter().collect()
+    pub fn get_reference_vec(&mut self) -> &mut Vec<Quad> {
+        &mut self.quads
     }
 
     fn get_light_level_from_dir(dir: QuadDir) -> u16 {

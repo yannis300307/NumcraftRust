@@ -7,6 +7,7 @@ use crate::{constants::player::ROTATION_SPEED, eadk};
 pub struct Camera {
     pos: Vector3<f32>,
     rotation: Vector3<f32>,
+    has_moved: bool,
 }
 
 impl Camera {
@@ -14,6 +15,7 @@ impl Camera {
         Camera {
             pos: Vector3::new(0., 0., 0.),
             rotation: Vector3::new(0., 0., 0.),
+            has_moved: true,
         }
     }
 
@@ -42,7 +44,10 @@ impl Camera {
             if self.rotation.x <= -PI / 2.0 + 0.0001 {
                 self.rotation.x = -PI / 2.0 + 0.0001
             }
+            self.has_moved = true;
         }
+        
+        self.has_moved = self.pos == self.pos;
 
         self.pos = position; // Updated from player
     }
@@ -56,6 +61,10 @@ impl Camera {
 
     pub fn get_pos(&self) -> &Vector3<f32> {
         &self.pos
+    }
+
+    pub fn get_has_moved(&self) -> bool {
+        self.has_moved
     }
 
     pub fn get_rotation(&self) -> &Vector3<f32> {

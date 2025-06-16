@@ -64,8 +64,8 @@ impl World {
     }
 
     /// Used for rendering priority. Return a Vector of all the loaded chunks from the nearest to the farest
-    pub fn get_chunks_sorted_by_distance(&self, pos: Vector3<f32>) -> Vec<&Chunk> {
-        let mut chunks: Vec<&Chunk> = self.chunks.iter().collect();
+    pub fn get_chunks_sorted_by_distance(&mut self, pos: Vector3<f32>) -> Vec<&mut Chunk> {
+        let mut chunks: Vec<&mut Chunk> = self.chunks.iter_mut().collect();
 
         chunks.sort_by(|a, b| {
             let a_dist = a
@@ -167,10 +167,10 @@ impl World {
     }
 
     /// Return the mesh of every chunks
-    pub fn get_mesh(&self) -> Vec<&Vec<Quad>> {
+    pub fn get_mesh(&mut self) -> Vec<&mut Vec<Quad>> {
         let mut world_mesh = Vec::new();
-        for chunk in &self.chunks {
-            world_mesh.push(&chunk.get_mesh().quads);
+        for chunk in &mut self.chunks {
+            world_mesh.push(&mut chunk.get_mesh().quads);
         }
 
         world_mesh

@@ -68,20 +68,21 @@ fn fill_triangle(
     }
 
     let triangle_height = t2.y - t0.y;
+    let triangle_heightf = triangle_height as f32;
 
     'height_iter: for i in 0..triangle_height {
         let second_half = i > (t1.y - t0.y) || (t1.y == t0.y);
-        let segment_height = if second_half {
-            t2.y - t1.y
+        let segment_heightf = if second_half {
+            (t2.y - t1.y) as f32
         } else {
-            t1.y - t0.y
+            (t1.y - t0.y) as f32
         };
 
-        let alpha = i as f32 / triangle_height as f32;
+        let alpha = i as f32 / triangle_heightf;
         let beta = if second_half {
-            (i as f32 - (t1.y - t0.y) as f32) / segment_height as f32
+            (i as f32 - (t1.y - t0.y) as f32) / segment_heightf
         } else {
-            i as f32 / segment_height as f32
+            i as f32 / segment_heightf
         };
 
         let mut a = t0.x as f32 + ((t2 - t0).x as f32 * alpha);
@@ -416,10 +417,7 @@ impl Renderer {
     }
 
     fn project_point(&self, point: Vector3<f32>) -> Vector2<f32> {
-        self.projection_matrix
-            .project_vector(&point)
-            .xy()
-            * -1.0
+        self.projection_matrix.project_vector(&point).xy() * -1.0
     }
 
     fn clear_screen(&mut self, color: eadk::Color) {
@@ -519,7 +517,10 @@ impl Renderer {
     }
 
     fn draw_triangles(&mut self, tile_x: usize, tile_y: usize) {
-        let tile_offset = Vector2::new(-((SCREEN_TILE_WIDTH * tile_x) as i16), -((SCREEN_TILE_HEIGHT * tile_y) as i16));
+        let tile_offset = Vector2::new(
+            -((SCREEN_TILE_WIDTH * tile_x) as i16),
+            -((SCREEN_TILE_HEIGHT * tile_y) as i16),
+        );
         for tri in self.triangles_to_render.iter_mut() {
             let mut tri_copy = *tri;
             tri_copy.p1 += tile_offset;
@@ -563,9 +564,9 @@ impl Renderer {
         &mut self,
         quad: &Quad,
         mat_view: &Matrix4<f32>,
-        chunk_pos: Vector3<isize>,
+        chunk_block_pos: Vector3<isize>,
     ) {
-        let quad_triangles = quad.get_triangles(chunk_pos);
+        let quad_triangles = quad.get_triangles(chunk_block_pos);
         self.add_3d_triangle_to_render(quad_triangles.0, mat_view);
         self.add_3d_triangle_to_render(quad_triangles.1, mat_view);
     }
@@ -604,40 +605,99 @@ impl Renderer {
         }
     }
 
-    pub fn update(&mut self, world: &World, player: &Player, fps_count: f32) {
+    fn draw_ui(&mut self, fps_count: f32, tile_x: usize, tile_y: usize) {
+        if tile_x == 0 && tile_y == 0 {
+            self.draw_string(
+                format!("FPS:{fps_count:.2}").as_str(),
+                &Vector2::new(10, 10),
+            );
+
+            self.draw_string(
+                format!("Tris:{}", self.triangles_to_render.len()).as_str(),
+                &Vector2::new(10, 30),
+            );
+
+            self.draw_string(
+                format!(
+                    "{:.1},{:.1},{:.1}",
+                    self.camera.get_pos().x,
+                    self.camera.get_pos().y,
+                    self.camera.get_pos().z
+                )
+                .as_str(),
+                &Vector2::new(10, 50),
+            );
+        }
+        let mut draw_cross = |x, y| {
+            self.draw_image_negate(
+                CROSS_DATA,
+                Vector2::new(CROSS_WIDTH as isize, CROSS_HEIGHT as isize),
+                Vector2::new(x, y),
+            );
+        };
+
+        if tile_x == 0 && tile_y == 0 {
+            draw_cross(
+                (SCREEN_TILE_WIDTH - CROSS_WIDTH / 2) as isize,
+                (SCREEN_TILE_HEIGHT - CROSS_HEIGHT / 2) as isize,
+            )
+        }
+        if tile_x == 1 && tile_y == 0 {
+            draw_cross(
+                -((CROSS_WIDTH / 2) as isize),
+                (SCREEN_TILE_HEIGHT - CROSS_HEIGHT / 2) as isize,
+            )
+        }
+        if tile_x == 1 && tile_y == 1 {
+            draw_cross(
+                -((CROSS_WIDTH / 2) as isize),
+                -((CROSS_HEIGHT / 2) as isize),
+            );
+        }
+        if tile_x == 0 && tile_y == 1 {
+            draw_cross(
+                (SCREEN_TILE_WIDTH - CROSS_WIDTH / 2) as isize,
+                -((CROSS_HEIGHT / 2) as isize),
+            );
+        }
+    }
+
+    pub fn update(&mut self, world: &mut World, player: &Player, fps_count: f32) {
         self.triangles_to_render.clear();
 
         let mat_view = self.get_mat_view();
 
         for chunk in world.get_chunks_sorted_by_distance(*self.camera.get_pos()) {
             let chunk_blocks_pos = chunk.get_pos() * CHUNK_SIZE_I;
-            let mut quads = chunk.get_mesh().get_reference_vec();
+            let quads = chunk.get_mesh().get_reference_vec();
 
-            quads.sort_by(|a, b| -> Ordering {
-                let a_pos = a.get_pos().map(|x| x as isize) + chunk_blocks_pos;
-                let b_pos = b.get_pos().map(|x| x as isize) + chunk_blocks_pos;
-                let avec = Vector3::new(
-                    a_pos.x as f32 + 0.5,
-                    a_pos.y as f32 + 0.5,
-                    a_pos.z as f32 + 0.5,
-                );
+            if self.camera.get_has_moved() {
+                quads.sort_by(|a, b| -> Ordering {
+                    let a_pos = a.get_pos().map(|x| x as isize) + chunk_blocks_pos;
+                    let b_pos = b.get_pos().map(|x| x as isize) + chunk_blocks_pos;
+                    let avec = Vector3::new(
+                        a_pos.x as f32 + 0.5,
+                        a_pos.y as f32 + 0.5,
+                        a_pos.z as f32 + 0.5,
+                    );
 
-                let bvec = Vector3::new(
-                    b_pos.x as f32 + 0.5,
-                    b_pos.y as f32 + 0.5,
-                    b_pos.z as f32 + 0.5,
-                );
+                    let bvec = Vector3::new(
+                        b_pos.x as f32 + 0.5,
+                        b_pos.y as f32 + 0.5,
+                        b_pos.z as f32 + 0.5,
+                    );
 
-                bvec.metric_distance(self.camera.get_pos())
-                    .total_cmp(&avec.metric_distance(self.camera.get_pos()))
-            });
+                    bvec.metric_distance(self.camera.get_pos())
+                        .total_cmp(&avec.metric_distance(self.camera.get_pos()))
+                });
+            }
             for quad in quads {
-                self.add_quad_to_render(quad, &mat_view, *chunk.get_pos());
+                self.add_quad_to_render(quad, &mat_view, chunk_blocks_pos);
             }
         }
 
         // Finally add the player block marker
-        let block_marker = player.get_block_marker();
+        let mut block_marker = player.get_block_marker();
         for quad in block_marker.0.get_reference_vec() {
             self.add_quad_to_render(quad, &mat_view, block_marker.1);
         }
@@ -647,60 +707,7 @@ impl Renderer {
                 self.clear_screen(Color::from_components(0b01110, 0b110110, 0b11111));
                 self.draw_triangles(x, y);
 
-                if x == 0 && y == 0 {
-                    self.draw_string(
-                        format!("FPS:{fps_count:.2}").as_str(),
-                        &Vector2::new(10, 10),
-                    );
-
-                    self.draw_string(
-                        format!("Tris:{}", self.triangles_to_render.len()).as_str(),
-                        &Vector2::new(10, 30),
-                    );
-
-                    self.draw_string(
-                        format!(
-                            "{:.1},{:.1},{:.1}",
-                            self.camera.get_pos().x,
-                            self.camera.get_pos().y,
-                            self.camera.get_pos().z
-                        )
-                        .as_str(),
-                        &Vector2::new(10, 50),
-                    );
-                }
-                let mut draw_cross = |x, y| {
-                    self.draw_image_negate(
-                        CROSS_DATA,
-                        Vector2::new(CROSS_WIDTH as isize, CROSS_HEIGHT as isize),
-                        Vector2::new(x, y),
-                    );
-                };
-
-                if x == 0 && y == 0 {
-                    draw_cross(
-                        (SCREEN_TILE_WIDTH - CROSS_WIDTH / 2) as isize,
-                        (SCREEN_TILE_HEIGHT - CROSS_HEIGHT / 2) as isize,
-                    )
-                }
-                if x == 1 && y == 0 {
-                    draw_cross(
-                        -((CROSS_WIDTH / 2) as isize),
-                        (SCREEN_TILE_HEIGHT - CROSS_HEIGHT / 2) as isize,
-                    )
-                }
-                if x == 1 && y == 1 {
-                    draw_cross(
-                        -((CROSS_WIDTH / 2) as isize),
-                        -((CROSS_HEIGHT / 2) as isize),
-                    );
-                }
-                if x == 0 && y == 1 {
-                    draw_cross(
-                        (SCREEN_TILE_WIDTH - CROSS_WIDTH / 2) as isize,
-                        -((CROSS_HEIGHT / 2) as isize),
-                    );
-                }
+                self.draw_ui(fps_count, x, y);
 
                 eadk::display::push_rect(
                     Rect {
