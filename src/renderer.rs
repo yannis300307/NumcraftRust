@@ -4,7 +4,7 @@ use alloc::format;
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
 
-use nalgebra::{Matrix4, Perspective3, Transform, Vector2, Vector3, Vector4};
+use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
 use core::{cmp::Ordering, f32, mem::swap};
 

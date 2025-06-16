@@ -44,7 +44,6 @@ impl Camera {
             if self.rotation.x <= -PI / 2.0 + 0.0001 {
                 self.rotation.x = -PI / 2.0 + 0.0001
             }
-            self.has_moved = true;
         }
         
         self.has_moved = self.pos == self.pos;
