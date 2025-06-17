@@ -36,3 +36,4 @@ rand = "0.9.1"
 
 [build-dependencies]
 image = "0.25.6"
+cc = "1.2.27"

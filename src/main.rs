@@ -25,6 +25,7 @@ pub mod mesh;
 mod renderer;
 mod world;
 use game::Game;
+mod storage;
 mod player;
 mod utils;
 

@@ -1,7 +1,6 @@
 use image::{self, GenericImageView, ImageReader};
 use std::{fs, process::Command};
 
-
 fn convert_image(file_name: &str) {
     let img = ImageReader::open(format!("assets/{file_name}.png").as_str())
         .unwrap()
@@ -33,7 +32,13 @@ fn main() {
         } else {
             println!("Windows detected");
             Command::new("cmd")
-                .args(["/c", "nwlink", "png-nwi", "assets/icon.png", "target/icon.nwi"])
+                .args([
+                    "/c",
+                    "nwlink",
+                    "png-nwi",
+                    "assets/icon.png",
+                    "target/icon.nwi",
+                ])
                 .output()
                 .expect("Unable to convert icon.")
         }
@@ -53,4 +58,20 @@ fn main() {
     println!("cargo:rerun-if-changed=assets/cross.png");
     println!("Converting cross");
     convert_image("cross");
+
+    unsafe { std::env::set_var("CC", "arm-none-eabi-gcc") };
+
+    cc::Build::new()
+        .file("src/storage.c")
+        .flag("-mthumb")
+        .flag("-mfloat-abi=hard")
+        .flag("-mcpu=cortex-m7")
+        .flag("-mfpu=fpv5-sp-d16")
+        .flag("-DPLATFORM_DEVICE=1")
+        .flag("-I/usr/local/lib/node_modules/nwlink/dist/eadk")
+        .flag("-std=c99")
+        .flag("-Os")
+        .flag("-Wall")
+        .flag("-ggdb")
+        .compile("storage_c");
 }
