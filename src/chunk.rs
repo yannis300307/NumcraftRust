@@ -90,6 +90,10 @@ impl Chunk {
         self.generated = true
     }
 
+    pub fn get_all_blocks(&self) -> &[BlockType; BLOCK_COUNT] {
+        &self.blocks
+    }
+
     pub fn get_mesh(&mut self) -> &mut Mesh {
         &mut self.mesh
     }

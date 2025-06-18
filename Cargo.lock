@@ -16,6 +16,7 @@ dependencies = [
  "image",
  "libm",
  "minifb",
+ "miniz_oxide",
  "nalgebra",
  "rand 0.9.1",
 ]

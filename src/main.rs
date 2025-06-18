@@ -25,9 +25,10 @@ pub mod mesh;
 mod renderer;
 mod world;
 use game::Game;
-mod storage;
+mod storage_lib;
 mod player;
 mod utils;
+mod storage_manager;
 
 #[used]
 #[cfg(target_os = "none")]
@@ -54,5 +55,5 @@ fn main() {
 
     let mut game = Game::new();
 
-    game.start();
+    //game.start();
 }
