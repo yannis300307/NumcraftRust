@@ -1,6 +1,6 @@
 use core::f32::consts::PI;
 
-use libm::{cosf, sincosf, sinf};
+use libm::sincosf;
 use nalgebra::{ComplexField, Vector3};
 
 use crate::{
@@ -8,7 +8,7 @@ use crate::{
     constants::{BlockType, player::MOVEMENT_SPEED},
     eadk,
     mesh::{Mesh, Quad, QuadDir},
-    world::{World, get_chunk_local_coords, get_chunk_pos_from_block},
+    world::World,
 };
 
 pub struct Player {

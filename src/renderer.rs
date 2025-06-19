@@ -4,18 +4,17 @@ use alloc::format;
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
 
-use libm::tanf;
 use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
 use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
-    camera::{self, Camera},
+    camera::Camera,
     constants::{get_quad_color_from_texture_id, rendering::*, world::CHUNK_SIZE},
     eadk::{self, Color, Rect},
     mesh::{Quad, Triangle, Triangle2D},
     player::Player,
-    utils::{self, Frustum},
+    utils::Frustum,
     world::World,
 };
 

@@ -1,5 +1,5 @@
 use libm::tanf;
-use nalgebra::{Vector3, Vector4};
+use nalgebra::Vector3;
 
 use crate::camera::Camera;
 
