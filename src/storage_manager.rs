@@ -1,5 +1,5 @@
 use alloc::vec::Vec;
-use miniz_oxide::deflate::compress_to_vec;
+use lz4_flex::compress;
 
 use crate::chunk::Chunk;
 
@@ -10,15 +10,24 @@ struct ChunkStorage {
     blocks: Vec<u8>
 }
 
-struct SaveFile {
-    
-}
-
 impl ChunkStorage {
     pub fn from_chunk(chunk: &Chunk) -> Self {
         let pos = chunk.get_pos();
         
-        let compressed = compress_to_vec(&chunk.get_all_blocks().map(|b| b as u8), 6);
+
+        let compressed = compress(&chunk.get_all_blocks().map(|b| b as u8));
         ChunkStorage { x: pos.x as i16, y: pos.y as i16, z: pos.z as i16, blocks: compressed }
     }
 }
+
+
+/*
+Save file format.
+
+Header:
+  x_world_size: u8
+  y_world_size: u8
+  z_world_size: u8
+
+  
+*/
