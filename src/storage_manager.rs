@@ -22,12 +22,12 @@ impl ChunkStorage {
 
 
 /*
-Save file format.
+Save file format. World is 4 x 4 x 4 chunks.
 
 Header:
-  x_world_size: u8
-  y_world_size: u8
-  z_world_size: u8
-
+    4x4x4 x 3 B array : 
+        3 B per chunks: 1B for world chunk position, 2 B as u16 for chunk index position in save file
+    
+    4x4x4 variable size chunks data.
   
 */
