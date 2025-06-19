@@ -7,6 +7,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - uses: carlosperate/arm-none-eabi-gcc-action@v1
       - name: Install nwlink
         uses: actions/setup-node@v4
         with:
