@@ -1,6 +1,7 @@
 #![cfg_attr(target_os = "none", no_std)]
 #![no_main]
 
+use alloc::format;
 #[allow(unused_imports)]
 #[cfg(target_os = "none")]
 use cortex_m;
@@ -25,6 +26,8 @@ pub mod mesh;
 mod renderer;
 mod world;
 use game::Game;
+
+use crate::eadk::{display::draw_string, Color, Point};
 mod storage_lib;
 mod player;
 mod utils;

@@ -158,6 +158,11 @@ impl World {
         }
 
         // Generate or regenerate mesh if needed
+        self.check_mesh_regeneration();
+        
+    }
+
+    pub fn check_mesh_regeneration(&mut self) {
         for i in 0..self.chunks.len() {
             if self.chunks[i].need_new_mesh {
                 let new_mesh = Mesh::generate_chunk(self, &self.chunks[i]);

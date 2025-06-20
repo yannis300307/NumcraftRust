@@ -1,3 +1,5 @@
+use nalgebra::Vector3;
+
 use crate::{
     constants::rendering::RENDER_DISTANCE,
     eadk::{self, input::KeyboardState},
@@ -26,6 +28,14 @@ impl Game {
     pub fn start(&mut self) {
         let mut last = eadk::timing::millis();
 
+        for x in 0..4 {
+            for y in 0..4 {
+                for z in 0..4 {
+                    self.world.add_chunk(Vector3::new(x, y, z));
+                }
+            }
+        }
+
         loop {
             let current = eadk::timing::millis();
             let delta = (current - last) as f32 / 1000.0;
@@ -52,10 +62,11 @@ impl Game {
             &mut self.renderer.camera,
         );
 
-        self.world
-            .generate_world_around_pos(*self.renderer.camera.get_pos(), RENDER_DISTANCE as isize);
+        //self.world.generate_world_around_pos(*self.renderer.camera.get_pos(), RENDER_DISTANCE as isize);
+        self.world.check_mesh_regeneration();
 
-        self.renderer.update(&mut self.world, &self.player, 1.0 / delta);
+        self.renderer
+            .update(&mut self.world, &self.player, 1.0 / delta);
 
         //eadk::timing::msleep(20);
         true
