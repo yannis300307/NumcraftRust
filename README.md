@@ -59,7 +59,7 @@ Good ideas but I will never have the time to do that :
 
 ## Build the app
 
-To build this app, you will need to install an embedded ARM rust compiler as well as [Node.js](https://nodejs.org/en/). The SDK for Epsilon apps is shipped as an npm module called [nwlink](https://www.npmjs.com/package/nwlink) that will automatically be installed at compile time.
+To build this app, you will need to install an embedded ARM rust compiler, the [Arm GCC compiler](https://developer.arm.com/downloads/-/gnu-rm) as well as [Node.js](https://nodejs.org/en/). The SDK for Epsilon apps is shipped as an npm module called [nwlink](https://www.npmjs.com/package/nwlink) that will automatically be installed at compile time. Make sure that `arm-none-eabi-gcc`is in your path.
 
 ```shell
 brew install rustup node # Or equivalent on your OS
