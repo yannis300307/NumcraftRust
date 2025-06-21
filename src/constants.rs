@@ -8,7 +8,7 @@ pub mod rendering {
 
     pub const FOV: f32 = core::f32::consts::PI / 4.0;
 
-    pub const MAX_TRIANGLES: usize = 1500;
+    pub const MAX_TRIANGLES: usize = 1300;
 
     pub const RENDER_DISTANCE: usize = 2;
 }

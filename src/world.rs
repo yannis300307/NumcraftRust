@@ -60,6 +60,19 @@ impl World {
         world
     }
 
+    pub fn load_area(&mut self, x_start: isize, x_stop: isize, y_start: isize, y_stop: isize, z_start: isize, z_stop: isize) {
+         for x in x_start..x_stop {
+            for y in y_start..y_stop {
+                for z in z_start..z_stop {
+                    self.add_chunk(Vector3::new(x, y, z));
+                    let chunk = self.chunks.last_mut().unwrap();
+                    chunk.generate_chunk(&self.gen_noise);
+                }
+            }
+        }
+
+    }
+
     /// Used for rendering priority. Return a Vector of all the loaded chunks from the nearest to the farest
     pub fn get_chunks_sorted_by_distance(&mut self, pos: Vector3<f32>) -> Vec<&mut Chunk> {
         let mut chunks: Vec<&mut Chunk> = self.chunks.iter_mut().collect();
@@ -80,11 +93,9 @@ impl World {
     }
 
     /// Add a chunk and return a reference to it as an option
-    pub fn add_chunk(&mut self, pos: Vector3<isize>) -> Option<&mut Chunk> {
+    pub fn add_chunk(&mut self, pos: Vector3<isize>) {
         let chunk = Chunk::new(pos);
         self.chunks.push(chunk);
-
-        self.chunks.last_mut()
     }
 
     /// Return true if a chunks is loaded at the given coordinates. The position is the position of the chunk and not the position of a block
@@ -135,9 +146,7 @@ impl World {
 
                     // Prevent creating chunks that already exist
                     if !self.get_chunk_exists_at(chunk_pos) {
-                        if self.add_chunk(chunk_pos).is_none() {
-                            continue;
-                        };
+                        self.add_chunk(chunk_pos);
                         let chunk = self.chunks.last_mut().unwrap();
 
                         chunk.generate_chunk(&self.gen_noise);

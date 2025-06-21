@@ -28,13 +28,7 @@ impl Game {
     pub fn start(&mut self) {
         let mut last = eadk::timing::millis();
 
-        for x in 0..4 {
-            for y in 0..4 {
-                for z in 0..4 {
-                    self.world.add_chunk(Vector3::new(x, y, z));
-                }
-            }
-        }
+        self.world.load_area(0, 4, 0, 4, 0, 4);
 
         loop {
             let current = eadk::timing::millis();
