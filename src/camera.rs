@@ -15,7 +15,7 @@ impl Camera {
     pub fn new() -> Self {
         Camera {
             pos: Vector3::new(0., 0., 0.),
-            rotation: Vector3::new(0.0, 0., 0.),
+            rotation: Vector3::new(0., 0., 0.),
             has_moved: true,
         }
     }

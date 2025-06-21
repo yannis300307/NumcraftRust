@@ -1,11 +1,7 @@
 use nalgebra::Vector3;
 
 use crate::{
-    constants::rendering::RENDER_DISTANCE,
-    eadk::{self, input::KeyboardState},
-    player::Player,
-    renderer::Renderer,
-    world::World,
+    constants::rendering::RENDER_DISTANCE, eadk::{self, input::KeyboardState}, player::Player, renderer::Renderer, storage_manager::SaveManager, world::World
 };
 
 pub struct Game {
@@ -13,6 +9,7 @@ pub struct Game {
     world: World,
     player: Player,
     last_keyboard_state: KeyboardState,
+    save_manager: SaveManager,
 }
 
 impl Game {
@@ -22,6 +19,7 @@ impl Game {
             world: World::new(),
             player: Player::new(),
             last_keyboard_state: KeyboardState::new(),
+            save_manager: SaveManager::new()
         }
     }
 
@@ -40,11 +38,21 @@ impl Game {
         }
     }
 
+    fn quit(&mut self) {
+        for chunk in self.world.chunks.iter() {
+            self.save_manager.set_chunk(chunk);
+        }
+
+        self.save_manager.save_world_to_file();
+    }
+
     pub fn update(&mut self, delta: f32) -> bool {
         let keyboard_state = eadk::input::KeyboardState::scan();
         let just_pressed_keyboard_state = keyboard_state.get_just_pressed(self.last_keyboard_state);
         self.last_keyboard_state = keyboard_state;
         if keyboard_state.key_down(eadk::input::Key::Home) {
+            self.quit();
+
             return false;
         }
 
