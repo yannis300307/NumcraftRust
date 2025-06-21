@@ -212,10 +212,25 @@ pub struct Triangle2D {
 
 impl Triangle2D {
     pub fn to_small(&self) -> SmallTriangle2D {
+        let value: u64 = ((self.p1.x as u64) << 45)
+            | ((self.p1.y as u64) << 36)
+            | ((self.p2.x as u64) << 27)
+            | ((self.p2.y as u64) << 18)
+            | ((self.p3.x as u64) << 9)
+            | (self.p3.y as u64);
+
+        let pos = (
+            ((value >> 48) & 0xFF) as u8,
+            ((value >> 40) & 0xFF) as u8,
+            ((value >> 32) & 0xFF) as u8,
+            ((value >> 24) & 0xFF) as u8,
+            ((value >> 16) & 0xFF) as u8,
+            ((value >> 8) & 0xFF) as u8,
+            (value & 0xFF) as u8,
+        );
+
         SmallTriangle2D {
-            p1: self.p1.map(|x| x as u8),
-            p2: self.p2.map(|x| x as u8),
-            p3: self.p3.map(|x| x as u8),
+            pos,
             texture_id: self.texture_id,
             light: self.light,
         }
@@ -223,19 +238,34 @@ impl Triangle2D {
 }
 
 pub struct SmallTriangle2D {
-    pub p1: Vector2<u8>,
-    pub p2: Vector2<u8>,
-    pub p3: Vector2<u8>,
+    pub pos: (u8, u8, u8, u8, u8, u8, u8),
     pub texture_id: u8,
     pub light: u8,
 }
 
 impl SmallTriangle2D {
     pub fn to_tri_2d(&self) -> Triangle2D {
+        // Recompose le u64 à partir des 7 u8
+        let value: u64 = ((self.pos.0 as u64) << 48)
+            | ((self.pos.1 as u64) << 40)
+            | ((self.pos.2 as u64) << 32)
+            | ((self.pos.3 as u64) << 24)
+            | ((self.pos.4 as u64) << 16)
+            | ((self.pos.5 as u64) << 8)
+            | (self.pos.6 as u64);
+
+        // Extrait chaque coordonnée sur 9 bits
+        let p1x = ((value >> 45) & 0x1FF) as i16;
+        let p1y = ((value >> 36) & 0x1FF) as i16;
+        let p2x = ((value >> 27) & 0x1FF) as i16;
+        let p2y = ((value >> 18) & 0x1FF) as i16;
+        let p3x = ((value >> 9) & 0x1FF) as i16;
+        let p3y = (value & 0x1FF) as i16;
+
         Triangle2D {
-            p1: self.p1.map(|x| x as i16),
-            p2: self.p2.map(|x| x as i16),
-            p3: self.p3.map(|x| x as i16),
+            p1: Vector2::new(p1x, p1y),
+            p2: Vector2::new(p2x, p2y),
+            p3: Vector2::new(p3x, p3y),
             texture_id: self.texture_id,
             light: self.light,
         }
