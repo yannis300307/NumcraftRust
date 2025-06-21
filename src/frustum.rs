@@ -58,29 +58,6 @@ impl Frustum {
         }
     }
 
-    pub fn is_point_in(&self, point: Vector3<f32>) -> bool {
-        let dist = |plane: &Plane| (point - plane.pos).dot(&plane.normal);
-
-        if dist(&self.far_plane) < 0.0 {
-            return false;
-        }
-        if dist(&self.near_plane) < 0.0 {
-            return false;
-        }
-        if dist(&self.right_plane) < 0.0 {
-            return false;
-        }
-        if dist(&self.left_plane) < 0.0 {
-            return false;
-        }
-        if dist(&self.top_plane) < 0.0 {
-            return false;
-        }
-        if dist(&self.bottom_plane) < 0.0 {
-            return false;
-        }
-        true
-    }
 
     pub fn is_aabb_in_frustum(&self, min: Vector3<f32>, max: Vector3<f32>) -> bool {
         let corners = [

@@ -47,7 +47,7 @@ impl Camera {
             }
         }
 
-        self.has_moved = self.pos == position;
+        self.has_moved = self.pos != position;
 
         self.pos = position; // Updated from player
     }

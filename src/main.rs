@@ -30,7 +30,7 @@ use game::Game;
 use crate::eadk::{display::draw_string, Color, Point};
 mod storage_lib;
 mod player;
-mod utils;
+mod frustum;
 mod storage_manager;
 
 #[used]

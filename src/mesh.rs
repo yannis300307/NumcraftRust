@@ -22,7 +22,7 @@ pub enum QuadDir {
 }
 
 impl QuadDir {
-    pub fn from_id(id: u8) -> Self {
+    pub const fn from_id(id: u8) -> Self {
         match id {
             1 => QuadDir::Front,
             2 => QuadDir::Back,
@@ -34,7 +34,7 @@ impl QuadDir {
         }
     }
 
-    pub fn get_normal_vector(&self) -> Vector3<isize> {
+    pub const fn get_normal_vector(&self) -> Vector3<isize> {
         match *self {
             QuadDir::Front => Vector3::new(0, 0, -1),
             QuadDir::Back => Vector3::new(0, 0, 1),
@@ -287,7 +287,7 @@ impl Mesh {
         &mut self.quads
     }
 
-    fn get_light_level_from_dir(dir: QuadDir) -> u16 {
+    const fn get_light_level_from_dir(dir: QuadDir) -> u16 {
         // Please not bellow 2 to avoid negative light. What is neagative light ?
         match dir {
             QuadDir::Front => 13,
@@ -305,7 +305,7 @@ impl Mesh {
         for x in 0..CHUNK_SIZE as isize {
             for y in 0..CHUNK_SIZE as isize {
                 for z in 0..CHUNK_SIZE as isize {
-                    let block_type = chunk.get_at(Vector3::new(x, y, z)).unwrap();
+                    let block_type = chunk.get_at_unchecked(Vector3::new(x, y, z));
                     if block_type != BlockType::Air {
                         let bloc_pos = Vector3::new(x as u16, y as u16, z as u16);
 

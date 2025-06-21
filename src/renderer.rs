@@ -14,7 +14,7 @@ use crate::{
     eadk::{self, Color, Rect},
     mesh::{Quad, Triangle, Triangle2D},
     player::Player,
-    utils::Frustum,
+    frustum::Frustum,
     world::World,
 };
 
