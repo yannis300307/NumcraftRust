@@ -38,9 +38,6 @@ pub fn get_chunk_local_coords(pos: Vector3<isize>) -> Vector3<isize> {
     )
 }
 
-pub fn get_chunk_pos_from_block(pos: Vector3<isize>) -> Vector3<isize> {
-    pos / CHUNK_SIZE_I
-}
 
 impl Default for World {
     fn default() -> Self {

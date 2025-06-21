@@ -1,6 +1,6 @@
 use core::f32::consts::PI;
 
-use libm::{cosf, sincosf, sinf};
+use libm::sincosf;
 use nalgebra::{ComplexField, Vector3};
 
 use crate::{
@@ -8,7 +8,7 @@ use crate::{
     constants::{BlockType, player::MOVEMENT_SPEED},
     eadk,
     mesh::{Mesh, Quad, QuadDir},
-    world::{World, get_chunk_local_coords, get_chunk_pos_from_block},
+    world::World,
 };
 
 pub struct Player {
@@ -160,8 +160,6 @@ impl Player {
             let current_voxel_pos_isize = current_voxel_pos.map(|x| x as isize);
             let result = world.get_block_in_world(current_voxel_pos_isize);
             if !result.is_none_or(|b| b == BlockType::Air) {
-                let block_type = result.unwrap();
-
                 let voxel_normal = if step_dir == 0 {
                     if dx < 0. {
                         QuadDir::Right
@@ -182,7 +180,6 @@ impl Player {
                 return Some(RaycastResult {
                     block_pos: current_voxel_pos_isize,
                     face_dir: voxel_normal,
-                    block_type,
                 });
             }
 
@@ -213,5 +210,4 @@ impl Player {
 struct RaycastResult {
     pub block_pos: Vector3<isize>,
     pub face_dir: QuadDir,
-    pub block_type: BlockType,
 }
