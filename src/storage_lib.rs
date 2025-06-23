@@ -1,11 +1,9 @@
-use core::ptr::addr_of;
-
 use alloc::ffi;
 use alloc::vec::Vec;
 
 pub fn storage_file_write(filename: &str, content: &[u8]) -> bool {
     let c_string = ffi::CString::new(filename).unwrap();
-    unsafe { extapp_fileWrite(c_string.as_ptr(), content.as_ptr().sub(1), content.len()) }
+    unsafe { extapp_fileWrite(c_string.as_ptr(), content.as_ptr(), content.len()) }
 }
 
 pub fn storage_extapp_fileExists(filename: &str) -> bool {
@@ -16,10 +14,10 @@ pub fn storage_extapp_fileExists(filename: &str) -> bool {
 pub fn storage_extapp_fileRead(filename: &str) -> Option<Vec<u8>> {
     let c_string = ffi::CString::new(filename).unwrap();
     let mut lenght: usize = 0;
-    let array_pointer = unsafe { extapp_fileRead(c_string.as_ptr(), &mut lenght as *mut usize)};
+    let array_pointer = unsafe { extapp_fileRead(c_string.as_ptr(), &mut lenght as *mut usize) };
 
     if array_pointer.is_null() {
-        return None
+        return None;
     }
 
     Some(unsafe { core::slice::from_raw_parts(array_pointer, lenght).to_vec() })

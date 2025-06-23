@@ -9,7 +9,7 @@ use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
-    camera::Camera, constants::{get_quad_color_from_texture_id, rendering::*, world::CHUNK_SIZE}, eadk::{self, Color, Rect}, frustum::Frustum, mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D}, player::Player, world::World
+    camera::Camera, constants::{get_quad_color_from_texture_id, rendering::*, world::CHUNK_SIZE}, eadk::{self, Color, Rect}, frustum::Frustum, mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D}, player::Player, world::World, HEAP
 };
 
 // Screen size related constants
@@ -620,6 +620,11 @@ impl Renderer {
                 )
                 .as_str(),
                 &Vector2::new(10, 50),
+            );
+
+            self.draw_string(
+                format!("heap:{}", HEAP.used()).as_str(),
+                &Vector2::new(10, 70),
             );
         }
         let mut draw_cross = |x, y| {

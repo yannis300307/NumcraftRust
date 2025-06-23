@@ -1,5 +1,5 @@
 use image::{self, GenericImageView, ImageReader};
-use std::{fs, process::Command};
+use std::{env, fs, process::Command};
 
 fn convert_image(file_name: &str) {
     let img = ImageReader::open(format!("assets/{file_name}.png").as_str())
@@ -59,19 +59,31 @@ fn main() {
     println!("Converting cross");
     convert_image("cross");
 
-    unsafe { std::env::set_var("CC", "arm-none-eabi-gcc") };
+    unsafe { std::env::set_var("CC", "arm-none-eabi-g++") };
 
-    cc::Build::new()
-        .file("src/storage.c")
-        .flag("-mthumb")
-        .flag("-mfloat-abi=hard")
-        .flag("-mcpu=cortex-m7")
-        .flag("-mfpu=fpv5-sp-d16")
-        .flag("-DPLATFORM_DEVICE=1")
-        .flag("-I/usr/local/lib/node_modules/nwlink/dist/eadk")
-        .flag("-std=c99")
-        .flag("-Os")
-        .flag("-Wall")
-        .flag("-ggdb")
-        .compile("storage_c");
+    let program = if cfg!(windows) {"C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx.cmd"} else {"npx"};
+
+    let nwlink_flags = String::from_utf8(
+        Command::new(program)
+            .args(["--yes", "--", "nwlink@0.0.19", "eadk-cflags"])
+            .output()
+            .expect("Failed to get nwlink eadk-cflags")
+            .stdout,
+    )
+    .expect("Invalid UTF-8 in nwlink flags");
+
+    let mut build = cc::Build::new();
+    build.file("src/storage.c");
+    build.flag("-std=c99");
+    build.flag("-Os");
+    build.flag("-Wall");
+    build.flag("-ggdb");
+
+    // Ajoute dynamiquement chaque flag récupéré
+    for flag in nwlink_flags.split_whitespace() {
+        build.flag(flag);
+    }
+
+    // Ajoute d'autres flags spécifiques si besoin
+    build.compile("storage_c");
 }

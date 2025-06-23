@@ -1,7 +1,12 @@
+use alloc::format;
 use nalgebra::Vector3;
 
 use crate::{
-    constants::rendering::RENDER_DISTANCE, eadk::{self, input::KeyboardState}, player::Player, renderer::Renderer, storage_manager::SaveManager, world::World
+    eadk::{self, debug_info, input::KeyboardState},
+    player::Player,
+    renderer::Renderer,
+    storage_manager::SaveManager,
+    world::World,
 };
 
 pub struct Game {
@@ -19,14 +24,28 @@ impl Game {
             world: World::new(),
             player: Player::new(),
             last_keyboard_state: KeyboardState::new(),
-            save_manager: SaveManager::new()
+            save_manager: SaveManager::new(),
         }
     }
 
     pub fn start(&mut self) {
         let mut last = eadk::timing::millis();
 
-        self.world.load_area(0, 4, 0, 4, 0, 4);
+        if self.save_manager.load_from_file().is_ok() {
+            for x in 0..4 {
+                for y in 0..4 {
+                    for z in 0..4 {
+                        let chunk = self.save_manager.get_chunk_at_pos(Vector3::new(x, y, z)).unwrap();
+
+                        self.world.push_chunk(chunk);
+                    }
+                }
+            } 
+        } else {
+            self.world.load_area(0, 4, 0, 4, 0, 4);
+        }
+
+        self.save_manager.clean();
 
         loop {
             let current = eadk::timing::millis();
@@ -50,6 +69,7 @@ impl Game {
         let keyboard_state = eadk::input::KeyboardState::scan();
         let just_pressed_keyboard_state = keyboard_state.get_just_pressed(self.last_keyboard_state);
         self.last_keyboard_state = keyboard_state;
+
         if keyboard_state.key_down(eadk::input::Key::Home) {
             self.quit();
 

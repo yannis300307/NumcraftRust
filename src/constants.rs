@@ -51,6 +51,16 @@ impl BlockType {
             BlockType::Dirt => 3,
         }
     }
+
+    pub const fn get_from_id(id: u8) -> Option<Self> {
+        match id {
+            0 => Some(BlockType::Air),
+            1 => Some(BlockType::Stone),
+            2 => Some(BlockType::Grass),
+            3 => Some(BlockType::Dirt),
+            _ => None,
+        }
+    }
 }
 
 pub fn get_quad_color_from_texture_id(id: u8) -> Color {

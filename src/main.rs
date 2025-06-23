@@ -1,7 +1,7 @@
 #![cfg_attr(target_os = "none", no_std)]
 #![no_main]
 
-use alloc::format;
+use alloc::{format, string::String};
 #[allow(unused_imports)]
 #[cfg(target_os = "none")]
 use cortex_m;
@@ -27,10 +27,13 @@ mod renderer;
 mod world;
 use game::Game;
 
-use crate::eadk::{display::draw_string, Color, Point};
-mod storage_lib;
-mod player;
+use crate::{
+    eadk::{Color, Point, display::draw_string},
+    storage_lib::{storage_extapp_fileRead, storage_file_write},
+};
 mod frustum;
+mod player;
+mod storage_lib;
 mod storage_manager;
 
 #[used]
