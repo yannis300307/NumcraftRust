@@ -33,6 +33,7 @@ mod frustum;
 mod player;
 mod storage_lib;
 mod storage_manager;
+mod menu;
 
 #[used]
 #[cfg(target_os = "none")]
