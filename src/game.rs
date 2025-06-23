@@ -72,7 +72,7 @@ impl Game {
         let just_pressed_keyboard_state = keyboard_state.get_just_pressed(self.last_keyboard_state);
         self.last_keyboard_state = keyboard_state;
 
-        if keyboard_state.key_down(eadk::input::Key::Home) {
+        if keyboard_state.key_down(eadk::input::Key::Exe) {
             self.quit();
 
             return false;
