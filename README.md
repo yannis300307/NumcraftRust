@@ -30,7 +30,7 @@ NumcraftRust should run on both N120, N115 and N110 models. You will get better 
 **Here is the current roadmap for the project :**
 - [X] Fix the raycaster
 - [ ] Add textures
-- [ ] Add a save system with compression
+- [X] Add a save system with compression
 - [ ] Add collisions
 - [ ] Better world generation
 - [ ] Add a main menu
