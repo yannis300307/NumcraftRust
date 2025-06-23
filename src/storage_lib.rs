@@ -23,9 +23,15 @@ pub fn storage_extapp_fileRead(filename: &str) -> Option<Vec<u8>> {
     Some(unsafe { core::slice::from_raw_parts(array_pointer, lenght).to_vec() })
 }
 
+pub fn storage_extapp_fileErase(filename: &str) -> bool {
+    let c_string = ffi::CString::new(filename).unwrap();
+    unsafe { extapp_fileErase(c_string.as_ptr()) }
+}
+
 unsafe extern "C" {
     fn extapp_fileWrite(filename: *const u8, content: *const u8, len: usize) -> bool;
     fn extapp_fileExists(filename: *const u8) -> bool;
     fn extapp_fileRead(filename: *const u8, len: *mut usize) -> *const u8;
+    fn extapp_fileErase(filename: *const u8) -> bool;
 
 }

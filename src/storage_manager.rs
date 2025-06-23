@@ -5,7 +5,7 @@ use nalgebra::Vector3;
 use crate::{
     chunk::Chunk,
     constants::{world::CHUNK_SIZE, BlockType},
-    storage_lib::{storage_extapp_fileExists, storage_extapp_fileRead, storage_file_write},
+    storage_lib::{storage_extapp_fileErase, storage_extapp_fileExists, storage_extapp_fileRead, storage_file_write},
 };
 
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
@@ -40,7 +40,9 @@ impl SaveManager {
     pub fn save_world_to_file(&self) {
         let data = self.get_raw();
 
-        if storage_extapp_fileExists("world.ncw") {}
+        if storage_extapp_fileExists("world.ncw") {
+            storage_extapp_fileErase("world.ncw");
+        }
         storage_file_write("world.ncw", &data);
     }
 
