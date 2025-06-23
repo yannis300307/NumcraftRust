@@ -7,6 +7,7 @@ name = "Numcraft"
 version = "0.0.4"
 dependencies = [
  "bresenham",
+ "cc",
  "cortex-m",
  "embedded-alloc",
  "fastnoise-lite",
@@ -14,6 +15,7 @@ dependencies = [
  "heapless",
  "image",
  "libm",
+ "lz4_flex",
  "minifb",
  "nalgebra",
  "rand 0.9.1",
@@ -781,6 +783,12 @@ checksum = "0fae87c125b03c1d2c0150c90365d7d6bcc53fb73a9acaef207d2d065860f062"
 dependencies = [
  "imgref",
 ]
+
+[[package]]
+name = "lz4_flex"
+version = "0.11.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08ab2867e3eeeca90e844d1940eab391c9dc5228783db2ed999acbc0a9ed375a"
 
 [[package]]
 name = "maybe-rayon"

@@ -10,6 +10,7 @@ jobs:
         steps:
             - name: Get latest code
               uses: actions/checkout@v4
+            - uses: carlosperate/arm-none-eabi-gcc-action@v1
             - name: Install nwlink
               uses: actions/setup-node@v4
               with:

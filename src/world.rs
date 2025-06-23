@@ -20,24 +20,20 @@ pub struct World {
 /// Convert the block position from world space to chunk space
 pub fn get_chunk_local_coords(pos: Vector3<isize>) -> Vector3<isize> {
     Vector3::new(
-        if pos.x < 0 {
-            CHUNK_SIZE_I - 1 + (pos.x + 1) % CHUNK_SIZE_I
-        } else {
-            pos.x % CHUNK_SIZE_I
-        },
-        if pos.y < 0 {
-            CHUNK_SIZE_I - 1 + (pos.y + 1) % CHUNK_SIZE_I
-        } else {
-            pos.y % CHUNK_SIZE_I
-        },
-        if pos.z < 0 {
-            CHUNK_SIZE_I - 1 + (pos.z + 1) % CHUNK_SIZE_I
-        } else {
-            pos.z % CHUNK_SIZE_I
-        },
+        (pos.x % CHUNK_SIZE_I + CHUNK_SIZE_I) % CHUNK_SIZE_I,
+        (pos.y % CHUNK_SIZE_I + CHUNK_SIZE_I) % CHUNK_SIZE_I,
+        (pos.z % CHUNK_SIZE_I + CHUNK_SIZE_I) % CHUNK_SIZE_I,
     )
 }
 
+fn div_floor(a: isize, b: isize) -> isize {
+    let (d, r) = (a / b, a % b);
+    if (r != 0) && ((r < 0) != (b < 0)) {
+        d - 1
+    } else {
+        d
+    }
+}
 
 impl Default for World {
     fn default() -> Self {
@@ -60,6 +56,30 @@ impl World {
         world
     }
 
+    pub fn load_area(
+        &mut self,
+        x_start: isize,
+        x_stop: isize,
+        y_start: isize,
+        y_stop: isize,
+        z_start: isize,
+        z_stop: isize,
+    ) {
+        for x in x_start..x_stop {
+            for y in y_start..y_stop {
+                for z in z_start..z_stop {
+                    self.add_chunk(Vector3::new(x, y, z));
+                    let chunk = self.chunks.last_mut().unwrap();
+                    chunk.generate_chunk(&self.gen_noise);
+                }
+            }
+        }
+    }
+
+    pub fn push_chunk(&mut self, chunk: Chunk) {
+        self.chunks.push(chunk);
+    }
+
     /// Used for rendering priority. Return a Vector of all the loaded chunks from the nearest to the farest
     pub fn get_chunks_sorted_by_distance(&mut self, pos: Vector3<f32>) -> Vec<&mut Chunk> {
         let mut chunks: Vec<&mut Chunk> = self.chunks.iter_mut().collect();
@@ -80,11 +100,9 @@ impl World {
     }
 
     /// Add a chunk and return a reference to it as an option
-    pub fn add_chunk(&mut self, pos: Vector3<isize>) -> Option<&mut Chunk> {
+    pub fn add_chunk(&mut self, pos: Vector3<isize>) {
         let chunk = Chunk::new(pos);
         self.chunks.push(chunk);
-
-        self.chunks.last_mut()
     }
 
     /// Return true if a chunks is loaded at the given coordinates. The position is the position of the chunk and not the position of a block
@@ -135,9 +153,7 @@ impl World {
 
                     // Prevent creating chunks that already exist
                     if !self.get_chunk_exists_at(chunk_pos) {
-                        if self.add_chunk(chunk_pos).is_none() {
-                            continue;
-                        };
+                        self.add_chunk(chunk_pos);
                         let chunk = self.chunks.last_mut().unwrap();
 
                         chunk.generate_chunk(&self.gen_noise);
@@ -155,6 +171,10 @@ impl World {
         }
 
         // Generate or regenerate mesh if needed
+        self.check_mesh_regeneration();
+    }
+
+    pub fn check_mesh_regeneration(&mut self) {
         for i in 0..self.chunks.len() {
             if self.chunks[i].need_new_mesh {
                 let new_mesh = Mesh::generate_chunk(self, &self.chunks[i]);
@@ -175,7 +195,12 @@ impl World {
 
     /// Return the block type of the block at the given position in world blocks space
     pub fn get_block_in_world(&self, pos: Vector3<isize>) -> Option<BlockType> {
-        self.get_chunk_at_pos(pos / CHUNK_SIZE_I)
+        let chunk_pos = Vector3::new(
+            div_floor(pos.x, CHUNK_SIZE_I),
+            div_floor(pos.y, CHUNK_SIZE_I),
+            div_floor(pos.z, CHUNK_SIZE_I),
+        );
+        self.get_chunk_at_pos(chunk_pos)
             .map(|chunk| chunk.get_at_unchecked(get_chunk_local_coords(pos)))
     }
 
@@ -188,12 +213,16 @@ impl World {
 
     /// Set the block type of the block at the given position in world blocks space. Regenerate chunk mesh if needed
     pub fn set_block_in_world(&mut self, pos: Vector3<isize>, block_type: BlockType) -> bool {
-        let chunk_pos = pos / CHUNK_SIZE_I;
+        let chunk_pos = Vector3::new(
+            div_floor(pos.x, CHUNK_SIZE_I),
+            div_floor(pos.y, CHUNK_SIZE_I),
+            div_floor(pos.z, CHUNK_SIZE_I),
+        );
         if let Some(chunk) = self.get_chunk_at_pos_mut(chunk_pos) {
             let local_pos = get_chunk_local_coords(pos);
             if chunk.set_at(local_pos.map(|x| x as usize), block_type) {
                 chunk.need_new_mesh = true;
-                
+
                 if local_pos.x == 0 {
                     self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(-1, 0, 0));
                 }

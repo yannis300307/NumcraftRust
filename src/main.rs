@@ -1,6 +1,8 @@
 #![cfg_attr(target_os = "none", no_std)]
 #![no_main]
 
+use core::arch::asm;
+
 #[allow(unused_imports)]
 #[cfg(target_os = "none")]
 use cortex_m;
@@ -25,8 +27,12 @@ pub mod mesh;
 mod renderer;
 mod world;
 use game::Game;
-mod player;
+
+
 mod frustum;
+mod player;
+mod storage_lib;
+mod storage_manager;
 
 #[used]
 #[cfg(target_os = "none")]
@@ -45,6 +51,7 @@ pub static EADK_APP_ICON: [u8; 3437] = *include_bytes!("../target/icon.nwi");
 
 #[unsafe(no_mangle)]
 fn main() {
+    // Init the heap
     #[cfg(target_os = "none")]
     {
         let heap_size: usize = heap_size();
@@ -53,5 +60,6 @@ fn main() {
 
     let mut game = Game::new();
 
-    game.start();
+    game.game_loop();
+
 }

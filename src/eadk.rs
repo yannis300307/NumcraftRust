@@ -126,7 +126,8 @@ pub mod display {
     ) {
         use alloc::ffi;
 
-        let c_string = ffi::CString::new(text).unwrap();
+        let c_string = ffi::CString::new(text)
+            .expect("Can't convert str to C_String. Maybe invalid caracter.");
         unsafe {
             eadk_display_draw_string(
                 c_string.as_ptr(),
@@ -579,6 +580,17 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
         );
     }
     loop {} // FIXME: Do something better. Exit the app maybe?
+}
+
+pub fn debug_info(text: &str, wait: usize) {
+    display::draw_string(
+        text,
+        Point { x: 10, y: 30 },
+        false,
+        Color::from_888(0, 0, 0),
+        Color::from_888(255, 255, 255),
+    );
+    timing::msleep(wait as u32);
 }
 
 unsafe extern "C" {

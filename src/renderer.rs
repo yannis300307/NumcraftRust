@@ -9,13 +9,7 @@ use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
-    camera::Camera,
-    constants::{get_quad_color_from_texture_id, rendering::*, world::CHUNK_SIZE},
-    eadk::{self, Color, Rect},
-    mesh::{Quad, Triangle, Triangle2D},
-    player::Player,
-    frustum::Frustum,
-    world::World,
+    camera::Camera, constants::{get_quad_color_from_texture_id, rendering::*, world::CHUNK_SIZE}, eadk::{self, Color, Rect}, frustum::Frustum, mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D}, player::Player, world::World, HEAP
 };
 
 // Screen size related constants
@@ -399,7 +393,7 @@ fn triangle_clip_against_plane(
 
 pub struct Renderer {
     pub camera: Camera,
-    triangles_to_render: Vec<Triangle2D>,
+    triangles_to_render: Vec<SmallTriangle2D>,
     tile_frame_buffer: [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
     projection_matrix: Perspective3<f32>,
 }
@@ -409,7 +403,7 @@ impl Renderer {
         let renderer: Renderer = Renderer {
             camera: Camera::new(),
             projection_matrix: Perspective3::new(ASPECT_RATIO, FOV, ZNEAR, ZFAR),
-            triangles_to_render: Vec::new(),
+            triangles_to_render: Vec::with_capacity(MAX_TRIANGLES),
             tile_frame_buffer: [Color { rgb565: 0 }; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
         };
 
@@ -503,7 +497,7 @@ impl Renderer {
                 }
 
                 for tri in clip_buffer {
-                    self.triangles_to_render.push(tri); // Do nothing if overflow
+                    self.triangles_to_render.push(tri.to_small()); // Do nothing if overflow
                 }
             };
 
@@ -522,7 +516,7 @@ impl Renderer {
             -((SCREEN_TILE_HEIGHT * tile_y) as i16),
         );
         for tri in self.triangles_to_render.iter_mut() {
-            let mut tri_copy = *tri;
+            let mut tri_copy = tri.to_tri_2d();
             tri_copy.p1 += tile_offset;
 
             tri_copy.p2 += tile_offset;
@@ -627,6 +621,11 @@ impl Renderer {
                 .as_str(),
                 &Vector2::new(10, 50),
             );
+
+            self.draw_string(
+                format!("heap:{}", HEAP.used()).as_str(),
+                &Vector2::new(10, 70),
+            );
         }
         let mut draw_cross = |x, y| {
             self.draw_image_negate(
@@ -679,9 +678,11 @@ impl Renderer {
                 continue;
             }
 
+            let need_sorting = chunk.need_sorting || self.camera.get_has_moved();
+
             let quads = chunk.get_mesh().get_reference_vec();
 
-            if self.camera.get_has_moved() {
+            if need_sorting {
                 quads.sort_by(|a, b| -> Ordering {
                     let a_pos = a.get_pos().map(|x| x as isize) + chunk_blocks_pos;
                     let b_pos = b.get_pos().map(|x| x as isize) + chunk_blocks_pos;

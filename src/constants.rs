@@ -8,7 +8,7 @@ pub mod rendering {
 
     pub const FOV: f32 = core::f32::consts::PI / 4.0;
 
-    pub const MAX_TRIANGLES: usize = 1500;
+    pub const MAX_TRIANGLES: usize = 1300;
 
     pub const RENDER_DISTANCE: usize = 2;
 }
@@ -49,6 +49,16 @@ impl BlockType {
                 }
             }
             BlockType::Dirt => 3,
+        }
+    }
+
+    pub const fn get_from_id(id: u8) -> Option<Self> {
+        match id {
+            0 => Some(BlockType::Air),
+            1 => Some(BlockType::Stone),
+            2 => Some(BlockType::Grass),
+            3 => Some(BlockType::Dirt),
+            _ => None,
         }
     }
 }

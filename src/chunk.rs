@@ -16,6 +16,7 @@ pub struct Chunk {
     pub mesh: Mesh,
     pub generated: bool,
     pub need_new_mesh: bool,
+    pub need_sorting: bool,
 }
 
 impl Chunk {
@@ -26,6 +27,7 @@ impl Chunk {
             mesh: Mesh::new(),
             generated: false,
             need_new_mesh: true,
+            need_sorting: false,
         }
     }
 
@@ -90,6 +92,10 @@ impl Chunk {
         self.generated = true
     }
 
+    pub fn get_all_blocks(&self) -> &[BlockType; BLOCK_COUNT] {
+        &self.blocks
+    }
+
     pub fn get_mesh(&mut self) -> &mut Mesh {
         &mut self.mesh
     }
@@ -97,5 +103,6 @@ impl Chunk {
     pub fn set_mesh(&mut self, new_mesh: Mesh) {
         self.mesh = new_mesh;
         self.need_new_mesh = false;
+        self.need_sorting = true;
     }
 }
