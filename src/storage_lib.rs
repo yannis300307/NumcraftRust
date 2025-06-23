@@ -6,12 +6,12 @@ pub fn storage_file_write(filename: &str, content: &[u8]) -> bool {
     unsafe { extapp_fileWrite(c_string.as_ptr(), content.as_ptr(), content.len()) }
 }
 
-pub fn storage_extapp_fileExists(filename: &str) -> bool {
+pub fn storage_extapp_file_exists(filename: &str) -> bool {
     let c_string = ffi::CString::new(filename).unwrap();
     unsafe { extapp_fileExists(c_string.as_ptr()) }
 }
 
-pub fn storage_extapp_fileRead(filename: &str) -> Option<Vec<u8>> {
+pub fn storage_extapp_file_read(filename: &str) -> Option<Vec<u8>> {
     let c_string = ffi::CString::new(filename).unwrap();
     let mut lenght: usize = 0;
     let array_pointer = unsafe { extapp_fileRead(c_string.as_ptr(), &mut lenght as *mut usize) };
@@ -23,7 +23,7 @@ pub fn storage_extapp_fileRead(filename: &str) -> Option<Vec<u8>> {
     Some(unsafe { core::slice::from_raw_parts(array_pointer, lenght).to_vec() })
 }
 
-pub fn storage_extapp_fileErase(filename: &str) -> bool {
+pub fn storage_extapp_file_erase(filename: &str) -> bool {
     let c_string = ffi::CString::new(filename).unwrap();
     unsafe { extapp_fileErase(c_string.as_ptr()) }
 }

@@ -1,7 +1,8 @@
 #![cfg_attr(target_os = "none", no_std)]
 #![no_main]
 
-use alloc::{format, string::String};
+use core::arch::asm;
+
 #[allow(unused_imports)]
 #[cfg(target_os = "none")]
 use cortex_m;
@@ -27,10 +28,7 @@ mod renderer;
 mod world;
 use game::Game;
 
-use crate::{
-    eadk::{Color, Point, display::draw_string},
-    storage_lib::{storage_extapp_fileRead, storage_file_write},
-};
+
 mod frustum;
 mod player;
 mod storage_lib;
@@ -53,6 +51,7 @@ pub static EADK_APP_ICON: [u8; 3437] = *include_bytes!("../target/icon.nwi");
 
 #[unsafe(no_mangle)]
 fn main() {
+    // Init the heap
     #[cfg(target_os = "none")]
     {
         let heap_size: usize = heap_size();
@@ -61,5 +60,6 @@ fn main() {
 
     let mut game = Game::new();
 
-    game.start();
+    game.game_loop();
+
 }

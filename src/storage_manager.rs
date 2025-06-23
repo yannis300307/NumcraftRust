@@ -1,14 +1,13 @@
-use alloc::{format, vec::Vec};
+use alloc::vec::Vec;
 use lz4_flex::{compress, compress_prepend_size, decompress, decompress_size_prepended};
 use nalgebra::Vector3;
 
 use crate::{
     chunk::Chunk,
     constants::{world::CHUNK_SIZE, BlockType},
-    storage_lib::{storage_extapp_fileErase, storage_extapp_fileExists, storage_extapp_fileRead, storage_file_write},
+    storage_lib::{storage_extapp_file_erase, storage_extapp_file_exists, storage_extapp_file_read, storage_file_write},
 };
 
-const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 
 pub struct SaveManager {
     chunks_data: [Vec<u8>; 64],
@@ -37,13 +36,13 @@ impl SaveManager {
         true
     }
 
-    pub fn save_world_to_file(&self) {
+    pub fn save_world_to_file(&self, filename: &str) {
         let data = self.get_raw();
 
-        if storage_extapp_fileExists("world.ncw") {
-            storage_extapp_fileErase("world.ncw");
+        if storage_extapp_file_exists(filename) {
+            storage_extapp_file_erase(filename);
         }
-        storage_file_write("world.ncw", &data);
+        storage_file_write(filename, &data);
     }
 
     fn get_raw(&self) -> Vec<u8> {
@@ -61,8 +60,8 @@ impl SaveManager {
         compress_prepend_size(&data)
     }
 
-    pub fn load_from_file(&mut self) -> Result<(), SaveFileLoadError> {
-        if let Some(raw_data) = storage_extapp_fileRead("world.ncw") {
+    pub fn load_from_file(&mut self, filename: &str) -> Result<(), SaveFileLoadError> {
+        if let Some(raw_data) = storage_extapp_file_read(filename) {
             if let Ok(data) = decompress_size_prepended(&raw_data) {
                 let mut current_pos = 128;
                 for i in 0..64 {

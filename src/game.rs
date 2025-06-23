@@ -1,8 +1,7 @@
-use alloc::format;
 use nalgebra::Vector3;
 
 use crate::{
-    eadk::{self, debug_info, input::KeyboardState},
+    eadk::{self, input::KeyboardState},
     player::Player,
     renderer::Renderer,
     storage_manager::SaveManager,
@@ -28,19 +27,22 @@ impl Game {
         }
     }
 
-    pub fn start(&mut self) {
+    pub fn game_loop(&mut self) {
         let mut last = eadk::timing::millis();
 
-        if self.save_manager.load_from_file().is_ok() {
+        if self.save_manager.load_from_file("world.ncw").is_ok() {
             for x in 0..4 {
                 for y in 0..4 {
                     for z in 0..4 {
-                        let chunk = self.save_manager.get_chunk_at_pos(Vector3::new(x, y, z)).unwrap();
+                        let chunk = self
+                            .save_manager
+                            .get_chunk_at_pos(Vector3::new(x, y, z))
+                            .unwrap();
 
                         self.world.push_chunk(chunk);
                     }
                 }
-            } 
+            }
         } else {
             self.world.load_area(0, 4, 0, 4, 0, 4);
         }
@@ -62,7 +64,7 @@ impl Game {
             self.save_manager.set_chunk(chunk);
         }
 
-        self.save_manager.save_world_to_file();
+        self.save_manager.save_world_to_file("world.ncw");
     }
 
     pub fn update(&mut self, delta: f32) -> bool {
