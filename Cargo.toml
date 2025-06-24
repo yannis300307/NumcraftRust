@@ -6,7 +6,7 @@ authors = ["Yannis300307"]
 edition = "2024"
 
 [[bin]]
-name = "main"
+name = "Numcraft"
 path = "src/main.rs"
 test = false
 doctest = false
