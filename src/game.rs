@@ -1,7 +1,9 @@
-use nalgebra::Vector3;
+use alloc::string::{String, ToString};
+use nalgebra::{Vector2, Vector3};
 
 use crate::{
     eadk::{self, input::KeyboardState},
+    menu::Menu,
     player::Player,
     renderer::Renderer,
     storage_manager::SaveManager,
@@ -53,9 +55,47 @@ impl Game {
             let current = eadk::timing::millis();
             let delta = (current - last) as f32 / 1000.0;
             last = current;
-            if !self.update(delta) {
+            if !self.update_in_game(delta) {
                 break;
             }
+        }
+    }
+
+    pub fn main_menu_loop(&mut self) {
+        let menu = Menu::new(Vector2::new(10, 10), 300)
+            .add_element(crate::menu::MenuElement::Button {
+                text: "Boutton".to_string(),
+                is_pressed: false,
+            })
+            .add_element(crate::menu::MenuElement::Slider {
+                text: "Slider".to_string(),
+                value: 0.0,
+                step_size: 0.1,
+            })
+            .add_element(crate::menu::MenuElement::Label {
+                text: "Label Center".to_string(),
+                text_anchor: crate::menu::TextAnchor::Center,
+            })
+            .add_element(crate::menu::MenuElement::Label {
+                text: "Label Left".to_string(),
+                text_anchor: crate::menu::TextAnchor::Left,
+            })
+            .add_element(crate::menu::MenuElement::Label {
+                text: "Label Right".to_string(),
+                text_anchor: crate::menu::TextAnchor::Right,
+            });
+
+        loop {
+            let keyboard_state = eadk::input::KeyboardState::scan();
+            let just_pressed_keyboard_state =
+                keyboard_state.get_just_pressed(self.last_keyboard_state);
+            self.last_keyboard_state = keyboard_state;
+
+            if keyboard_state.key_down(eadk::input::Key::Exe) {
+                return;
+            }
+            self.renderer.draw_menu(&menu);
+            eadk::timing::msleep(50);
         }
     }
 
@@ -67,7 +107,7 @@ impl Game {
         self.save_manager.save_world_to_file("world.ncw");
     }
 
-    pub fn update(&mut self, delta: f32) -> bool {
+    pub fn update_in_game(&mut self, delta: f32) -> bool {
         let keyboard_state = eadk::input::KeyboardState::scan();
         let just_pressed_keyboard_state = keyboard_state.get_just_pressed(self.last_keyboard_state);
         self.last_keyboard_state = keyboard_state;
@@ -90,7 +130,7 @@ impl Game {
         self.world.check_mesh_regeneration();
 
         self.renderer
-            .update(&mut self.world, &self.player, 1.0 / delta);
+            .draw_game(&mut self.world, &self.player, 1.0 / delta);
 
         //eadk::timing::msleep(20);
         true

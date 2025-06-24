@@ -10,7 +10,16 @@ pub mod rendering {
 
     pub const MAX_TRIANGLES: usize = 1300;
 
-    pub const RENDER_DISTANCE: usize = 2;
+    pub const RENDER_DISTANCE: usize = 2; // You shouldn't go higher
+}
+
+pub mod menu {
+    use crate::eadk::Color;
+
+    pub const MENU_OUTLINE_COLOR: Color = Color::from_888(200, 200, 200);
+    pub const MENU_ELEMENT_BACKGROUND_COLOR: Color = Color::from_888(230, 230, 230);
+    pub const MENU_TEXT_COLOR: Color = Color::from_888(0, 0, 0);
+    pub const MENU_BACKGROUND_COLOR: Color = Color::from_888(255, 255, 255);
 }
 
 pub mod world {

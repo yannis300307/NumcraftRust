@@ -9,7 +9,26 @@ use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
-    camera::Camera, constants::{get_quad_color_from_texture_id, rendering::*, world::CHUNK_SIZE}, eadk::{self, Color, Rect}, frustum::Frustum, mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D}, player::Player, world::World, HEAP
+    HEAP,
+    camera::Camera,
+    constants::{
+        get_quad_color_from_texture_id,
+        menu::{
+            MENU_BACKGROUND_COLOR, MENU_ELEMENT_BACKGROUND_COLOR, MENU_OUTLINE_COLOR,
+            MENU_TEXT_COLOR,
+        },
+        rendering::*,
+        world::CHUNK_SIZE,
+    },
+    eadk::{
+        self, Color, Rect,
+        display::{push_rect_uniform, wait_for_vblank},
+    },
+    frustum::Frustum,
+    menu::{Menu, MenuElement, TextAnchor},
+    mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D},
+    player::Player,
+    world::World,
 };
 
 // Screen size related constants
@@ -661,7 +680,7 @@ impl Renderer {
         }
     }
 
-    pub fn update(&mut self, world: &mut World, player: &Player, fps_count: f32) {
+    pub fn draw_game(&mut self, world: &mut World, player: &Player, fps_count: f32) {
         self.triangles_to_render.clear();
 
         let mat_view = self.get_mat_view();
@@ -732,5 +751,104 @@ impl Renderer {
             }
         }
         //eadk::display::wait_for_vblank();
+    }
+
+    pub fn draw_menu(&self, menu: &Menu) {
+        let elements = menu.get_elements();
+        for i in 0..elements.len() {
+            let element = &elements[i];
+
+            let element_y = menu.pos.y + 45 * i;
+
+            let default_rect = Rect {
+                x: menu.pos.x as u16,
+                y: element_y as u16,
+                width: menu.width as u16,
+                height: 40,
+            };
+
+            let draw_outline = || {
+                push_rect_uniform(
+                    Rect {
+                        x: default_rect.x - 1,
+                        y: default_rect.y - 1,
+                        width: default_rect.width + 1,
+                        height: 1,
+                    },
+                    MENU_OUTLINE_COLOR,
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: default_rect.x - 1,
+                        y: default_rect.y + default_rect.height,
+                        width: default_rect.width + 2,
+                        height: 1,
+                    },
+                    MENU_OUTLINE_COLOR,
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: default_rect.x - 1,
+                        y: default_rect.y,
+                        width: 1,
+                        height: default_rect.height,
+                    },
+                    MENU_OUTLINE_COLOR,
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: default_rect.x + default_rect.width,
+                        y: default_rect.y,
+                        width: 1,
+                        height: default_rect.height,
+                    },
+                    MENU_OUTLINE_COLOR,
+                );
+            };
+
+            match element {
+                MenuElement::Button { text, is_pressed } => {
+                    push_rect_uniform(default_rect, MENU_ELEMENT_BACKGROUND_COLOR);
+                    draw_outline();
+                    let text_y = menu.pos.x + (menu.width - 10 * text.len()) / 2;
+                    eadk::display::draw_string(
+                        text,
+                        eadk::Point {
+                            x: text_y as u16,
+                            y: (element_y + 10) as u16,
+                        },
+                        true,
+                        MENU_TEXT_COLOR,
+                        MENU_ELEMENT_BACKGROUND_COLOR,
+                    );
+                }
+                MenuElement::Slider {
+                    text,
+                    value,
+                    step_size,
+                } => {
+                    push_rect_uniform(default_rect, MENU_ELEMENT_BACKGROUND_COLOR);
+                }
+                MenuElement::Label { text, text_anchor } => {
+                    let text_y = match text_anchor {
+                        TextAnchor::Left => menu.pos.x + 10,
+                        TextAnchor::Center => menu.pos.x + (menu.width - 10 * text.len()) / 2,
+                        TextAnchor::Right => menu.pos.x + menu.width - 10 * text.len() - 10,
+                    };
+                    eadk::display::draw_string(
+                        text,
+                        eadk::Point {
+                            x: text_y as u16,
+                            y: (element_y + 10) as u16,
+                        },
+                        true,
+                        MENU_TEXT_COLOR,
+                        MENU_BACKGROUND_COLOR,
+                    );
+                }
+            }
+        }
+
+        wait_for_vblank();
     }
 }

@@ -59,6 +59,6 @@ fn main() {
 
     let mut game = Game::new();
 
-    game.game_loop();
+    game.main_menu_loop();
 
 }
