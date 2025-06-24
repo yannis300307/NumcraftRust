@@ -62,7 +62,7 @@ impl Game {
     }
 
     pub fn main_menu_loop(&mut self) {
-        let menu = Menu::new(Vector2::new(10, 10), 300)
+        let mut menu = Menu::new(Vector2::new(10, 10), 300)
             .add_element(crate::menu::MenuElement::Button {
                 text: "Boutton".to_string(),
                 is_pressed: false,
@@ -93,6 +93,12 @@ impl Game {
 
             if keyboard_state.key_down(eadk::input::Key::Exe) {
                 return;
+            }
+            if just_pressed_keyboard_state.key_down(eadk::input::Key::Down) {
+                menu.cursor_down();
+            }
+            if just_pressed_keyboard_state.key_down(eadk::input::Key::Up) {
+                menu.cursor_up();
             }
             self.renderer.draw_menu(&menu);
             eadk::timing::msleep(50);

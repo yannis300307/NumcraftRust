@@ -14,8 +14,8 @@ use crate::{
     constants::{
         get_quad_color_from_texture_id,
         menu::{
-            MENU_BACKGROUND_COLOR, MENU_ELEMENT_BACKGROUND_COLOR, MENU_OUTLINE_COLOR,
-            MENU_TEXT_COLOR,
+            MENU_BACKGROUND_COLOR, MENU_ELEMENT_BACKGROUND_COLOR,
+            MENU_ELEMENT_BACKGROUND_COLOR_HOVER, MENU_OUTLINE_COLOR, MENU_TEXT_COLOR,
         },
         rendering::*,
         world::CHUNK_SIZE,
@@ -806,9 +806,15 @@ impl Renderer {
                 );
             };
 
+            let element_bg_color = if i == menu.selected_index {
+                MENU_ELEMENT_BACKGROUND_COLOR_HOVER
+            } else {
+                MENU_ELEMENT_BACKGROUND_COLOR
+            };
+
             match element {
                 MenuElement::Button { text, is_pressed } => {
-                    push_rect_uniform(default_rect, MENU_ELEMENT_BACKGROUND_COLOR);
+                    push_rect_uniform(default_rect, element_bg_color);
                     draw_outline();
                     let text_y = menu.pos.x + (menu.width - 10 * text.len()) / 2;
                     eadk::display::draw_string(
@@ -819,7 +825,7 @@ impl Renderer {
                         },
                         true,
                         MENU_TEXT_COLOR,
-                        MENU_ELEMENT_BACKGROUND_COLOR,
+                        element_bg_color,
                     );
                 }
                 MenuElement::Slider {
@@ -827,7 +833,7 @@ impl Renderer {
                     value,
                     step_size,
                 } => {
-                    push_rect_uniform(default_rect, MENU_ELEMENT_BACKGROUND_COLOR);
+                    push_rect_uniform(default_rect, element_bg_color);
                 }
                 MenuElement::Label { text, text_anchor } => {
                     let text_y = match text_anchor {

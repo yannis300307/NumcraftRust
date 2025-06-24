@@ -16,8 +16,9 @@ pub mod rendering {
 pub mod menu {
     use crate::eadk::Color;
 
-    pub const MENU_OUTLINE_COLOR: Color = Color::from_888(200, 200, 200);
+    pub const MENU_OUTLINE_COLOR: Color = Color::from_888(150, 150, 150);
     pub const MENU_ELEMENT_BACKGROUND_COLOR: Color = Color::from_888(230, 230, 230);
+    pub const MENU_ELEMENT_BACKGROUND_COLOR_HOVER: Color = Color::from_888(190, 190, 190);
     pub const MENU_TEXT_COLOR: Color = Color::from_888(0, 0, 0);
     pub const MENU_BACKGROUND_COLOR: Color = Color::from_888(255, 255, 255);
 }
