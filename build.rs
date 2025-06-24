@@ -80,11 +80,9 @@ fn main() {
     build.flag("-ggdb");
     build.warnings(false);
 
-    // Ajoute dynamiquement chaque flag récupéré
     for flag in nwlink_flags.split_whitespace() {
         build.flag(flag);
     }
 
-    // Ajoute d'autres flags spécifiques si besoin
     build.compile("storage_c");
 }
