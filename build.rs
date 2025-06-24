@@ -1,5 +1,5 @@
 use image::{self, GenericImageView, ImageReader};
-use std::{env, fs, process::Command};
+use std::{fs, process::Command};
 
 fn convert_image(file_name: &str) {
     let img = ImageReader::open(format!("assets/{file_name}.png").as_str())
@@ -59,7 +59,7 @@ fn main() {
     println!("Converting cross");
     convert_image("cross");
 
-    unsafe { std::env::set_var("CC", "arm-none-eabi-g++") };
+    unsafe { std::env::set_var("CC", "arm-none-eabi-gcc") };
 
     let program = if cfg!(windows) {"C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx.cmd"} else {"npx"};
 
@@ -78,6 +78,7 @@ fn main() {
     build.flag("-Os");
     build.flag("-Wall");
     build.flag("-ggdb");
+    build.warnings(false);
 
     // Ajoute dynamiquement chaque flag récupéré
     for flag in nwlink_flags.split_whitespace() {
