@@ -55,7 +55,7 @@ Good ideas but I will never have the time to do that :
 ## Known Bugs:
 - Weird beahaviors in the negative coordinates
 - Rendering issues with the block selection marker
-- Crash on start on N0120 (I can't do anything about that, it's related to the OS)
+- Can randomly crash on start on N0120. You have to reset your calculator before downloading a new version (I can't do anything about that, it's related to the OS)
 
 ## Build the app
 

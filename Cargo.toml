@@ -5,6 +5,13 @@ version = "0.0.4"
 authors = ["Yannis300307"]
 edition = "2024"
 
+[[bin]]
+name = "main"
+path = "src/main.rs"
+test = false
+doctest = false
+bench = false
+
 [profile.dev]
 panic="abort"
 strip=true
