@@ -122,7 +122,7 @@ impl Game {
 
             let mut need_redraw = false;
 
-            for element in menu.get_elements_mut() {
+            for element in menu.get_elements_mut() { // TODO : Bad code, remake this
                 match element {
                     MenuElement::Button {
                         id: 4,
