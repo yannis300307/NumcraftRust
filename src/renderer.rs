@@ -429,6 +429,11 @@ impl Renderer {
         renderer
     }
 
+    pub fn update_fov(&mut self, new_fov: f32) {
+        self.camera.set_fov(new_fov);
+        self.projection_matrix = Perspective3::new(ASPECT_RATIO, self.camera.get_fov(), ZNEAR, ZFAR);
+    }
+
     fn project_point(&self, point: Vector3<f32>) -> Vector2<f32> {
         self.projection_matrix.project_vector(&point).xy() * -1.0
     }
@@ -753,18 +758,44 @@ impl Renderer {
         //eadk::display::wait_for_vblank();
     }
 
-    pub fn draw_menu(&self, menu: &Menu) {
+    pub fn draw_menu(&self, menu: &mut Menu) {
+        if !menu.need_redraw {
+            return;
+        }
+
+        menu.need_redraw = false;
+
         let elements = menu.get_elements();
         for i in 0..elements.len() {
             let element = &elements[i];
 
-            let element_y = menu.pos.y + 45 * i;
+            let element_y = menu.pos.y
+                + if matches!(
+                    element,
+                    MenuElement::Label {
+                        allow_margin: true,
+                        ..
+                    } | MenuElement::Button {
+                        allow_margin: true,
+                        ..
+                    } | MenuElement::Slider {
+                        allow_margin: true,
+                        ..
+                    } | MenuElement::Void {
+                        allow_margin: true,
+                        ..
+                    }
+                ) {
+                    35
+                } else {
+                    30
+                } * i;
 
             let default_rect = Rect {
                 x: menu.pos.x as u16,
                 y: element_y as u16,
                 width: menu.width as u16,
-                height: 40,
+                height: 30,
             };
 
             let draw_outline = || {
@@ -772,7 +803,7 @@ impl Renderer {
                     Rect {
                         x: default_rect.x - 1,
                         y: default_rect.y - 1,
-                        width: default_rect.width + 1,
+                        width: default_rect.width + 2,
                         height: 1,
                     },
                     MENU_OUTLINE_COLOR,
@@ -813,7 +844,10 @@ impl Renderer {
             };
 
             match element {
-                MenuElement::Button { text, is_pressed } => {
+                MenuElement::Button {
+                    text,
+                    ..
+                } => {
                     push_rect_uniform(default_rect, element_bg_color);
                     draw_outline();
                     let text_y = menu.pos.x + (menu.width - 10 * text.len()) / 2;
@@ -821,7 +855,7 @@ impl Renderer {
                         text,
                         eadk::Point {
                             x: text_y as u16,
-                            y: (element_y + 10) as u16,
+                            y: (element_y + 6) as u16,
                         },
                         true,
                         MENU_TEXT_COLOR,
@@ -829,13 +863,42 @@ impl Renderer {
                     );
                 }
                 MenuElement::Slider {
-                    text,
+                    text_fn,
                     value,
-                    step_size,
+                    ..
                 } => {
                     push_rect_uniform(default_rect, element_bg_color);
+                    let text = text_fn(*value);
+                    let cursor_width = 20;
+                    let x_pos =
+                        default_rect.x + (value * (menu.width - cursor_width - 4) as f32) as u16;
+                    let text_y = menu.pos.x + (menu.width - 10 * text.len()) / 2;
+                    eadk::display::draw_string(
+                        text.as_str(),
+                        eadk::Point {
+                            x: text_y as u16,
+                            y: (element_y + 6) as u16,
+                        },
+                        true,
+                        MENU_TEXT_COLOR,
+                        element_bg_color,
+                    );
+                    push_rect_uniform(
+                        Rect {
+                            x: x_pos + 2,
+                            y: default_rect.y + 2,
+                            width: 20,
+                            height: default_rect.height - 4,
+                        },
+                        Color::from_888(255, 255, 255),
+                    );
+                    draw_outline();
                 }
-                MenuElement::Label { text, text_anchor } => {
+                MenuElement::Label {
+                    text,
+                    text_anchor,
+                    ..
+                } => {
                     let text_y = match text_anchor {
                         TextAnchor::Left => menu.pos.x + 10,
                         TextAnchor::Center => menu.pos.x + (menu.width - 10 * text.len()) / 2,
@@ -845,13 +908,14 @@ impl Renderer {
                         text,
                         eadk::Point {
                             x: text_y as u16,
-                            y: (element_y + 10) as u16,
+                            y: (element_y + 6) as u16,
                         },
                         true,
                         MENU_TEXT_COLOR,
                         MENU_BACKGROUND_COLOR,
                     );
                 }
+                MenuElement::Void { .. } => {}
             }
         }
 

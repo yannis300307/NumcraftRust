@@ -6,11 +6,14 @@ pub mod rendering {
 
     pub const SCREEN_TILE_SUBDIVISION: usize = 2; // Minimum 2
 
-    pub const FOV: f32 = core::f32::consts::PI / 4.0;
+    pub const MIN_FOV: f32 = 30.;
+    pub const MAX_FOV: f32 = 110.;
+    
+    pub const FOV: f32 = 45.;
 
     pub const MAX_TRIANGLES: usize = 1300;
 
-    pub const RENDER_DISTANCE: usize = 2; // You shouldn't go higher
+    pub const MAX_RENDER_DISTANCE: usize = 2; // You shouldn't go higher
 }
 
 pub mod menu {

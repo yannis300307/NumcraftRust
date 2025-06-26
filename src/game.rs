@@ -1,9 +1,16 @@
-use alloc::string::{String, ToString};
+use alloc::{
+    format,
+    string::{String, ToString},
+};
 use nalgebra::{Vector2, Vector3};
 
 use crate::{
-    eadk::{self, input::KeyboardState},
-    menu::Menu,
+    constants::{
+        menu::MENU_BACKGROUND_COLOR,
+        rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
+    },
+    eadk::{self, Color, input::KeyboardState},
+    menu::{Menu, MenuElement, TextAnchor},
     player::Player,
     renderer::Renderer,
     storage_manager::SaveManager,
@@ -61,29 +68,49 @@ impl Game {
         }
     }
 
-    pub fn main_menu_loop(&mut self) {
-        let mut menu = Menu::new(Vector2::new(10, 10), 300)
-            .add_element(crate::menu::MenuElement::Button {
-                text: "Boutton".to_string(),
+    pub fn settings_menu_loop(&mut self) {
+        let mut menu = Menu::new(Vector2::new(10, 20), 300, 1)
+            .add_element(MenuElement::Label {
+                text: "Settings".to_string(),
+                text_anchor: TextAnchor::Center,
+                allow_margin: true,
+                id: 0,
+            })
+            .add_element(MenuElement::Slider {
+                text_fn: |value| {
+                    format!(
+                        "Render Distance: {}",
+                        libm::roundf(value * MAX_RENDER_DISTANCE as f32) as usize
+                    )
+                },
+                value: 1.,
+                step_size: 0.5,
+                allow_margin: false,
+                id: 1,
+            })
+            .add_element(MenuElement::Slider {
+                text_fn: |value| format!("{}", libm::roundf(MIN_FOV + (MAX_FOV - MIN_FOV) * value)),
+                value: 0.2,
+                step_size: 0.04,
+                allow_margin: false,
+                id: 2,
+            })
+            .add_element(MenuElement::Button {
+                text: "Vsync: Enabled".to_string(),
                 is_pressed: false,
+                allow_margin: false,
+                id: 3,
             })
-            .add_element(crate::menu::MenuElement::Slider {
-                text: "Slider".to_string(),
-                value: 0.0,
-                step_size: 0.1,
-            })
-            .add_element(crate::menu::MenuElement::Label {
-                text: "Label Center".to_string(),
-                text_anchor: crate::menu::TextAnchor::Center,
-            })
-            .add_element(crate::menu::MenuElement::Label {
-                text: "Label Left".to_string(),
-                text_anchor: crate::menu::TextAnchor::Left,
-            })
-            .add_element(crate::menu::MenuElement::Label {
-                text: "Label Right".to_string(),
-                text_anchor: crate::menu::TextAnchor::Right,
+            .add_element(MenuElement::Button {
+                text: "Save".to_string(),
+                is_pressed: false,
+                allow_margin: false,
+                id: 4,
             });
+
+        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+
+        let mut vsync_enabled = true;
 
         loop {
             let keyboard_state = eadk::input::KeyboardState::scan();
@@ -91,16 +118,111 @@ impl Game {
                 keyboard_state.get_just_pressed(self.last_keyboard_state);
             self.last_keyboard_state = keyboard_state;
 
-            if keyboard_state.key_down(eadk::input::Key::Exe) {
+            menu.check_inputs(keyboard_state, just_pressed_keyboard_state);
+
+            let mut need_redraw = false;
+
+            for element in menu.get_elements_mut() {
+                match element {
+                    MenuElement::Button {
+                        id: 4,
+                        is_pressed: true,
+                        ..
+                    } => {
+                        eadk::timing::msleep(300);
+                        return;
+                    }
+                    MenuElement::Button {
+                        text,
+                        is_pressed: true,
+                        id: 3,
+                        ..
+                    } => {
+                        vsync_enabled = !vsync_enabled;
+                        *text = if vsync_enabled {
+                            "Vsync: Enabled".to_string()
+                        } else {
+                            "Vsync: Disabled".to_string()
+                        };
+                        need_redraw = true;
+                    }
+                    MenuElement::Button { // Disable all buttons
+                        is_pressed, ..
+                    } => {
+                        *is_pressed = false;
+                    }
+                    _ => (),
+                }
+            }
+
+            if need_redraw {
+                menu.need_redraw = true;
+            }
+
+            self.renderer.draw_menu(&mut menu);
+            eadk::timing::msleep(50);
+        }
+    }
+
+    pub fn main_menu_loop(&mut self) {
+        let mut menu = Menu::new(Vector2::new(10, 40), 300, 2)
+            .add_element(MenuElement::Label {
+                text: "Numcraft".to_string(),
+                text_anchor: TextAnchor::Center,
+                allow_margin: true,
+                id: 0,
+            })
+            .add_element(MenuElement::Void {
+                allow_margin: true,
+                id: 1,
+            })
+            .add_element(MenuElement::Button {
+                text: "Load world".to_string(),
+                is_pressed: false,
+                allow_margin: true,
+                id: 2,
+            })
+            .add_element(MenuElement::Button {
+                text: "Settings".to_string(),
+                is_pressed: false,
+                allow_margin: true,
+                id: 3,
+            })
+            .add_element(MenuElement::Label {
+                text: "Press [Home] to quit".to_string(),
+                text_anchor: TextAnchor::Center,
+                allow_margin: true,
+                id: 4,
+            });
+
+        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+
+        loop {
+            let keyboard_state = eadk::input::KeyboardState::scan();
+            let just_pressed_keyboard_state =
+                keyboard_state.get_just_pressed(self.last_keyboard_state);
+            self.last_keyboard_state = keyboard_state;
+
+            menu.check_inputs(keyboard_state, just_pressed_keyboard_state);
+
+            if just_pressed_keyboard_state.key_down(eadk::input::Key::Home) {
                 return;
             }
-            if just_pressed_keyboard_state.key_down(eadk::input::Key::Down) {
-                menu.cursor_down();
+
+            for element in menu.get_elements() {
+                if matches!(
+                    element,
+                    MenuElement::Button {
+                        id: 3,
+                        is_pressed: true,
+                        ..
+                    }
+                ) {
+                    self.settings_menu_loop();
+                }
             }
-            if just_pressed_keyboard_state.key_down(eadk::input::Key::Up) {
-                menu.cursor_up();
-            }
-            self.renderer.draw_menu(&menu);
+
+            self.renderer.draw_menu(&mut menu);
             eadk::timing::msleep(50);
         }
     }

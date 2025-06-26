@@ -26,12 +26,11 @@ mod renderer;
 mod world;
 use game::Game;
 
-
 mod frustum;
+mod menu;
 mod player;
 mod storage_lib;
 mod storage_manager;
-mod menu;
 
 #[used]
 #[cfg(target_os = "none")]
@@ -49,7 +48,7 @@ pub static EADK_APP_API_LEVEL: u32 = 0;
 pub static EADK_APP_ICON: [u8; 3437] = *include_bytes!("../target/icon.nwi");
 
 #[unsafe(no_mangle)]
-fn main() {
+fn main() -> isize {
     // Init the heap
     #[cfg(target_os = "none")]
     {
@@ -61,4 +60,5 @@ fn main() {
 
     game.main_menu_loop();
 
+    0
 }
