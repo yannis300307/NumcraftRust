@@ -308,7 +308,11 @@ impl Game {
             self.save_manager.set_chunk(chunk);
         }
 
+        self.world.clear();
+
         self.save_manager.save_world_to_file(world_name.as_str());
+
+        self.save_manager.clean();
     }
 
     pub fn update_in_game(&mut self, delta: f32, world_name: &String) -> bool {
