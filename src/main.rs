@@ -56,9 +56,13 @@ fn main() -> isize {
         unsafe { HEAP.init(eadk::HEAP_START as usize, heap_size) }
     }
 
+    while eadk::input::KeyboardState::scan().key_down(eadk::input::Key::Ok) { // Avoid instant click on Ok
+        eadk::timing::msleep(50);
+    }
+
     let mut game = Game::new();
 
-    game.main_menu_loop();
+    game.main_loop();
 
     0
 }

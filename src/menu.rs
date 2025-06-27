@@ -56,25 +56,27 @@ pub struct Menu {
 }
 
 impl Menu {
+    pub fn check_inputs(
+        &mut self,
+        keyboard_state: KeyboardState,
+        just_pressed_keyboard_state: KeyboardState,
+    ) {
+        if just_pressed_keyboard_state.key_down(eadk::input::Key::Down) {
+            self.cursor_down();
+        }
+        if just_pressed_keyboard_state.key_down(eadk::input::Key::Up) {
+            self.cursor_up();
+        }
+        if just_pressed_keyboard_state.key_down(eadk::input::Key::Right) {
+            self.slide_right();
+        }
+        if just_pressed_keyboard_state.key_down(eadk::input::Key::Left) {
+            self.slide_left();
+        }
 
-    pub fn check_inputs(&mut self, keyboard_state: KeyboardState, just_pressed_keyboard_state: KeyboardState) {
-            if just_pressed_keyboard_state.key_down(eadk::input::Key::Down) {
-                self.cursor_down();
-            }
-            if just_pressed_keyboard_state.key_down(eadk::input::Key::Up) {
-                self.cursor_up();
-            }
-            if just_pressed_keyboard_state.key_down(eadk::input::Key::Right) {
-                self.slide_right();
-            }
-            if just_pressed_keyboard_state.key_down(eadk::input::Key::Left) {
-                self.slide_left();
-            }
-
-            if just_pressed_keyboard_state.key_down(eadk::input::Key::Ok) {
-                self.set_pressed(true);
-            }
-
+        if just_pressed_keyboard_state.key_down(eadk::input::Key::Ok) {
+            self.set_pressed(true);
+        }
     }
     pub fn new(pos: Vector2<usize>, width: usize, start_index: usize) -> Self {
         Menu {
@@ -93,9 +95,26 @@ impl Menu {
         }
     }
 
-    pub fn add_element(mut self, element: MenuElement) -> Self {
+    pub fn with_element(mut self, element: MenuElement) -> Self {
         self.elements.push(element);
         self
+    }
+
+    pub fn add_element(&mut self, element: MenuElement) {
+        self.elements.push(element);
+    }
+
+    pub fn finish_buttons_handling(&mut self) {
+        for element in self.get_elements_mut() {
+            if let MenuElement::Button {
+                // Disable all buttons
+                is_pressed,
+                ..
+            } = element
+            {
+                *is_pressed = false;
+            }
+        }
     }
 
     pub fn cursor_down(&mut self) {
@@ -197,7 +216,7 @@ impl Menu {
         }
     }
 
-    pub fn get_elements(&self) -> & Vec<MenuElement> {
+    pub fn get_elements(&self) -> &Vec<MenuElement> {
         &self.elements
     }
     pub fn get_elements_mut(&mut self) -> &mut Vec<MenuElement> {

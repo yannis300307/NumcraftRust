@@ -431,7 +431,8 @@ impl Renderer {
 
     pub fn update_fov(&mut self, new_fov: f32) {
         self.camera.set_fov(new_fov);
-        self.projection_matrix = Perspective3::new(ASPECT_RATIO, self.camera.get_fov(), ZNEAR, ZFAR);
+        self.projection_matrix =
+            Perspective3::new(ASPECT_RATIO, self.camera.get_fov(), ZNEAR, ZFAR);
     }
 
     fn project_point(&self, point: Vector3<f32>) -> Vector2<f32> {
@@ -765,31 +766,11 @@ impl Renderer {
 
         menu.need_redraw = false;
 
+        let mut element_y = menu.pos.y;
+
         let elements = menu.get_elements();
         for i in 0..elements.len() {
             let element = &elements[i];
-
-            let element_y = menu.pos.y
-                + if matches!(
-                    element,
-                    MenuElement::Label {
-                        allow_margin: true,
-                        ..
-                    } | MenuElement::Button {
-                        allow_margin: true,
-                        ..
-                    } | MenuElement::Slider {
-                        allow_margin: true,
-                        ..
-                    } | MenuElement::Void {
-                        allow_margin: true,
-                        ..
-                    }
-                ) {
-                    35
-                } else {
-                    30
-                } * i;
 
             let default_rect = Rect {
                 x: menu.pos.x as u16,
@@ -844,10 +825,7 @@ impl Renderer {
             };
 
             match element {
-                MenuElement::Button {
-                    text,
-                    ..
-                } => {
+                MenuElement::Button { text, .. } => {
                     push_rect_uniform(default_rect, element_bg_color);
                     draw_outline();
                     let text_y = menu.pos.x + (menu.width - 10 * text.len()) / 2;
@@ -862,11 +840,7 @@ impl Renderer {
                         element_bg_color,
                     );
                 }
-                MenuElement::Slider {
-                    text_fn,
-                    value,
-                    ..
-                } => {
+                MenuElement::Slider { text_fn, value, .. } => {
                     push_rect_uniform(default_rect, element_bg_color);
                     let text = text_fn(*value);
                     let cursor_width = 20;
@@ -895,9 +869,7 @@ impl Renderer {
                     draw_outline();
                 }
                 MenuElement::Label {
-                    text,
-                    text_anchor,
-                    ..
+                    text, text_anchor, ..
                 } => {
                     let text_y = match text_anchor {
                         TextAnchor::Left => menu.pos.x + 10,
@@ -917,6 +889,27 @@ impl Renderer {
                 }
                 MenuElement::Void { .. } => {}
             }
+
+            element_y += if matches!(
+                element,
+                MenuElement::Label {
+                    allow_margin: true,
+                    ..
+                } | MenuElement::Button {
+                    allow_margin: true,
+                    ..
+                } | MenuElement::Slider {
+                    allow_margin: true,
+                    ..
+                } | MenuElement::Void {
+                    allow_margin: true,
+                    ..
+                }
+            ) {
+                40
+            } else {
+                30
+            };
         }
 
         wait_for_vblank();
