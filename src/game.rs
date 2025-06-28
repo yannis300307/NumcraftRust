@@ -12,7 +12,7 @@ use crate::{
         menu::{MENU_BACKGROUND_COLOR, SETTINGS_FILENAME},
         rendering::{FOV, MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
-    eadk::{self, input::KeyboardState},
+    eadk::{self, Color, Point, SCREEN_RECT, input::KeyboardState},
     menu::{Menu, MenuElement, TextAnchor},
     player::Player,
     renderer::Renderer,
@@ -71,6 +71,25 @@ impl Game {
         }
 
         self.save_manager.clean(); // Clear save manager to save memory
+
+        // Show a warning messge
+        eadk::display::push_rect_uniform(SCREEN_RECT, Color::from_888(255, 255, 255));
+        let mut show_msg = |message, y| {
+            eadk::display::draw_string(
+                message,
+                Point {
+                    x: ((320 - message.len() * 10) / 2) as u16,
+                    y: y,
+                },
+                true,
+                Color::from_888(0, 0, 0),
+                Color::from_888(255, 255, 255),
+            );
+        };
+        show_msg("To exit, press [EXE]", 90);
+        show_msg("DON'T press [Home]", 110);
+
+        eadk::timing::msleep(3000);
 
         // Delta time calculation stuff and loop
         let mut last = eadk::timing::millis();
@@ -242,6 +261,7 @@ impl Game {
                         self.settings.render_distance = render_distance;
                         self.settings.vsync = vsync_enabled;
                         self.update_settings();
+                        self.settings.save();
 
                         return GameState::GoMainMenu;
                     }
@@ -284,8 +304,6 @@ impl Game {
     pub fn update_settings(&mut self) {
         self.renderer.update_fov(self.settings.fov);
         self.renderer.enable_vsync = self.settings.vsync;
-
-        self.settings.save();
     }
 
     pub fn main_menu_loop(&mut self) -> GameState {
@@ -403,6 +421,7 @@ impl Game {
         let mut state = GameState::GoMainMenu;
 
         self.settings.load();
+        self.update_settings();
 
         while !matches!(state, GameState::Quit) {
             state = match state {
