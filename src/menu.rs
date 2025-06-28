@@ -141,8 +141,9 @@ impl Menu {
             // If we get to the bottom, we go at the top of the elements
             if self.selected_index == self.elements.len() - 1 {
                 self.selected_index = 0;
+            } else {
+                self.selected_index += 1;
             }
-            self.selected_index += 1;
             counter += 1;
         }
 
@@ -154,7 +155,7 @@ impl Menu {
             *is_pressed = false
         }
 
-        // Check if we are at the bottom, go to the top
+        // Check if we are at the top, go to the bottom
         if self.selected_index == 0 {
             self.selected_index = self.elements.len() - 1;
         } else {
@@ -173,9 +174,9 @@ impl Menu {
             // If we reach the top, go back to the bottom
             if self.selected_index == 0 {
                 self.selected_index = self.elements.len() - 1;
+            } else {
+                self.selected_index -= 1;
             }
-
-            self.selected_index -= 1;
             counter += 1;
         }
 
