@@ -415,6 +415,7 @@ pub struct Renderer {
     triangles_to_render: Vec<SmallTriangle2D>,
     tile_frame_buffer: [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
     projection_matrix: Perspective3<f32>,
+    pub enable_vsync: bool,
 }
 
 impl Renderer {
@@ -424,6 +425,7 @@ impl Renderer {
             projection_matrix: Perspective3::new(ASPECT_RATIO, FOV, ZNEAR, ZFAR),
             triangles_to_render: Vec::with_capacity(MAX_TRIANGLES),
             tile_frame_buffer: [Color { rgb565: 0 }; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+            enable_vsync: true,
         };
 
         renderer

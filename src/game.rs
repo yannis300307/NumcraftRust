@@ -8,9 +8,9 @@ use nalgebra::{Vector2, Vector3};
 use crate::{
     constants::{
         menu::MENU_BACKGROUND_COLOR,
-        rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
+        rendering::{FOV, MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
-    eadk::{self, Color, Point, input::KeyboardState},
+    eadk::{self, input::KeyboardState},
     menu::{Menu, MenuElement, TextAnchor},
     player::Player,
     renderer::Renderer,
@@ -24,6 +24,7 @@ pub struct Game {
     player: Player,
     last_keyboard_state: KeyboardState,
     save_manager: SaveManager,
+    settings: Settings,
 }
 
 impl Game {
@@ -34,13 +35,19 @@ impl Game {
             player: Player::new(),
             last_keyboard_state: KeyboardState::new(),
             save_manager: SaveManager::new(),
+            settings: Settings::new(),
         }
     }
 
+    /// The game loop. Handle physic, rendering etc ...
     pub fn game_loop(&mut self, world_name: &String) -> GameState {
-        let mut last = eadk::timing::millis();
-
-        if self.save_manager.load_from_file(world_name.as_str()).is_ok() {
+        // Load the world or create it if it doesn't exists yet
+        if self
+            .save_manager
+            .load_from_file(world_name.as_str())
+            .is_ok()
+        {
+            // Add chunks. Maybe move this code into world (TODO)
             for x in 0..4 {
                 for y in 0..4 {
                     for z in 0..4 {
@@ -57,8 +64,10 @@ impl Game {
             self.world.load_area(0, 4, 0, 4, 0, 4);
         }
 
-        self.save_manager.clean();
+        self.save_manager.clean(); // Clear save manager to save memory
 
+        // Delta time calculation stuff and loop
+        let mut last = eadk::timing::millis();
         loop {
             let current = eadk::timing::millis();
             let delta = (current - last) as f32 / 1000.0;
@@ -69,7 +78,9 @@ impl Game {
         }
     }
 
+    /// The menu the user can go to select the world to load
     pub fn worlds_select_menu_loop(&mut self) -> GameState {
+        // Create a new menu with a title
         let mut menu = Menu::new(Vector2::new(10, 20), 300, 1).with_element(MenuElement::Label {
             text: "Select a world".to_string(),
             text_anchor: TextAnchor::Center,
@@ -77,11 +88,11 @@ impl Game {
             id: 0,
         });
 
-        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
-
+        // Get the list of all the existing worlds. World name must be "world{i}.ncw" (NCW = "NumCraft World" btw)
         let worlds = self.save_manager.get_existing_worlds();
 
-        for i in 0..4 { 
+        // Max 4 worlds because it's enough for the storage memory amount we have and because. I can't fit more than 4 buttons on the screen ;-)
+        for i in 0..4 {
             let world_name = format!("world{i}.ncw");
             let button_text = if worlds.contains(&world_name) {
                 format!("Load {}", world_name)
@@ -96,18 +107,25 @@ impl Game {
             });
         }
 
+        // Clear the screen
+        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+
         loop {
+            // Get keyboard state and calculate the new presses
             let keyboard_state = eadk::input::KeyboardState::scan();
             let just_pressed_keyboard_state =
                 keyboard_state.get_just_pressed(self.last_keyboard_state);
             self.last_keyboard_state = keyboard_state;
 
+            // Handle the navigation in the menu
             menu.check_inputs(keyboard_state, just_pressed_keyboard_state);
 
+            // Exit the menu when [Back] is pressed
             if keyboard_state.key_down(eadk::input::Key::Back) {
                 return GameState::GoMainMenu;
             }
 
+            // Handle buttons
             for element in menu.get_elements_mut() {
                 match element {
                     MenuElement::Button {
@@ -115,21 +133,17 @@ impl Game {
                         is_pressed: true,
                         ..
                     } => {
-                        let world_slot = *id - 1; // So please change this if you change your button's id. Not 100% safe but...
+                        let world_slot = *id - 1; // Please change this if you change the button's id. Not 100% safe but who cares about safety?
+                        let world_name = format!("world{world_slot}.ncw");
 
-                        if world_slot < worlds.len() {
-                            let world_filename = &worlds[world_slot];
-
-                            return GameState::LoadWorld(world_filename.to_owned());
-                        } else {
-                            return GameState::LoadWorld(format!("world{}.ncw", world_slot));
-                        }
+                        // Load the world (and create a new world if it doesn't exists yet)
+                        return GameState::LoadWorld(world_name.to_owned());
                     }
-
                     _ => (),
                 }
             }
 
+            // Set all "is_pressed" to false
             menu.finish_buttons_handling();
 
             self.renderer.draw_menu(&mut menu);
@@ -138,6 +152,12 @@ impl Game {
     }
 
     pub fn settings_menu_loop(&mut self) -> GameState {
+        // Temporary variables used to store settings
+        let mut vsync_enabled = self.settings.vsync;
+        let mut fov: f32 = self.settings.fov;
+        let mut render_distance: usize = self.settings.render_distance;
+
+        // Create the menu.
         let mut menu = Menu::new(Vector2::new(10, 20), 300, 1)
             .with_element(MenuElement::Label {
                 text: "Settings".to_string(),
@@ -152,7 +172,7 @@ impl Game {
                         libm::roundf(value * MAX_RENDER_DISTANCE as f32) as usize
                     )
                 },
-                value: 1.,
+                value: render_distance as f32 / MAX_RENDER_DISTANCE as f32,
                 step_size: 0.5,
                 allow_margin: false,
                 id: 1,
@@ -164,13 +184,17 @@ impl Game {
                         libm::roundf(MIN_FOV + (MAX_FOV - MIN_FOV) * value)
                     )
                 },
-                value: 0.2,
+                value: (fov - MIN_FOV) / (MAX_FOV - MIN_FOV), // The opposite of the above calculation
                 step_size: 0.04,
                 allow_margin: false,
                 id: 2,
             })
             .with_element(MenuElement::Button {
-                text: "Vsync: Enabled".to_string(),
+                text: if vsync_enabled {
+                    "Vsync: Enabled".to_string()
+                } else {
+                    "Vsync: Disabled".to_string()
+                },
                 is_pressed: false,
                 allow_margin: true,
                 id: 3,
@@ -181,16 +205,19 @@ impl Game {
                 allow_margin: true,
                 id: 4,
             });
-
+        
+        // Clear the screen
         eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
-
-        let mut vsync_enabled = true;
 
         loop {
             let keyboard_state = eadk::input::KeyboardState::scan();
             let just_pressed_keyboard_state =
                 keyboard_state.get_just_pressed(self.last_keyboard_state);
             self.last_keyboard_state = keyboard_state;
+
+            if keyboard_state.key_down(eadk::input::Key::Back) {
+                return GameState::GoMainMenu;
+            }
 
             menu.check_inputs(keyboard_state, just_pressed_keyboard_state);
 
@@ -199,13 +226,20 @@ impl Game {
             for element in menu.get_elements_mut() {
                 match element {
                     MenuElement::Button {
+                        // Save
                         id: 4,
                         is_pressed: true,
                         ..
                     } => {
+                        // Save settings
+                        self.settings.fov = fov;
+                        self.settings.render_distance = render_distance;
+                        self.settings.vsync = vsync_enabled;
+
                         return GameState::GoMainMenu;
                     }
                     MenuElement::Button {
+                        // Enable / Disable Vsync
                         text,
                         is_pressed: true,
                         id: 3,
@@ -218,6 +252,12 @@ impl Game {
                             "Vsync: Disabled".to_string()
                         };
                         need_redraw = true;
+                    }
+                    MenuElement::Slider { value, id: 2, .. } => {
+                        fov = libm::roundf(MIN_FOV + (MAX_FOV - MIN_FOV) * *value)
+                    }
+                    MenuElement::Slider { value, id: 1, .. } => {
+                        render_distance = libm::roundf(*value * MAX_RENDER_DISTANCE as f32) as usize
                     }
                     _ => (),
                 }
@@ -365,4 +405,20 @@ pub enum GameState {
     GoSelectWorld,
     LoadWorld(String), // String: World name
     Quit,
+}
+
+pub struct Settings {
+    render_distance: usize,
+    fov: f32,
+    vsync: bool,
+}
+
+impl Settings {
+    pub fn new() -> Self {
+        Settings {
+            render_distance: MAX_RENDER_DISTANCE,
+            fov: FOV,
+            vsync: true,
+        }
+    }
 }
