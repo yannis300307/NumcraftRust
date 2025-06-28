@@ -1,4 +1,7 @@
+use core::ffi::CStr;
+
 use alloc::ffi;
+use alloc::string::String;
 use alloc::vec::Vec;
 
 pub fn storage_file_write(filename: &str, content: &[u8]) -> bool {
@@ -28,10 +31,39 @@ pub fn storage_extapp_file_erase(filename: &str) -> bool {
     unsafe { extapp_fileErase(c_string.as_ptr()) }
 }
 
+pub fn storage_extapp_file_list_with_extension(max_records: usize, extension: &str) -> Vec<String> {
+    let mut filenames: Vec<*mut u8> = Vec::with_capacity(max_records);
+    let c_string = ffi::CString::new(extension).unwrap();
+
+    unsafe {
+        let final_len = extapp_fileListWithExtension(
+            filenames.as_mut_slice().as_mut_ptr(),
+            max_records as isize,
+            c_string.as_ptr(),
+        );
+        filenames.set_len(final_len as usize);
+
+        let mut files: Vec<String> = Vec::new();
+        for name_ptr in filenames {
+            if !name_ptr.is_null() {
+                let name = CStr::from_ptr(name_ptr).to_string_lossy().into_owned();
+                files.push(name);
+            }
+        }
+
+        files
+    }
+}
+
 unsafe extern "C" {
     fn extapp_fileWrite(filename: *const u8, content: *const u8, len: usize) -> bool;
     fn extapp_fileExists(filename: *const u8) -> bool;
     fn extapp_fileRead(filename: *const u8, len: *mut usize) -> *const u8;
     fn extapp_fileErase(filename: *const u8) -> bool;
+    fn extapp_fileListWithExtension(
+        filename: *mut *mut u8,
+        maxrecord: isize,
+        extension: *const u8,
+    ) -> isize;
 
 }

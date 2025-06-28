@@ -6,11 +6,26 @@ pub mod rendering {
 
     pub const SCREEN_TILE_SUBDIVISION: usize = 2; // Minimum 2
 
-    pub const FOV: f32 = core::f32::consts::PI / 4.0;
+    pub const MIN_FOV: f32 = 30.;
+    pub const MAX_FOV: f32 = 110.;
+
+    pub const FOV: f32 = 45.;
 
     pub const MAX_TRIANGLES: usize = 1300;
 
-    pub const RENDER_DISTANCE: usize = 2;
+    pub const MAX_RENDER_DISTANCE: usize = 2; // You shouldn't go higher
+}
+
+pub mod menu {
+    use crate::eadk::Color;
+
+    pub const MENU_OUTLINE_COLOR: Color = Color::from_888(150, 150, 150);
+    pub const MENU_ELEMENT_BACKGROUND_COLOR: Color = Color::from_888(230, 230, 230);
+    pub const MENU_ELEMENT_BACKGROUND_COLOR_HOVER: Color = Color::from_888(190, 190, 190);
+    pub const MENU_TEXT_COLOR: Color = Color::from_888(0, 0, 0);
+    pub const MENU_BACKGROUND_COLOR: Color = Color::from_888(255, 255, 255);
+
+    pub const SETTINGS_FILENAME: &str = "settings.ncd"; // NCD = NumCraftData
 }
 
 pub mod world {

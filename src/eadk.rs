@@ -37,6 +37,7 @@ impl Color {
 }
 
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct Rect {
     pub x: u16,
     pub y: u16,
@@ -44,7 +45,15 @@ pub struct Rect {
     pub height: u16,
 }
 
+pub const SCREEN_RECT: Rect = Rect {
+    x: 0,
+    y: 0,
+    width: 320,
+    height: 240,
+};
+
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct Point {
     pub x: u16,
     pub y: u16,
@@ -322,6 +331,10 @@ pub mod input {
 
         pub fn get_just_pressed(&self, old: KeyboardState) -> Self {
             KeyboardState(self.0 & (!old.0))
+        }
+
+        pub fn get_just_realeased(&self, old: KeyboardState) -> Self {
+            KeyboardState((!self.0) & old.0)
         }
     }
 

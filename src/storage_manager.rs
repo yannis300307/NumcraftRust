@@ -1,13 +1,15 @@
-use alloc::vec::Vec;
+use alloc::{string::String, vec::Vec};
 use lz4_flex::{compress, compress_prepend_size, decompress, decompress_size_prepended};
 use nalgebra::Vector3;
 
 use crate::{
     chunk::Chunk,
-    constants::{world::CHUNK_SIZE, BlockType},
-    storage_lib::{storage_extapp_file_erase, storage_extapp_file_exists, storage_extapp_file_read, storage_file_write},
+    constants::{BlockType, world::CHUNK_SIZE},
+    storage_lib::{
+        storage_extapp_file_erase, storage_extapp_file_exists,
+        storage_extapp_file_list_with_extension, storage_extapp_file_read, storage_file_write,
+    },
 };
-
 
 pub struct SaveManager {
     chunks_data: [Vec<u8>; 64],
@@ -34,6 +36,10 @@ impl SaveManager {
         self.chunks_data[index] = compressed;
 
         true
+    }
+
+    pub fn get_existing_worlds(&self) -> Vec<String> {
+        storage_extapp_file_list_with_extension(4, "ncw")
     }
 
     pub fn save_world_to_file(&self, filename: &str) {

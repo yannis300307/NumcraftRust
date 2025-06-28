@@ -9,7 +9,25 @@ use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
-    camera::Camera, constants::{get_quad_color_from_texture_id, rendering::*, world::CHUNK_SIZE}, eadk::{self, Color, Rect}, frustum::Frustum, mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D}, player::Player, world::World, HEAP
+    camera::Camera,
+    constants::{
+        get_quad_color_from_texture_id,
+        menu::{
+            MENU_BACKGROUND_COLOR, MENU_ELEMENT_BACKGROUND_COLOR,
+            MENU_ELEMENT_BACKGROUND_COLOR_HOVER, MENU_OUTLINE_COLOR, MENU_TEXT_COLOR,
+        },
+        rendering::*,
+        world::CHUNK_SIZE,
+    },
+    eadk::{
+        self, Color, Rect,
+        display::{push_rect_uniform, wait_for_vblank},
+    },
+    frustum::Frustum,
+    menu::{Menu, MenuElement, TextAnchor},
+    mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D},
+    player::Player,
+    world::World,
 };
 
 // Screen size related constants
@@ -396,6 +414,7 @@ pub struct Renderer {
     triangles_to_render: Vec<SmallTriangle2D>,
     tile_frame_buffer: [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
     projection_matrix: Perspective3<f32>,
+    pub enable_vsync: bool,
 }
 
 impl Renderer {
@@ -405,9 +424,16 @@ impl Renderer {
             projection_matrix: Perspective3::new(ASPECT_RATIO, FOV, ZNEAR, ZFAR),
             triangles_to_render: Vec::with_capacity(MAX_TRIANGLES),
             tile_frame_buffer: [Color { rgb565: 0 }; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+            enable_vsync: true,
         };
 
         renderer
+    }
+
+    pub fn update_fov(&mut self, new_fov: f32) {
+        self.camera.set_fov(new_fov);
+        self.projection_matrix =
+            Perspective3::new(ASPECT_RATIO, self.camera.get_fov(), ZNEAR, ZFAR);
     }
 
     fn project_point(&self, point: Vector3<f32>) -> Vector2<f32> {
@@ -621,11 +647,6 @@ impl Renderer {
                 .as_str(),
                 &Vector2::new(10, 50),
             );
-
-            self.draw_string(
-                format!("heap:{}", HEAP.used()).as_str(),
-                &Vector2::new(10, 70),
-            );
         }
         let mut draw_cross = |x, y| {
             self.draw_image_negate(
@@ -661,12 +682,18 @@ impl Renderer {
         }
     }
 
-    pub fn update(&mut self, world: &mut World, player: &Player, fps_count: f32) {
+    pub fn draw_game(&mut self, world: &mut World, player: &Player, fps_count: f32) {
         self.triangles_to_render.clear();
 
         let mat_view = self.get_mat_view();
 
-        let frustum = Frustum::new(&self.camera, ASPECT_RATIO, FOV, ZNEAR, ZFAR);
+        let frustum = Frustum::new(
+            &self.camera,
+            ASPECT_RATIO,
+            self.camera.get_fov(),
+            ZNEAR,
+            ZFAR,
+        );
 
         for chunk in world.get_chunks_sorted_by_distance(*self.camera.get_pos()) {
             let chunk_blocks_pos = chunk.get_pos() * CHUNK_SIZE_I;
@@ -731,6 +758,164 @@ impl Renderer {
                 );
             }
         }
-        //eadk::display::wait_for_vblank();
+        if self.enable_vsync {
+            eadk::display::wait_for_vblank();
+        }
+    }
+
+    pub fn draw_menu(&self, menu: &mut Menu) {
+        if !menu.need_redraw {
+            return;
+        }
+
+        menu.need_redraw = false;
+
+        let mut element_y = menu.pos.y;
+
+        let elements = menu.get_elements();
+        for i in 0..elements.len() {
+            let element = &elements[i];
+
+            let default_rect = Rect {
+                x: menu.pos.x as u16,
+                y: element_y as u16,
+                width: menu.width as u16,
+                height: 30,
+            };
+
+            let draw_outline = || {
+                push_rect_uniform(
+                    Rect {
+                        x: default_rect.x - 1,
+                        y: default_rect.y - 1,
+                        width: default_rect.width + 2,
+                        height: 1,
+                    },
+                    MENU_OUTLINE_COLOR,
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: default_rect.x - 1,
+                        y: default_rect.y + default_rect.height,
+                        width: default_rect.width + 2,
+                        height: 1,
+                    },
+                    MENU_OUTLINE_COLOR,
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: default_rect.x - 1,
+                        y: default_rect.y,
+                        width: 1,
+                        height: default_rect.height,
+                    },
+                    MENU_OUTLINE_COLOR,
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: default_rect.x + default_rect.width,
+                        y: default_rect.y,
+                        width: 1,
+                        height: default_rect.height,
+                    },
+                    MENU_OUTLINE_COLOR,
+                );
+            };
+
+            let element_bg_color = if i == menu.selected_index {
+                MENU_ELEMENT_BACKGROUND_COLOR_HOVER
+            } else {
+                MENU_ELEMENT_BACKGROUND_COLOR
+            };
+
+            match element {
+                MenuElement::Button { text, .. } => {
+                    push_rect_uniform(default_rect, element_bg_color);
+                    draw_outline();
+                    let text_y = menu.pos.x + (menu.width - 10 * text.len()) / 2;
+                    eadk::display::draw_string(
+                        text,
+                        eadk::Point {
+                            x: text_y as u16,
+                            y: (element_y + 6) as u16,
+                        },
+                        true,
+                        MENU_TEXT_COLOR,
+                        element_bg_color,
+                    );
+                }
+                MenuElement::Slider { text_fn, value, .. } => {
+                    push_rect_uniform(default_rect, element_bg_color);
+                    let text = text_fn(*value);
+                    let cursor_width = 20;
+                    let x_pos =
+                        default_rect.x + (value * (menu.width - cursor_width - 4) as f32) as u16;
+                    let text_y = menu.pos.x + (menu.width - 10 * text.len()) / 2;
+                    eadk::display::draw_string(
+                        text.as_str(),
+                        eadk::Point {
+                            x: text_y as u16,
+                            y: (element_y + 6) as u16,
+                        },
+                        true,
+                        MENU_TEXT_COLOR,
+                        element_bg_color,
+                    );
+                    push_rect_uniform(
+                        Rect {
+                            x: x_pos + 2,
+                            y: default_rect.y + 2,
+                            width: 20,
+                            height: default_rect.height - 4,
+                        },
+                        Color::from_888(255, 255, 255),
+                    );
+                    draw_outline();
+                }
+                MenuElement::Label {
+                    text, text_anchor, ..
+                } => {
+                    let text_y = match text_anchor {
+                        TextAnchor::Left => menu.pos.x + 10,
+                        TextAnchor::Center => menu.pos.x + (menu.width - 10 * text.len()) / 2,
+                        TextAnchor::Right => menu.pos.x + menu.width - 10 * text.len() - 10,
+                    };
+                    eadk::display::draw_string(
+                        text,
+                        eadk::Point {
+                            x: text_y as u16,
+                            y: (element_y + 6) as u16,
+                        },
+                        true,
+                        MENU_TEXT_COLOR,
+                        MENU_BACKGROUND_COLOR,
+                    );
+                }
+                MenuElement::Void { .. } => {}
+            }
+
+            element_y += if matches!(
+                element,
+                MenuElement::Label {
+                    allow_margin: true,
+                    ..
+                } | MenuElement::Button {
+                    allow_margin: true,
+                    ..
+                } | MenuElement::Slider {
+                    allow_margin: true,
+                    ..
+                } | MenuElement::Void {
+                    allow_margin: true,
+                    ..
+                }
+            ) {
+                40
+            } else {
+                30
+            };
+        }
+
+        wait_for_vblank();
     }
 }

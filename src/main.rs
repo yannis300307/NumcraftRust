@@ -26,8 +26,8 @@ mod renderer;
 mod world;
 use game::Game;
 
-
 mod frustum;
+mod menu;
 mod player;
 mod storage_lib;
 mod storage_manager;
@@ -48,7 +48,7 @@ pub static EADK_APP_API_LEVEL: u32 = 0;
 pub static EADK_APP_ICON: [u8; 3437] = *include_bytes!("../target/icon.nwi");
 
 #[unsafe(no_mangle)]
-fn main() {
+fn main() -> isize {
     // Init the heap
     #[cfg(target_os = "none")]
     {
@@ -56,8 +56,14 @@ fn main() {
         unsafe { HEAP.init(eadk::HEAP_START as usize, heap_size) }
     }
 
+    while eadk::input::KeyboardState::scan().key_down(eadk::input::Key::Ok) {
+        // Avoid instant click on Ok
+        eadk::timing::msleep(50);
+    }
+
     let mut game = Game::new();
 
-    game.game_loop();
+    game.main_loop();
 
+    0
 }

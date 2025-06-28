@@ -125,6 +125,11 @@ impl World {
         self.chunks.iter().find(|&chunk| *chunk.get_pos() == pos)
     }
 
+    /// Delete all loaded chunks
+    pub fn clear(&mut self) {
+        self.chunks.clear();
+    }
+
     /// Generate the chunks around the given position The position is in global blocks space, not world chunk space
     pub fn generate_world_around_pos(&mut self, pos: Vector3<f32>, render_distance: isize) {
         // Convert global block space coordinates to chnuk space
