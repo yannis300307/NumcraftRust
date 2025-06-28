@@ -646,11 +646,6 @@ impl Renderer {
                 .as_str(),
                 &Vector2::new(10, 50),
             );
-
-            self.draw_string(
-                format!("heap:{}", HEAP.used()).as_str(),
-                &Vector2::new(10, 70),
-            );
         }
         let mut draw_cross = |x, y| {
             self.draw_image_negate(
