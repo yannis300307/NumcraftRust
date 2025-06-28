@@ -56,6 +56,7 @@ Good ideas but I will never have the time to do that :
 - ~Weird beahaviors in the negative coordinates~
 - Rendering issues with the block selection marker
 - Can randomly crash on start on N0120. You have to reset your calculator before downloading a new version (I can't do anything about that, it's related to the OS)
+- Rendering issues and memory corruption if too many triangles are shown at the same time on the screen
 
 ## Build the app
 
