@@ -81,9 +81,10 @@ impl Game {
 
         let worlds = self.save_manager.get_existing_worlds();
 
-        for i in 0..4 {
-            let button_text = if i < worlds.len() {
-                format!("Load {}", worlds[i])
+        for i in 0..4 { 
+            let world_name = format!("world{i}.ncw");
+            let button_text = if worlds.contains(&world_name) {
+                format!("Load {}", world_name)
             } else {
                 format!("Create world{i}.ncw")
             };
