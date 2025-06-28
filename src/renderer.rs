@@ -9,7 +9,6 @@ use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
-    HEAP,
     camera::Camera,
     constants::{
         get_quad_color_from_texture_id,

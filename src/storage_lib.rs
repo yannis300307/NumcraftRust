@@ -1,6 +1,5 @@
 use core::ffi::CStr;
 
-use alloc::borrow::ToOwned;
 use alloc::ffi;
 use alloc::string::String;
 use alloc::vec::Vec;

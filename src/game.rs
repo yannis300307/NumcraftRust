@@ -74,7 +74,7 @@ impl Game {
 
         // Show a warning messge
         eadk::display::push_rect_uniform(SCREEN_RECT, Color::from_888(255, 255, 255));
-        let mut show_msg = |message, y| {
+        let show_msg = |message, y| {
             eadk::display::draw_string(
                 message,
                 Point {
