@@ -33,9 +33,9 @@ NumcraftRust should run on both N120, N115 and N110 models. You will get better 
 - [X] Add a save system with compression
 - [ ] Add collisions
 - [ ] Better world generation
-- [ ] Add a main menu
+- [X] Add a main menu
 - [ ] Add a creative menu to select multiple blocks
-- [ ] Add a menu to select between multiple worlds
+- [X] Add a menu to select between multiple worlds
 - [ ] Add a lightning engine
 - [ ] Add mobs
 - [ ] Add a survival mode
@@ -53,7 +53,7 @@ Good ideas but I will never have the time to do that :
 - [ ] Multiplayer (impossible at that time)
 
 ## Known Bugs:
-- Weird beahaviors in the negative coordinates
+- ~Weird beahaviors in the negative coordinates~
 - Rendering issues with the block selection marker
 - Can randomly crash on start on N0120. You have to reset your calculator before downloading a new version (I can't do anything about that, it's related to the OS)
 
