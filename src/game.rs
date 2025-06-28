@@ -3,7 +3,7 @@ use alloc::{
     format,
     string::{String, ToString},
 };
-use nalgebra::{Vector2, Vector3};
+use nalgebra::{Rotation, Vector2, Vector3};
 use postcard::from_bytes;
 use serde::{Deserialize, Serialize};
 
@@ -52,6 +52,7 @@ impl Game {
             .save_manager
             .load_from_file(world_name.as_str())
             .is_ok()
+        // TODO: Show an error message instead
         {
             // Add chunks. Maybe move this code into world (TODO)
             for x in 0..4 {
@@ -66,8 +67,15 @@ impl Game {
                     }
                 }
             }
+
+            self.player.set_pos_rotation(
+                &mut self.renderer.camera,
+                self.save_manager.get_player_rot(),
+                self.save_manager.get_player_pos(),
+            );
         } else {
             self.world.load_area(0, 4, 0, 4, 0, 4);
+            self.player.set_pos_rotation(&mut self.renderer.camera, Vector3::new(0., 0., 0.), Vector3::new(16., 16., 16.)); // Hard codded map center. TODO : calculate height if random seed generation is implemented (it will)
         }
 
         self.save_manager.clean(); // Clear save manager to save memory
@@ -376,12 +384,13 @@ impl Game {
         }
     }
 
-    fn quit(&mut self, world_name: &String) {
+    fn exit_world(&mut self, world_name: &String) {
         for chunk in self.world.chunks.iter() {
             self.save_manager.set_chunk(chunk);
         }
-
         self.world.clear();
+
+        self.save_manager.update_player_data(&self.player);
 
         self.save_manager.save_world_to_file(world_name.as_str());
 
@@ -394,7 +403,7 @@ impl Game {
         self.last_keyboard_state = keyboard_state;
 
         if keyboard_state.key_down(eadk::input::Key::Exe) {
-            self.quit(world_name);
+            self.exit_world(world_name);
 
             return false;
         }
@@ -406,6 +415,8 @@ impl Game {
             &mut self.world,
             &mut self.renderer.camera,
         );
+
+        self.renderer.camera.update(delta, keyboard_state);
 
         //self.world.generate_world_around_pos(*self.renderer.camera.get_pos(), self.settings.render_distance as isize);
         self.world.check_mesh_regeneration();

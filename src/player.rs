@@ -38,6 +38,17 @@ impl Player {
         }
     }
 
+    pub fn sync_with_camera(&mut self, camera: &mut Camera) {
+        camera.update_pos(self.pos - Vector3::new(0., 1.70, 0.));
+        self.rotation = *camera.get_rotation();
+    }
+
+    pub fn set_pos_rotation(&mut self, camera: &mut Camera, rotation: Vector3<f32>, pos: Vector3<f32>) {
+        self.pos = pos;
+        camera.set_rotation(rotation);
+        self.sync_with_camera(camera);
+    }
+
     pub fn update(
         &mut self,
         delta: f32,
@@ -46,7 +57,7 @@ impl Player {
         world: &mut World,
         camera: &mut Camera,
     ) {
-        camera.update(delta, keyboard_state, self.pos - Vector3::new(0., 1.70, 0.));
+        self.sync_with_camera(camera);
         self.rotation = *camera.get_rotation();
 
         self.ray_cast_result = self.ray_cast(camera, world, 10);

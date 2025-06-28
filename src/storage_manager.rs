@@ -1,24 +1,46 @@
 use alloc::{string::String, vec::Vec};
 use lz4_flex::{compress, compress_prepend_size, decompress, decompress_size_prepended};
 use nalgebra::Vector3;
+use postcard::{from_bytes, to_allocvec};
+use serde::{Deserialize, Serialize};
 
 use crate::{
+    camera::Camera,
     chunk::Chunk,
     constants::{BlockType, world::CHUNK_SIZE},
+    player::Player,
     storage_lib::{
         storage_extapp_file_erase, storage_extapp_file_exists,
         storage_extapp_file_list_with_extension, storage_extapp_file_read, storage_file_write,
     },
 };
 
+#[derive(Serialize, Deserialize)]
+pub struct PlayerData {
+    pub pos: (f32, f32, f32),
+    pub rotation: (f32, f32), // Only Pitch and Yaw
+                              // More in the futur
+}
+
+impl PlayerData {
+    pub fn new() -> Self {
+        PlayerData {
+            pos: (0., 0., 0.),
+            rotation: (0., 0.),
+        }
+    }
+}
+
 pub struct SaveManager {
     chunks_data: [Vec<u8>; 64],
+    player_data: PlayerData,
 }
 
 impl SaveManager {
     pub fn new() -> Self {
         SaveManager {
             chunks_data: [const { Vec::new() }; 64],
+            player_data: PlayerData::new(),
         }
     }
 
@@ -36,6 +58,15 @@ impl SaveManager {
         self.chunks_data[index] = compressed;
 
         true
+    }
+
+    pub fn update_player_data(&mut self, player: &Player) {
+        self.player_data.pos.0 = player.pos.x;
+        self.player_data.pos.1 = player.pos.y;
+        self.player_data.pos.2 = player.pos.z;
+
+        self.player_data.rotation.0 = player.rotation.x;
+        self.player_data.rotation.1 = player.rotation.y;
     }
 
     pub fn get_existing_worlds(&self) -> Vec<String> {
@@ -63,17 +94,24 @@ impl SaveManager {
             data.extend(&self.chunks_data[i]);
         }
 
+        let raw_player_data = to_allocvec(&self.player_data).unwrap();
+        data.extend((raw_player_data.len() as u16).to_be_bytes());
+        data.extend(raw_player_data);
+
         compress_prepend_size(&data)
     }
 
     pub fn load_from_file(&mut self, filename: &str) -> Result<(), SaveFileLoadError> {
         if let Some(raw_data) = storage_extapp_file_read(filename) {
+            // Read file
             if let Ok(data) = decompress_size_prepended(&raw_data) {
+                // Decompress the entire file
                 let mut current_pos = 128;
                 for i in 0..64 {
-                    let size = u16::from_be_bytes([data[i * 2], data[i * 2 + 1]]) as usize;
+                    let size = u16::from_be_bytes([data[i * 2], data[i * 2 + 1]]) as usize; // Get the compressed chunk size from the headers
 
                     if current_pos + size > data.len() {
+                        // Check for corruption. If overflow, the size is wrong and the world is ... unusable ...
                         return Err(SaveFileLoadError::CorruptedWorld);
                     }
                     let raw_chunk = &data[current_pos..(current_pos + size)];
@@ -82,6 +120,32 @@ impl SaveManager {
 
                     current_pos += size;
                 }
+
+                // If player data is missing, the world is currupted
+                if current_pos + 1 >= data.len() {
+                    return Err(SaveFileLoadError::CorruptedWorld);
+                }
+
+                // Extract player_data
+                let player_data_size =
+                    u16::from_be_bytes([data[current_pos], data[current_pos + 1]]) as usize;
+
+                current_pos += 2; // player data size
+
+                // Check for overflow
+                if current_pos + player_data_size > data.len() {
+                    return Err(SaveFileLoadError::CorruptedWorld);
+                }
+
+                // Read the raw data
+                let player_data_raw = &data[current_pos..(current_pos + player_data_size)];
+
+                if let Ok(player_data) = from_bytes::<PlayerData>(player_data_raw) {
+                    self.player_data = player_data;
+                } else {
+                    return Err(SaveFileLoadError::CorruptedWorld);
+                }
+
                 Ok(())
             } else {
                 Err(SaveFileLoadError::CorruptedWorld)
@@ -127,10 +191,20 @@ impl SaveManager {
         }
     }
 
+    pub fn get_player_pos(&self) -> Vector3<f32> {
+        Vector3::new(self.player_data.pos.0,self.player_data.pos.1, self.player_data.pos.2)
+    }
+
+    pub fn get_player_rot(&self) -> Vector3<f32> {
+        Vector3::new(self.player_data.rotation.0,self.player_data.rotation.1, 0.)
+    }
+
     pub fn clean(&mut self) {
         for chunk in self.chunks_data.iter_mut() {
             chunk.clear();
         }
+
+        self.player_data = PlayerData::new();
     }
 }
 
