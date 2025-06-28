@@ -688,7 +688,13 @@ impl Renderer {
 
         let mat_view = self.get_mat_view();
 
-        let frustum = Frustum::new(&self.camera, ASPECT_RATIO, FOV, ZNEAR, ZFAR);
+        let frustum = Frustum::new(
+            &self.camera,
+            ASPECT_RATIO,
+            self.camera.get_fov(),
+            ZNEAR,
+            ZFAR,
+        );
 
         for chunk in world.get_chunks_sorted_by_distance(*self.camera.get_pos()) {
             let chunk_blocks_pos = chunk.get_pos() * CHUNK_SIZE_I;
@@ -753,7 +759,9 @@ impl Renderer {
                 );
             }
         }
-        //eadk::display::wait_for_vblank();
+        if self.enable_vsync {
+            eadk::display::wait_for_vblank();
+        }
     }
 
     pub fn draw_menu(&self, menu: &mut Menu) {

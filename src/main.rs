@@ -56,7 +56,8 @@ fn main() -> isize {
         unsafe { HEAP.init(eadk::HEAP_START as usize, heap_size) }
     }
 
-    while eadk::input::KeyboardState::scan().key_down(eadk::input::Key::Ok) { // Avoid instant click on Ok
+    while eadk::input::KeyboardState::scan().key_down(eadk::input::Key::Ok) {
+        // Avoid instant click on Ok
         eadk::timing::msleep(50);
     }
 

@@ -58,7 +58,6 @@ impl Frustum {
         }
     }
 
-
     pub fn is_aabb_in_frustum(&self, min: Vector3<f32>, max: Vector3<f32>) -> bool {
         let corners = [
             Vector3::new(min.x, min.y, min.z),

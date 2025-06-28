@@ -4,16 +4,22 @@ use alloc::{
     string::{String, ToString},
 };
 use nalgebra::{Vector2, Vector3};
+use postcard::from_bytes;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     constants::{
-        menu::MENU_BACKGROUND_COLOR,
+        menu::{MENU_BACKGROUND_COLOR, SETTINGS_FILENAME},
         rendering::{FOV, MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
     eadk::{self, input::KeyboardState},
     menu::{Menu, MenuElement, TextAnchor},
     player::Player,
     renderer::Renderer,
+    storage_lib::{
+        storage_extapp_file_erase, storage_extapp_file_exists, storage_extapp_file_read,
+        storage_file_write,
+    },
     storage_manager::SaveManager,
     world::World,
 };
@@ -205,7 +211,7 @@ impl Game {
                 allow_margin: true,
                 id: 4,
             });
-        
+
         // Clear the screen
         eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
@@ -235,6 +241,7 @@ impl Game {
                         self.settings.fov = fov;
                         self.settings.render_distance = render_distance;
                         self.settings.vsync = vsync_enabled;
+                        self.update_settings();
 
                         return GameState::GoMainMenu;
                     }
@@ -272,6 +279,13 @@ impl Game {
             self.renderer.draw_menu(&mut menu);
             eadk::timing::msleep(50);
         }
+    }
+
+    pub fn update_settings(&mut self) {
+        self.renderer.update_fov(self.settings.fov);
+        self.renderer.enable_vsync = self.settings.vsync;
+
+        self.settings.save();
     }
 
     pub fn main_menu_loop(&mut self) -> GameState {
@@ -375,7 +389,7 @@ impl Game {
             &mut self.renderer.camera,
         );
 
-        //self.world.generate_world_around_pos(*self.renderer.camera.get_pos(), RENDER_DISTANCE as isize);
+        //self.world.generate_world_around_pos(*self.renderer.camera.get_pos(), self.settings.render_distance as isize);
         self.world.check_mesh_regeneration();
 
         self.renderer
@@ -387,13 +401,16 @@ impl Game {
 
     pub fn main_loop(&mut self) {
         let mut state = GameState::GoMainMenu;
+
+        self.settings.load();
+
         while !matches!(state, GameState::Quit) {
             state = match state {
                 GameState::GoMainMenu => self.main_menu_loop(),
                 GameState::GoSetting => self.settings_menu_loop(),
                 GameState::GoSelectWorld => self.worlds_select_menu_loop(),
                 GameState::LoadWorld(world_name) => self.game_loop(&world_name),
-                GameState::Quit => return,
+                GameState::Quit => break,
             }
         }
     }
@@ -407,6 +424,7 @@ pub enum GameState {
     Quit,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Settings {
     render_distance: usize,
     fov: f32,
@@ -419,6 +437,25 @@ impl Settings {
             render_distance: MAX_RENDER_DISTANCE,
             fov: FOV,
             vsync: true,
+        }
+    }
+
+    pub fn save(&self) {
+        if storage_extapp_file_exists(SETTINGS_FILENAME) {
+            storage_extapp_file_erase(SETTINGS_FILENAME);
+        }
+        let raw = postcard::to_allocvec(self).unwrap();
+
+        storage_file_write(SETTINGS_FILENAME, &raw);
+    }
+
+    pub fn load(&mut self) {
+        if storage_extapp_file_exists(SETTINGS_FILENAME) {
+            let raw = storage_extapp_file_read(SETTINGS_FILENAME).unwrap();
+
+            let object: Settings = from_bytes(&raw).unwrap();
+
+            *self = object;
         }
     }
 }

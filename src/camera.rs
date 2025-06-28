@@ -3,13 +3,16 @@ use core::f32::{self, consts::PI};
 use libm::{cosf, sinf};
 use nalgebra::{Matrix4, UnitQuaternion, Vector3};
 
-use crate::{constants::{player::ROTATION_SPEED, rendering::FOV}, eadk};
+use crate::{
+    constants::{player::ROTATION_SPEED, rendering::FOV},
+    eadk,
+};
 
 pub struct Camera {
     pos: Vector3<f32>,
     rotation: Vector3<f32>,
     has_moved: bool,
-    fov: f32
+    fov: f32,
 }
 
 impl Camera {
@@ -27,7 +30,7 @@ impl Camera {
     }
 
     pub fn set_fov(&mut self, degrees: f32) {
-        self.fov = degrees*PI/180.0;
+        self.fov = degrees * PI / 180.0;
     }
 
     pub fn update(

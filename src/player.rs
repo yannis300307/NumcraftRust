@@ -30,12 +30,8 @@ impl Player {
         let mut mesh = Mesh::new();
 
         if let Some(result) = &self.ray_cast_result {
-            mesh.quads.push(Quad::new(
-                Vector3::new(0, 0, 0),
-                result.face_dir,
-                255,
-                0,
-            ));
+            mesh.quads
+                .push(Quad::new(Vector3::new(0, 0, 0), result.face_dir, 255, 0));
             (mesh, result.block_pos)
         } else {
             (mesh, Vector3::repeat(0))

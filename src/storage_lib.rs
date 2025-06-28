@@ -45,18 +45,15 @@ pub fn storage_extapp_file_list_with_extension(max_records: usize, extension: &s
         filenames.set_len(final_len as usize);
 
         let mut files: Vec<String> = Vec::new();
-        for name_ptr in filenames{
+        for name_ptr in filenames {
             if !name_ptr.is_null() {
-                let name = CStr::from_ptr(name_ptr)
-                    .to_string_lossy()
-                    .into_owned();
+                let name = CStr::from_ptr(name_ptr).to_string_lossy().into_owned();
                 files.push(name);
             }
         }
 
         files
     }
-
 }
 
 unsafe extern "C" {

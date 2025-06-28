@@ -8,7 +8,7 @@ pub mod rendering {
 
     pub const MIN_FOV: f32 = 30.;
     pub const MAX_FOV: f32 = 110.;
-    
+
     pub const FOV: f32 = 45.;
 
     pub const MAX_TRIANGLES: usize = 1300;
@@ -24,6 +24,8 @@ pub mod menu {
     pub const MENU_ELEMENT_BACKGROUND_COLOR_HOVER: Color = Color::from_888(190, 190, 190);
     pub const MENU_TEXT_COLOR: Color = Color::from_888(0, 0, 0);
     pub const MENU_BACKGROUND_COLOR: Color = Color::from_888(255, 255, 255);
+
+    pub const SETTINGS_FILENAME: &str = "settings.ncd"; // NCD = NumCraftData
 }
 
 pub mod world {

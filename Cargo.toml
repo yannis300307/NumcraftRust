@@ -37,9 +37,10 @@ embedded-alloc = "0.6.0"
 fastnoise-lite = { version="1.1.1", default-features=false, features = ["libm"] }
 bresenham = "0.1.1"
 lz4_flex = {version="0.11.5", default-features=false}
+postcard = {version = "1.1.2", features=["alloc"]}
+serde = {version = "1.0.219", default-features=false}
 
 [target.'cfg(any(windows, unix))'.dependencies]
-minifb = "0.28"
 rand = "0.9.1"
 
 [build-dependencies]
