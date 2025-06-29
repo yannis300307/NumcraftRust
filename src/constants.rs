@@ -36,7 +36,7 @@ pub mod player {
     use core::f32::consts::PI;
 
     pub const ROTATION_SPEED: f32 = PI / 3.0; // rad / sec
-    pub const MOVEMENT_SPEED: f32 = 2.0;
+    pub const MOVEMENT_SPEED: f32 = 4.0;
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
