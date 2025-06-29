@@ -24,28 +24,15 @@ pub enum MenuElement {
         text: String,
         text_anchor: TextAnchor,
         allow_margin: bool,
-        id: usize,
     },
     /// A space
-    Void { allow_margin: bool, id: usize },
+    Void { allow_margin: bool },
 
     ButtonOption {
         text: String,
         is_pressed: bool,
         id: usize,
     },
-}
-
-impl MenuElement {
-    pub fn get_id(&self) -> usize {
-        match self {
-            MenuElement::Button { id, .. }
-            | MenuElement::Label { id, .. }
-            | MenuElement::Void { id, .. }
-            | MenuElement::Slider { id, .. }
-            | MenuElement::ButtonOption { id, .. } => *id,
-        }
-    }
 }
 
 pub enum TextAnchor {
@@ -97,7 +84,7 @@ impl Menu {
 
     pub fn set_pressed(&mut self, state: bool) {
         let element = &mut self.elements[self.selected_index];
-        if let MenuElement::Button { is_pressed, .. } = element {
+        if let MenuElement::Button { is_pressed, .. } | MenuElement::ButtonOption { is_pressed, .. } = element {
             *is_pressed = state
         }
     }

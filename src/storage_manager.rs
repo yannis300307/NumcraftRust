@@ -73,6 +73,12 @@ impl SaveManager {
         storage_extapp_file_list_with_extension(4, "ncw")
     }
 
+    pub fn delete_world(&self, world_name: &String) {
+        if storage_extapp_file_exists(&world_name) {
+            storage_extapp_file_erase(&world_name);
+        }
+    }
+
     pub fn save_world_to_file(&self, filename: &str) {
         let data = self.get_raw();
 

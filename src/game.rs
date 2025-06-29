@@ -75,7 +75,11 @@ impl Game {
             );
         } else {
             self.world.load_area(0, 4, 0, 4, 0, 4);
-            self.player.set_pos_rotation(&mut self.renderer.camera, Vector3::new(0., 0., 0.), Vector3::new(16., 16., 16.)); // Hard codded map center. TODO : calculate height if random seed generation is implemented (it will)
+            self.player.set_pos_rotation(
+                &mut self.renderer.camera,
+                Vector3::new(0., 0., 0.),
+                Vector3::new(16., 16., 16.),
+            ); // Hard codded map center. TODO : calculate height if random seed generation is implemented (it will)
         }
 
         self.save_manager.clean(); // Clear save manager to save memory
@@ -111,6 +115,79 @@ impl Game {
         }
     }
 
+    pub fn delete_world_menu_loop(&mut self, world_name: &String) -> GameState {
+        let mut menu = Menu::new(Vector2::new(10, 70), 300, 2)
+            .with_element(MenuElement::Label {
+                text: format!("Delete {}?", world_name),
+                //Do you want to delete {}?
+                //
+                text_anchor: TextAnchor::Center,
+                allow_margin: false,
+            })
+            .with_element(MenuElement::Label {
+                text: "This cannot be undone.".to_string(),
+                text_anchor: TextAnchor::Center,
+                allow_margin: true,
+            })
+            .with_element(MenuElement::Button {
+                text: format!("Yes, delete {}", world_name),
+                is_pressed: false,
+                allow_margin: true,
+                id: 0,
+            })
+            .with_element(MenuElement::Button {
+                text: "No, go back".to_string(),
+                is_pressed: false,
+                allow_margin: false,
+                id: 1,
+            });
+
+        // Clear the screen
+        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+
+        loop {
+            // Get keyboard state and calculate the new presses
+            let keyboard_state = eadk::input::KeyboardState::scan();
+            let just_pressed_keyboard_state =
+                keyboard_state.get_just_pressed(self.last_keyboard_state);
+            self.last_keyboard_state = keyboard_state;
+
+            // Exit the menu when [Back] is pressed
+            if keyboard_state.key_down(eadk::input::Key::Back) {
+                return GameState::GoSelectWorld;
+            }
+
+            // Handle the navigation in the menu
+            menu.check_inputs(keyboard_state, just_pressed_keyboard_state);
+            for element in menu.get_elements() {
+                match element {
+                    MenuElement::Button {
+                        // Confirm delete
+                        id: 0,
+                        is_pressed: true,
+                        ..
+                    } => {
+                        self.save_manager.delete_world(world_name);
+                        return GameState::GoSelectWorld;
+                    }
+                    MenuElement::Button {
+                        // Cancel delete
+                        id: 1,
+                        is_pressed: true,
+                        ..
+                    } => {
+                        return GameState::GoSelectWorld;
+                    }
+                    _ => (),
+                }
+            }
+            menu.finish_buttons_handling();
+
+            self.renderer.draw_menu(&mut menu);
+            eadk::timing::msleep(50);
+        }
+    }
+
     /// The menu the user can go to select the world to load
     pub fn worlds_select_menu_loop(&mut self) -> GameState {
         // Create a new menu with a title
@@ -118,7 +195,6 @@ impl Game {
             text: "Select a world".to_string(),
             text_anchor: TextAnchor::Center,
             allow_margin: true,
-            id: 0,
         });
 
         // Get the list of all the existing worlds. World name must be "world{i}.ncw" (NCW = "NumCraft World" btw)
@@ -127,7 +203,8 @@ impl Game {
         // Max 4 worlds because it's enough for the storage memory amount we have and because. I can't fit more than 4 buttons on the screen ;-)
         for i in 0..4 {
             let world_name = format!("world{i}.ncw");
-            let button_text = if worlds.contains(&world_name) {
+            let world_exists = worlds.contains(&world_name);
+            let button_text = if world_exists {
                 format!("Load {}", world_name)
             } else {
                 format!("Create world{i}.ncw")
@@ -135,9 +212,16 @@ impl Game {
             menu.add_element(MenuElement::Button {
                 text: button_text,
                 allow_margin: true,
-                id: 1 + i,
+                id: i,
                 is_pressed: false,
             });
+            if world_exists {
+                menu.add_element(MenuElement::ButtonOption {
+                    text: "Delete".to_string(),
+                    is_pressed: false,
+                    id: i,
+                });
+            }
         }
 
         // Clear the screen
@@ -166,11 +250,22 @@ impl Game {
                         is_pressed: true,
                         ..
                     } => {
-                        let world_slot = *id - 1; // Please change this if you change the button's id. Not 100% safe but who cares about safety?
+                        let world_slot = *id; // Please change this if you change the button's id. Not 100% safe but who cares about safety?
                         let world_name = format!("world{world_slot}.ncw");
 
                         // Load the world (and create a new world if it doesn't exists yet)
                         return GameState::LoadWorld(world_name.to_owned());
+                    }
+                    MenuElement::ButtonOption {
+                        is_pressed: true,
+                        id,
+                        ..
+                    } => {
+                        let world_slot = *id; // Please change this if you change the button's id.
+                        let world_name = format!("world{world_slot}.ncw");
+
+                        // Delete the world
+                        return GameState::DeleteWorld(world_name.to_owned());
                     }
                     _ => (),
                 }
@@ -196,7 +291,6 @@ impl Game {
                 text: "Settings".to_string(),
                 text_anchor: TextAnchor::Center,
                 allow_margin: true,
-                id: 0,
             })
             .with_element(MenuElement::Slider {
                 text_fn: |value| {
@@ -320,29 +414,24 @@ impl Game {
                 text: "Numcraft".to_string(),
                 text_anchor: TextAnchor::Center,
                 allow_margin: true,
-                id: 0,
             })
-            .with_element(MenuElement::Void {
-                allow_margin: true,
-                id: 1,
-            })
+            .with_element(MenuElement::Void { allow_margin: true })
             .with_element(MenuElement::Button {
                 text: "Load world".to_string(),
                 is_pressed: false,
                 allow_margin: true,
-                id: 2,
+                id: 0,
             })
             .with_element(MenuElement::Button {
                 text: "Settings".to_string(),
                 is_pressed: false,
                 allow_margin: true,
-                id: 3,
+                id: 1,
             })
             .with_element(MenuElement::Label {
                 text: "Press [Home] to quit".to_string(),
                 text_anchor: TextAnchor::Center,
                 allow_margin: true,
-                id: 4,
             });
 
         eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
@@ -362,14 +451,14 @@ impl Game {
             for element in menu.get_elements_mut() {
                 match element {
                     MenuElement::Button {
-                        id: 3,
+                        id: 1,
                         is_pressed: true,
                         ..
                     } => {
                         return GameState::GoSetting;
                     }
                     MenuElement::Button {
-                        id: 2,
+                        id: 0,
                         is_pressed: true,
                         ..
                     } => return GameState::GoSelectWorld,
@@ -440,6 +529,7 @@ impl Game {
                 GameState::GoSetting => self.settings_menu_loop(),
                 GameState::GoSelectWorld => self.worlds_select_menu_loop(),
                 GameState::LoadWorld(world_name) => self.game_loop(&world_name),
+                GameState::DeleteWorld(world_name) => self.delete_world_menu_loop(&world_name),
                 GameState::Quit => break,
             }
         }
@@ -451,6 +541,7 @@ pub enum GameState {
     GoSetting,
     GoSelectWorld,
     LoadWorld(String), // String: World name
+    DeleteWorld(String),
     Quit,
 }
 
