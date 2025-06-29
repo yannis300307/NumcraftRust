@@ -776,11 +776,42 @@ impl Renderer {
         for i in 0..elements.len() {
             let element = &elements[i];
 
-            let default_rect = Rect {
-                x: menu.pos.x as u16,
-                y: element_y as u16,
-                width: menu.width as u16,
-                height: 30,
+            let default_rect = if matches!(&elements[i], MenuElement::Button { .. }) {
+                if i < elements.len() - 1
+                    && let MenuElement::ButtonOption { text, .. } = &elements[i + 1]
+                {
+                    let option_button_width = 20 + text.len() * 10;
+                    Rect {
+                        x: menu.pos.x as u16,
+                        y: element_y as u16,
+                        width: (menu.width - option_button_width - 10) as u16,
+                        height: 30,
+                    }
+                } else {
+                    Rect {
+                        x: menu.pos.x as u16,
+                        y: element_y as u16,
+                        width: menu.width as u16,
+                        height: 30,
+                    }
+                }
+            } else {
+                if let MenuElement::ButtonOption { text, .. } = &elements[i] {
+                    let option_button_width = 20 + text.len() * 10;
+                    Rect {
+                        x: (menu.pos.x + menu.width - option_button_width) as u16,
+                        y: element_y as u16,
+                        width: option_button_width as u16,
+                        height: 30,
+                    }
+                } else {
+                    Rect {
+                        x: menu.pos.x as u16,
+                        y: element_y as u16,
+                        width: menu.width as u16,
+                        height: 30,
+                    }
+                }
             };
 
             let draw_outline = || {
@@ -832,11 +863,11 @@ impl Renderer {
                 MenuElement::Button { text, .. } => {
                     push_rect_uniform(default_rect, element_bg_color);
                     draw_outline();
-                    let text_y = menu.pos.x + (menu.width - 10 * text.len()) / 2;
+                    let text_x = menu.pos.x + (default_rect.width as usize - 10 * text.len()) / 2;
                     eadk::display::draw_string(
                         text,
                         eadk::Point {
-                            x: text_y as u16,
+                            x: text_x as u16,
                             y: (element_y + 6) as u16,
                         },
                         true,
@@ -850,11 +881,11 @@ impl Renderer {
                     let cursor_width = 20;
                     let x_pos =
                         default_rect.x + (value * (menu.width - cursor_width - 4) as f32) as u16;
-                    let text_y = menu.pos.x + (menu.width - 10 * text.len()) / 2;
+                    let text_x = menu.pos.x + (default_rect.width as usize - 10 * text.len()) / 2;
                     eadk::display::draw_string(
                         text.as_str(),
                         eadk::Point {
-                            x: text_y as u16,
+                            x: text_x as u16,
                             y: (element_y + 6) as u16,
                         },
                         true,
@@ -891,11 +922,31 @@ impl Renderer {
                         MENU_BACKGROUND_COLOR,
                     );
                 }
+                MenuElement::ButtonOption { text, .. } => {
+                    push_rect_uniform(default_rect, element_bg_color);
+                    draw_outline();
+
+                    eadk::display::draw_string(
+                        text.as_str(),
+                        eadk::Point {
+                            x: default_rect.x + 10,
+                            y: (element_y + 6) as u16,
+                        },
+                        true,
+                        MENU_TEXT_COLOR,
+                        element_bg_color,
+                    );
+                }
+
                 MenuElement::Void { .. } => {}
             }
 
-            element_y += if matches!(
-                element,
+            element_y += if i < elements.len() - 1
+                && matches!(&elements[i + 1], MenuElement::ButtonOption { .. }) // keep the same y if we have a button option next to a button
+            {
+                0
+            } else if matches!( // If the element needs margin, add and additional margin
+                &element,
                 MenuElement::Label {
                     allow_margin: true,
                     ..
@@ -910,6 +961,16 @@ impl Renderer {
                     ..
                 }
             ) {
+                40
+            } else if i > 0 // If the element is a button option and that the previous element is a button requesting for margin, add margin
+                && matches!(
+                    &elements[i - 1],
+                    MenuElement::Button {
+                        allow_margin: true,
+                        ..
+                    }
+                )
+            {
                 40
             } else {
                 30

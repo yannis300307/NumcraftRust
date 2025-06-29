@@ -28,6 +28,12 @@ pub enum MenuElement {
     },
     /// A space
     Void { allow_margin: bool, id: usize },
+
+    ButtonOption {
+        text: String,
+        is_pressed: bool,
+        id: usize,
+    },
 }
 
 impl MenuElement {
@@ -36,7 +42,8 @@ impl MenuElement {
             MenuElement::Button { id, .. }
             | MenuElement::Label { id, .. }
             | MenuElement::Void { id, .. }
-            | MenuElement::Slider { id, .. } => *id,
+            | MenuElement::Slider { id, .. }
+            | MenuElement::ButtonOption { id, .. } => *id,
         }
     }
 }
@@ -68,10 +75,10 @@ impl Menu {
             self.cursor_up();
         }
         if just_pressed_keyboard_state.key_down(eadk::input::Key::Right) {
-            self.slide_right();
+            self.cursor_right();
         }
         if just_pressed_keyboard_state.key_down(eadk::input::Key::Left) {
-            self.slide_left();
+            self.cursor_left();
         }
 
         if just_pressed_keyboard_state.key_down(eadk::input::Key::Ok) {
@@ -135,7 +142,7 @@ impl Menu {
         // Iterate unless the element is not a Label or we made a complete loop
         while matches!(
             self.elements[self.selected_index],
-            MenuElement::Label { .. } | MenuElement::Void { .. }
+            MenuElement::Label { .. } | MenuElement::Void { .. } | MenuElement::ButtonOption { .. }
         ) && counter != self.elements.len()
         {
             // If we get to the bottom, we go at the top of the elements
@@ -168,7 +175,7 @@ impl Menu {
         // Iterate unless the element is not a Label or we made a complete loop
         while matches!(
             self.elements[self.selected_index],
-            MenuElement::Label { .. } | MenuElement::Void { .. }
+            MenuElement::Label { .. } | MenuElement::Void { .. } | MenuElement::ButtonOption { .. }
         ) && counter != self.elements.len()
         {
             // If we reach the top, go back to the bottom
@@ -183,13 +190,9 @@ impl Menu {
         self.need_redraw = true;
     }
 
-    pub fn slide_right(&mut self) {
-        if let MenuElement::Slider {
-            text_fn: _,
-            value,
-            step_size,
-            allow_margin: _,
-            id: _,
+    pub fn cursor_right(&mut self) {
+        if let MenuElement::Slider { // If we have a cursor
+            value, step_size, ..
         } = &mut self.elements[self.selected_index]
         {
             *value += *step_size;
@@ -197,22 +200,30 @@ impl Menu {
                 *value = 1.;
             }
             self.need_redraw = true;
+        } else if matches!(self.elements[self.selected_index], MenuElement::Button { .. }) // If the element after the button is a button option
+            && self.selected_index < self.elements.len() - 1
+            && matches!(self.elements[self.selected_index + 1], MenuElement::ButtonOption { .. })
+        {
+            self.selected_index += 1;
+            self.need_redraw = true;
         }
     }
 
-    pub fn slide_left(&mut self) {
+    pub fn cursor_left(&mut self) {
         if let MenuElement::Slider {
-            text_fn: _,
-            value,
-            step_size,
-            allow_margin: _,
-            id: _,
+            value, step_size, ..
         } = &mut self.elements[self.selected_index]
         {
             *value -= *step_size;
             if *value < 0. {
                 *value = 0.;
             }
+            self.need_redraw = true;
+        } else if matches!(self.elements[self.selected_index], MenuElement::ButtonOption { .. }) // If the element after the button is a button option
+            && self.selected_index > 0
+            && matches!(self.elements[self.selected_index - 1], MenuElement::Button { .. })
+        {
+            self.selected_index -= 1;
             self.need_redraw = true;
         }
     }
