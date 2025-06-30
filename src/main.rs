@@ -30,7 +30,7 @@ mod frustum;
 mod menu;
 mod player;
 mod storage_lib;
-mod storage_manager;
+mod save_manager;
 
 #[used]
 #[cfg(target_os = "none")]

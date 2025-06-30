@@ -16,11 +16,11 @@ use crate::{
     menu::{Menu, MenuElement, TextAnchor},
     player::Player,
     renderer::Renderer,
+    save_manager::SaveManager,
     storage_lib::{
         storage_extapp_file_erase, storage_extapp_file_exists, storage_extapp_file_read,
         storage_file_write,
     },
-    storage_manager::SaveManager,
     world::World,
 };
 
@@ -46,12 +46,9 @@ impl Game {
     }
 
     /// The game loop. Handle physic, rendering etc ...
-    pub fn game_loop(&mut self, world_name: &String) -> GameState {
+    pub fn game_loop(&mut self, file_name: &String) -> GameState {
         // Load the world or create it if it doesn't exists yet
-        if self
-            .save_manager
-            .load_from_file(world_name.as_str())
-            .is_ok()
+        if self.save_manager.load_from_file(file_name.as_str()).is_ok()
         // TODO: Show an error message instead
         {
             // Add chunks. Maybe move this code into world (TODO)
@@ -109,9 +106,105 @@ impl Game {
             let current = eadk::timing::millis();
             let delta = (current - last) as f32 / 1000.0;
             last = current;
-            if !self.update_in_game(delta, world_name) {
+            if !self.update_in_game(delta, file_name) {
                 return GameState::GoMainMenu;
             }
+        }
+    }
+
+    pub fn create_world_menu_loop(&mut self, file_name: &String) -> GameState {
+        let mut menu = Menu::new(Vector2::new(10, 20), 300, 1)
+            .with_element(MenuElement::Label {
+                text: "Create new world".to_string(),
+                text_anchor: TextAnchor::Center,
+                allow_margin: true,
+            })
+            .with_element(MenuElement::Entry {
+                placeholder_text: "World name".to_string(),
+                value: String::new(),
+                allow_margin: false,
+                max_len: 20,
+                digits_only: false,
+                id: 0,
+            })
+            .with_element(MenuElement::Entry {
+                placeholder_text: "World seed".to_string(),
+                value: format!("{}", eadk::random() % 1_000_000_000),
+                allow_margin: true,
+                max_len: 9,
+                digits_only: false,
+                id: 1,
+            })
+            .with_element(MenuElement::Button {
+                // TODO : Implement Game Mode
+                text: "Game mode : Creative".to_string(),
+                is_pressed: false,
+                allow_margin: true,
+                id: 2,
+            })
+            .with_element(MenuElement::Button {
+                text: "Create world".to_string(),
+                is_pressed: false,
+                allow_margin: false,
+                id: 3,
+            });
+
+        // Clear the screen
+        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+
+        loop {
+            // Get keyboard state and calculate the new presses
+            let keyboard_state = eadk::input::KeyboardState::scan();
+            let just_pressed_keyboard_state =
+                keyboard_state.get_just_pressed(self.last_keyboard_state);
+            self.last_keyboard_state = keyboard_state;
+
+            // Exit the menu when [Back] is pressed
+            if keyboard_state.key_down(eadk::input::Key::Back) {
+                return GameState::GoSelectWorld;
+            }
+
+            // Handle the navigation in the menu
+            menu.check_inputs(just_pressed_keyboard_state);
+            for element in menu.get_elements() {
+                match element {
+                    MenuElement::Button {
+                        is_pressed: true,
+                        id: 3,
+                        ..
+                    } => {
+                        let mut world_name = String::new();
+                        let mut seed= "1".to_string();
+                        for other_element in menu.get_elements() {
+                            if let MenuElement::Entry { value, id: 0, .. } = &other_element {
+                                world_name = value.clone();
+                            }
+                            if let MenuElement::Entry { value, id: 1, .. } = &other_element {
+                                seed = value.clone();
+                            }
+                        }
+
+                        if world_name.is_empty() {
+                            world_name = "New World".to_string();
+                        }
+
+                        if seed.is_empty() {
+                            seed = format!("{}", eadk::random() % 1_000_000_000);
+                        }
+
+                        // TODO : handle seed
+
+                        self.save_manager.set_world_name(&world_name);
+
+                        return GameState::LoadWorld(file_name.clone());
+                    }
+                    _ => (),
+                }
+            }
+            menu.finish_buttons_handling();
+
+            self.renderer.draw_menu(&mut menu);
+            eadk::timing::msleep(50);
         }
     }
 
@@ -200,8 +293,14 @@ impl Game {
 
         // Max 4 worlds because it's enough for the storage memory amount we have and because. I can't fit more than 4 buttons on the screen ;-)
         for i in 0..4 {
-            let world_name = format!("world{i}.ncw");
-            let world_exists = worlds.contains(&world_name);
+            let filename = format!("world{i}.ncw");
+
+            let world_name = if let Some(world_info) = self.save_manager.get_world_info(&filename) {
+                world_info.world_name
+            } else {
+                filename.clone()
+            };
+            let world_exists = worlds.contains(&filename);
             let button_text = if world_exists {
                 format!("Load {}", world_name)
             } else {
@@ -249,10 +348,14 @@ impl Game {
                         ..
                     } => {
                         let world_slot = *id; // Please change this if you change the button's id. Not 100% safe but who cares about safety?
-                        let world_name = format!("world{world_slot}.ncw");
+                        let filename = format!("world{world_slot}.ncw");
 
-                        // Load the world (and create a new world if it doesn't exists yet)
-                        return GameState::LoadWorld(world_name.to_owned());
+                        if worlds.contains(&filename) {
+                            // Load the world (and create a new world if it doesn't exists yet)
+                            return GameState::LoadWorld(filename.to_owned());
+                        } else {
+                            return GameState::CreateWorld(filename.to_owned());
+                        }
                     }
                     MenuElement::ButtonOption {
                         is_pressed: true,
@@ -260,10 +363,10 @@ impl Game {
                         ..
                     } => {
                         let world_slot = *id; // Please change this if you change the button's id.
-                        let world_name = format!("world{world_slot}.ncw");
+                        let filename = format!("world{world_slot}.ncw");
 
                         // Delete the world
-                        return GameState::DeleteWorld(world_name.to_owned());
+                        return GameState::DeleteWorld(filename.to_owned());
                     }
                     _ => (),
                 }
@@ -526,8 +629,9 @@ impl Game {
                 GameState::GoMainMenu => self.main_menu_loop(),
                 GameState::GoSetting => self.settings_menu_loop(),
                 GameState::GoSelectWorld => self.worlds_select_menu_loop(),
-                GameState::LoadWorld(world_name) => self.game_loop(&world_name),
-                GameState::DeleteWorld(world_name) => self.delete_world_menu_loop(&world_name),
+                GameState::LoadWorld(filename) => self.game_loop(&filename),
+                GameState::DeleteWorld(filename) => self.delete_world_menu_loop(&filename),
+                GameState::CreateWorld(file_name) => self.create_world_menu_loop(&file_name),
                 GameState::Quit => break,
             }
         }
@@ -538,7 +642,8 @@ pub enum GameState {
     GoMainMenu,
     GoSetting,
     GoSelectWorld,
-    LoadWorld(String), // String: World name
+    LoadWorld(String),   // String: filename, String: world name
+    CreateWorld(String), // String: file_name
     DeleteWorld(String),
     Quit,
 }

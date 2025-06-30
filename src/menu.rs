@@ -4,9 +4,7 @@ use alloc::{
 };
 use nalgebra::Vector2;
 
-use crate::eadk::{
-        input::{Key, KeyboardState},
-};
+use crate::eadk::input::{Key, KeyboardState};
 
 pub enum MenuElement {
     /// A simple button
@@ -44,7 +42,9 @@ pub enum MenuElement {
         placeholder_text: String,
         value: String,
         allow_margin: bool,
-        max_len: usize
+        max_len: u8,
+        digits_only: bool,
+        id: usize,
     },
 }
 
@@ -66,10 +66,7 @@ pub struct Menu {
 }
 
 impl Menu {
-    pub fn check_inputs(
-        &mut self,
-        just_pressed_keyboard_state: KeyboardState,
-    ) {
+    pub fn check_inputs(&mut self, just_pressed_keyboard_state: KeyboardState) {
         if just_pressed_keyboard_state.key_down(Key::Down) {
             self.cursor_down();
         }
@@ -95,7 +92,13 @@ impl Menu {
             self.shift_active = !self.shift_active;
         }
 
-        if let MenuElement::Entry { value, max_len, .. } = &mut self.elements[self.selected_index] {
+        if let MenuElement::Entry {
+            value,
+            max_len,
+            digits_only,
+            ..
+        } = &mut self.elements[self.selected_index]
+        {
             if just_pressed_keyboard_state.key_down(Key::Backspace) && value.len() > 0 {
                 value.truncate(value.len() - 1);
                 self.need_redraw = true;
@@ -135,8 +138,8 @@ impl Menu {
                 Key::Zero,
                 Key::Dot,
             ] {
-                if just_pressed_keyboard_state.key_down(key) && value.len() < *max_len {
-                    if self.alpha_active {
+                if just_pressed_keyboard_state.key_down(key) && value.len() < *max_len as usize {
+                    if self.alpha_active && !*digits_only {
                         let mut letter = match key {
                             Key::Exp => "a",
                             Key::Ln => "b",
@@ -174,7 +177,23 @@ impl Menu {
                         if self.shift_active {
                             letter = letter.to_uppercase();
                         }
-                        
+
+                        value.push_str(&letter);
+                        self.need_redraw = true;
+                    } else {
+                        let letter = match key {
+                            Key::One => "1",
+                            Key::Two => "2",
+                            Key::Three => "3",
+                            Key::Four => "4",
+                            Key::Five => "5",
+                            Key::Six => "6",
+                            Key::Seven => "7",
+                            Key::Eight => "8",
+                            Key::Nine => "9",
+                            Key::Zero => "0",
+                            _ => "",
+                        };
                         value.push_str(&letter);
                         self.need_redraw = true;
                     }
