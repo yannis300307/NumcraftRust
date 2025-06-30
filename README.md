@@ -29,25 +29,25 @@ NumcraftRust should run on both N120, N115 and N110 models. You will get better 
 ## Roadmap
 **Here is the current roadmap for the project :**
 - [X] Fix the raycaster
-- [ ] Add textures
-- [X] Add world deletion
-- [ ] Add world creation settings
-- [X] Add a save system with compression
-- [ ] Add collisions
+- [ ] Textures
+- [X] World deletion
+- [ ] World creation settings
+- [X] Save system with compression
+- [ ] Collisions
 - [ ] Better world generation
-- [X] Add a main menu
-- [ ] Add a creative menu to select multiple blocks
-- [X] Add a menu to select between multiple worlds
-- [ ] Add a lightning engine
-- [ ] Add mobs
-- [ ] Add a survival mode
+- [X] Main menu
+- [ ] Creative menu to select multiple blocks
+- [X] Menu to select between multiple worlds
+- [ ] Lightning engine
+- [ ] Mobs
+- [ ] Survival mode
 
 If I have the time:
-- [ ] Add TNT
-- [ ] Add redstone
-- [ ] Add commands support
+- [ ] TNT
+- [ ] Redstone
+- [ ] Commands support
 - [ ] Make a tool to convert Minecraft schematics to Numcraft structures
-- [ ] Add structures such as Villages
+- [ ] Structures such as Villages
 - [ ] Upsilon / Omega compatibility
 
 Good ideas but I will never have the time to do that :
