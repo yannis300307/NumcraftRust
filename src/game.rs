@@ -3,7 +3,7 @@ use alloc::{
     format,
     string::{String, ToString},
 };
-use nalgebra::{Rotation, Vector2, Vector3};
+use nalgebra::{Vector2, Vector3};
 use postcard::from_bytes;
 use serde::{Deserialize, Serialize};
 
@@ -119,8 +119,6 @@ impl Game {
         let mut menu = Menu::new(Vector2::new(10, 70), 300, 2)
             .with_element(MenuElement::Label {
                 text: format!("Delete {}?", world_name),
-                //Do you want to delete {}?
-                //
                 text_anchor: TextAnchor::Center,
                 allow_margin: false,
             })
@@ -158,7 +156,7 @@ impl Game {
             }
 
             // Handle the navigation in the menu
-            menu.check_inputs(keyboard_state, just_pressed_keyboard_state);
+            menu.check_inputs(just_pressed_keyboard_state);
             for element in menu.get_elements() {
                 match element {
                     MenuElement::Button {
@@ -235,7 +233,7 @@ impl Game {
             self.last_keyboard_state = keyboard_state;
 
             // Handle the navigation in the menu
-            menu.check_inputs(keyboard_state, just_pressed_keyboard_state);
+            menu.check_inputs(just_pressed_keyboard_state);
 
             // Exit the menu when [Back] is pressed
             if keyboard_state.key_down(eadk::input::Key::Back) {
@@ -346,7 +344,7 @@ impl Game {
                 return GameState::GoMainMenu;
             }
 
-            menu.check_inputs(keyboard_state, just_pressed_keyboard_state);
+            menu.check_inputs(just_pressed_keyboard_state);
 
             let mut need_redraw = false;
 
@@ -442,7 +440,7 @@ impl Game {
                 keyboard_state.get_just_pressed(self.last_keyboard_state);
             self.last_keyboard_state = keyboard_state;
 
-            menu.check_inputs(keyboard_state, just_pressed_keyboard_state);
+            menu.check_inputs(just_pressed_keyboard_state);
 
             if just_pressed_keyboard_state.key_down(eadk::input::Key::Home) {
                 return GameState::Quit;

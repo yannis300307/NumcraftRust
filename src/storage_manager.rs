@@ -5,7 +5,6 @@ use postcard::{from_bytes, to_allocvec};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    camera::Camera,
     chunk::Chunk,
     constants::{BlockType, world::CHUNK_SIZE},
     player::Player,

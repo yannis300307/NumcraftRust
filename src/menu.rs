@@ -1,7 +1,12 @@
-use alloc::{string::String, vec::Vec};
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
 use nalgebra::Vector2;
 
-use crate::eadk::{self, input::KeyboardState};
+use crate::eadk::{
+        input::{Key, KeyboardState},
+};
 
 pub enum MenuElement {
     /// A simple button
@@ -28,13 +33,22 @@ pub enum MenuElement {
     /// A space
     Void { allow_margin: bool },
 
+    /// An additional button that can be added at the left of an existing button. Must be placed after a Button.
     ButtonOption {
         text: String,
         is_pressed: bool,
         id: usize,
     },
+
+    Entry {
+        placeholder_text: String,
+        value: String,
+        allow_margin: bool,
+        max_len: usize
+    },
 }
 
+#[allow(dead_code)]
 pub enum TextAnchor {
     Left,
     Right,
@@ -47,29 +61,125 @@ pub struct Menu {
     pub width: usize,
     pub selected_index: usize,
     pub need_redraw: bool,
+    alpha_active: bool,
+    shift_active: bool,
 }
 
 impl Menu {
     pub fn check_inputs(
         &mut self,
-        keyboard_state: KeyboardState,
         just_pressed_keyboard_state: KeyboardState,
     ) {
-        if just_pressed_keyboard_state.key_down(eadk::input::Key::Down) {
+        if just_pressed_keyboard_state.key_down(Key::Down) {
             self.cursor_down();
         }
-        if just_pressed_keyboard_state.key_down(eadk::input::Key::Up) {
+        if just_pressed_keyboard_state.key_down(Key::Up) {
             self.cursor_up();
         }
-        if just_pressed_keyboard_state.key_down(eadk::input::Key::Right) {
+        if just_pressed_keyboard_state.key_down(Key::Right) {
             self.cursor_right();
         }
-        if just_pressed_keyboard_state.key_down(eadk::input::Key::Left) {
+        if just_pressed_keyboard_state.key_down(Key::Left) {
             self.cursor_left();
         }
 
-        if just_pressed_keyboard_state.key_down(eadk::input::Key::Ok) {
+        if just_pressed_keyboard_state.key_down(Key::Ok) {
             self.set_pressed(true);
+        }
+
+        if just_pressed_keyboard_state.key_down(Key::Alpha) {
+            self.alpha_active = !self.alpha_active;
+        }
+
+        if just_pressed_keyboard_state.key_down(Key::Shift) {
+            self.shift_active = !self.shift_active;
+        }
+
+        if let MenuElement::Entry { value, max_len, .. } = &mut self.elements[self.selected_index] {
+            if just_pressed_keyboard_state.key_down(Key::Backspace) && value.len() > 0 {
+                value.truncate(value.len() - 1);
+                self.need_redraw = true;
+            }
+            for key in [
+                Key::Xnt,
+                Key::Var,
+                Key::Toolbox,
+                Key::Backspace,
+                Key::Exp,
+                Key::Ln,
+                Key::Log,
+                Key::Imaginary,
+                Key::Comma,
+                Key::Power,
+                Key::Sine,
+                Key::Cosine,
+                Key::Tangent,
+                Key::Pi,
+                Key::Sqrt,
+                Key::Square,
+                Key::Seven,
+                Key::Eight,
+                Key::Nine,
+                Key::LeftParenthesis,
+                Key::RightParenthesis,
+                Key::Four,
+                Key::Five,
+                Key::Six,
+                Key::Multiplication,
+                Key::Division,
+                Key::One,
+                Key::Two,
+                Key::Three,
+                Key::Plus,
+                Key::Minus,
+                Key::Zero,
+                Key::Dot,
+            ] {
+                if just_pressed_keyboard_state.key_down(key) && value.len() < *max_len {
+                    if self.alpha_active {
+                        let mut letter = match key {
+                            Key::Exp => "a",
+                            Key::Ln => "b",
+                            Key::Log => "c",
+                            Key::Imaginary => "d",
+                            Key::Comma => "e",
+                            Key::Power => "f",
+                            Key::Sine => "g",
+                            Key::Cosine => "h",
+                            Key::Tangent => "i",
+                            Key::Pi => "j",
+                            Key::Sqrt => "k",
+                            Key::Square => "l",
+                            Key::Seven => "m",
+                            Key::Eight => "n",
+                            Key::Nine => "o",
+                            Key::LeftParenthesis => "p",
+                            Key::RightParenthesis => "q",
+                            Key::Four => "r",
+                            Key::Five => "s",
+                            Key::Six => "t",
+                            Key::Multiplication => "u",
+                            Key::Division => "v",
+                            Key::One => "w",
+                            Key::Two => "x",
+                            Key::Three => "y",
+                            Key::Plus => "z",
+                            Key::Minus => " ",
+                            Key::Zero => "?",
+                            Key::Dot => "!",
+                            _ => "",
+                        }
+                        .to_string();
+
+                        if self.shift_active {
+                            letter = letter.to_uppercase();
+                        }
+                        
+                        value.push_str(&letter);
+                        self.need_redraw = true;
+                    }
+                }
+            }
         }
     }
     pub fn new(pos: Vector2<usize>, width: usize, start_index: usize) -> Self {
@@ -79,12 +189,16 @@ impl Menu {
             width,
             selected_index: start_index,
             need_redraw: true,
+            alpha_active: true,
+            shift_active: false,
         }
     }
 
     pub fn set_pressed(&mut self, state: bool) {
         let element = &mut self.elements[self.selected_index];
-        if let MenuElement::Button { is_pressed, .. } | MenuElement::ButtonOption { is_pressed, .. } = element {
+        if let MenuElement::Button { is_pressed, .. }
+        | MenuElement::ButtonOption { is_pressed, .. } = element
+        {
             *is_pressed = state
         }
     }
@@ -178,8 +292,11 @@ impl Menu {
     }
 
     pub fn cursor_right(&mut self) {
-        if let MenuElement::Slider { // If we have a cursor
-            value, step_size, ..
+        if let MenuElement::Slider {
+            // If we have a cursor
+            value,
+            step_size,
+            ..
         } = &mut self.elements[self.selected_index]
         {
             *value += *step_size;
