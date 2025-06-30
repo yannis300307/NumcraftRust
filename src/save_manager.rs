@@ -1,6 +1,5 @@
 use alloc::{
-    format,
-    string::{String, ToString},
+    string::String,
     vec::Vec,
 };
 use lz4_flex::{compress, compress_prepend_size, decompress, decompress_size_prepended};
@@ -11,7 +10,6 @@ use serde::{Deserialize, Serialize};
 use crate::{
     chunk::Chunk,
     constants::{BlockType, world::CHUNK_SIZE},
-    eadk,
     player::Player,
     storage_lib::{
         storage_extapp_file_erase, storage_extapp_file_exists,
