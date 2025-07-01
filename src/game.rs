@@ -77,11 +77,17 @@ impl Game {
             self.world.set_seed(world_info.world_seed);
         } else {
             self.world.load_area(0, 4, 0, 4, 0, 4);
+
+            let player_spawn_pos = Vector3::new(
+                16.,
+                (self.world.get_terrain_height(Vector2::new(16, 16)) - 2) as f32,
+                16.,
+            );
             self.player.set_pos_rotation(
                 &mut self.renderer.camera,
                 Vector3::new(0., 0., 0.),
-                Vector3::new(16., 16., 16.),
-            ); // Hard codded map center. TODO : calculate height if random seed generation is implemented (it will)
+                player_spawn_pos,
+            );
         }
 
         self.save_manager.clean(); // Clear save manager to save memory
@@ -179,7 +185,7 @@ impl Game {
                         ..
                     } => {
                         let mut world_name = String::new();
-                        let mut seed= "1".to_string();
+                        let mut seed = "1".to_string();
                         for other_element in menu.get_elements() {
                             if let MenuElement::Entry { value, id: 0, .. } = &other_element {
                                 world_name = value.clone();
