@@ -190,7 +190,7 @@ impl Game {
                         }
 
                         if world_name.is_empty() {
-                            world_name = "New World".to_string();
+                            world_name = "Unnamed".to_string();
                         }
 
                         if seed.is_empty() {
