@@ -11,6 +11,7 @@ use crate::{
 
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 
+#[repr(u8)]
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum QuadDir {
     Front = 1,
