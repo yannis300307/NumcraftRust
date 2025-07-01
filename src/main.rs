@@ -31,6 +31,7 @@ mod menu;
 mod player;
 mod storage_lib;
 mod save_manager;
+mod inventory;
 
 #[used]
 #[cfg(target_os = "none")]
