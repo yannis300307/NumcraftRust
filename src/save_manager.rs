@@ -1,7 +1,4 @@
-use alloc::{
-    string::String,
-    vec::Vec,
-};
+use alloc::{string::String, vec::Vec};
 use lz4_flex::{compress, compress_prepend_size, decompress, decompress_size_prepended};
 use nalgebra::Vector3;
 use postcard::{from_bytes, to_allocvec};
@@ -28,12 +25,14 @@ pub struct PlayerData {
 #[derive(Serialize, Deserialize)]
 pub struct WorldInfo {
     pub world_name: String,
+    world_seed: i32,
 }
 
 impl WorldInfo {
     pub fn new() -> Self {
         WorldInfo {
             world_name: String::new(),
+            world_seed: 1,
         }
     }
 }
@@ -60,6 +59,10 @@ impl SaveManager {
             player_data: PlayerData::new(),
             world_info: WorldInfo::new(),
         }
+    }
+
+    pub fn set_world_seed(&mut self, seed: i32) {
+        self.world_info.world_seed = seed;
     }
 
     pub fn set_world_name(&mut self, world_name: &String) {

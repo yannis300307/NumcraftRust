@@ -192,8 +192,10 @@ impl Game {
                             seed = format!("{}", eadk::random() % 1_000_000_000);
                         }
 
-                        // TODO : handle seed
+                        let world_seed = seed.parse::<i32>().unwrap_or(1);
+                        self.world.set_seed(world_seed);
 
+                        self.save_manager.set_world_seed(world_seed);
                         self.save_manager.set_world_name(&world_name);
 
                         return GameState::LoadWorld(file_name.clone());
