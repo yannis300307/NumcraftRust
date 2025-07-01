@@ -25,7 +25,7 @@ pub struct PlayerData {
 #[derive(Serialize, Deserialize)]
 pub struct WorldInfo {
     pub world_name: String,
-    world_seed: i32,
+    pub world_seed: i32,
 }
 
 impl WorldInfo {
@@ -59,6 +59,10 @@ impl SaveManager {
             player_data: PlayerData::new(),
             world_info: WorldInfo::new(),
         }
+    }
+
+    pub fn get_current_loaded_world_info(&self) -> &WorldInfo {
+        &self.world_info
     }
 
     pub fn set_world_seed(&mut self, seed: i32) {

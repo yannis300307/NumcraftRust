@@ -65,11 +65,16 @@ impl Game {
                 }
             }
 
+            // Load player data
             self.player.set_pos_rotation(
                 &mut self.renderer.camera,
                 self.save_manager.get_player_rot(),
                 self.save_manager.get_player_pos(),
             );
+
+            // Load world info
+            let world_info = self.save_manager.get_current_loaded_world_info();
+            self.world.set_seed(world_info.world_seed);
         } else {
             self.world.load_area(0, 4, 0, 4, 0, 4);
             self.player.set_pos_rotation(
@@ -123,7 +128,7 @@ impl Game {
                 placeholder_text: "World name".to_string(),
                 value: String::new(),
                 allow_margin: false,
-                max_len: 20,
+                max_len: 15,
                 digits_only: false,
                 id: 0,
             })
@@ -132,7 +137,7 @@ impl Game {
                 value: format!("{}", eadk::random() % 1_000_000_000),
                 allow_margin: true,
                 max_len: 9,
-                digits_only: false,
+                digits_only: true,
                 id: 1,
             })
             .with_element(MenuElement::Button {
