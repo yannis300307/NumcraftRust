@@ -13,12 +13,7 @@ Numcraft running on actual N0110 Numworks on latest Epsilon. (more than 40 FPS o
 Note that this is not the final result but the current state of the project.
 
 ## Current project state
-At that time, on the main branch, the app is capable of:
-- Rendering multiple chunks
-- Loading chunks generated with noise around the camera
-- Having multiple colors for each blocks
-- Setting the light level for each individual quad
-- Breaking and placing blocks (only stone for now)
+[See Roadmap below]
 
 The program runs at 10-20 FPS on N0110 and 30-50 FPS on N0120.
 
@@ -31,7 +26,7 @@ NumcraftRust should run on both N120, N115 and N110 models. You will get better 
 - [X] Fix the raycaster
 - [ ] Textures
 - [X] World deletion
-- [ ] World creation settings
+- [X] World creation settings
 - [X] Save system with compression
 - [ ] Collisions
 - [ ] Better world generation
