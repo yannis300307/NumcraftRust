@@ -937,15 +937,57 @@ impl Renderer {
                         element_bg_color,
                     );
                 }
-
                 MenuElement::Void { .. } => {}
+                MenuElement::Entry {
+                    placeholder_text,
+                    value,
+                    ..
+                } => {
+                    push_rect_uniform(default_rect, element_bg_color);
+                    draw_outline();
+                    let text_x = menu.pos.x + 10;
+                    if value.is_empty() {
+                        eadk::display::draw_string(
+                            &placeholder_text,
+                            eadk::Point {
+                                x: text_x as u16,
+                                y: (element_y + 6) as u16,
+                            },
+                            true,
+                            MENU_TEXT_COLOR,
+                            element_bg_color,
+                        );
+                    } else {
+                        eadk::display::draw_string(
+                            &value,
+                            eadk::Point {
+                                x: text_x as u16,
+                                y: (element_y + 6) as u16,
+                            },
+                            true,
+                            MENU_TEXT_COLOR,
+                            element_bg_color,
+                        );
+                    }
+                    push_rect_uniform(
+                        Rect {
+                            x: (text_x + value.len() * 10 ) as u16,
+                            y: (element_y + 6) as u16,
+                            width: 2,
+                            height: 18,
+                        },
+                        MENU_TEXT_COLOR,
+                    );
+                }
             }
 
             element_y += if i < elements.len() - 1
-                && matches!(&elements[i + 1], MenuElement::ButtonOption { .. }) // keep the same y if we have a button option next to a button
+                && matches!(&elements[i + 1], MenuElement::ButtonOption { .. })
+            // keep the same y if we have a button option next to a button
             {
                 0
-            } else if matches!( // If the element needs margin, add and additional margin
+            } else if matches!(
+                // If the element needs margin, add and additional margin
                 &element,
                 MenuElement::Label {
                     allow_margin: true,
@@ -957,6 +999,9 @@ impl Renderer {
                     allow_margin: true,
                     ..
                 } | MenuElement::Void {
+                    allow_margin: true,
+                    ..
+                } | MenuElement::Entry {
                     allow_margin: true,
                     ..
                 }

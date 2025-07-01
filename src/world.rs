@@ -8,7 +8,7 @@ use crate::mesh::{Mesh, Quad};
 use alloc::vec::Vec;
 
 use fastnoise_lite::FastNoiseLite;
-use nalgebra::Vector3;
+use nalgebra::{Vector2, Vector3};
 
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 
@@ -99,6 +99,12 @@ impl World {
         chunks
     }
 
+    /// Return the terrain height at the given world block x-z coordinates. The vector must be (x, z)!
+    pub fn get_terrain_height(&self, pos: Vector2<isize>) -> isize {
+        let negative_1_to_1 = self.gen_noise.get_noise_2d((pos.x) as f32, (pos.y) as f32);
+        roundf((negative_1_to_1 + 1.) / 2. * 16.0) as isize
+    }
+
     /// Add a chunk and return a reference to it as an option
     pub fn add_chunk(&mut self, pos: Vector3<isize>) {
         let chunk = Chunk::new(pos);
@@ -128,6 +134,11 @@ impl World {
     /// Delete all loaded chunks
     pub fn clear(&mut self) {
         self.chunks.clear();
+    }
+
+    /// Set the world generation seed
+    pub fn set_seed(&mut self, seed: i32) {
+        self.gen_noise.seed = seed;
     }
 
     /// Generate the chunks around the given position The position is in global blocks space, not world chunk space

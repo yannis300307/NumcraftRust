@@ -26,6 +26,18 @@ pub fn storage_extapp_file_read(filename: &str) -> Option<Vec<u8>> {
     Some(unsafe { core::slice::from_raw_parts(array_pointer, lenght).to_vec() })
 }
 
+pub fn storage_extapp_file_read_header(filename: &str, header_len: usize) -> Option<Vec<u8>> {
+    let c_string = ffi::CString::new(filename).unwrap();
+    let mut _lenght: usize = 0;
+    let array_pointer = unsafe { extapp_fileRead(c_string.as_ptr(), &mut _lenght as *mut usize) };
+
+    if array_pointer.is_null() {
+        return None;
+    }
+
+    Some(unsafe { core::slice::from_raw_parts(array_pointer, header_len).to_vec() })
+}
+
 pub fn storage_extapp_file_erase(filename: &str) -> bool {
     let c_string = ffi::CString::new(filename).unwrap();
     unsafe { extapp_fileErase(c_string.as_ptr()) }
