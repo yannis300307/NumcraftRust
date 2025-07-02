@@ -11,17 +11,10 @@ use crate::{
     constants::{
         menu::{MENU_BACKGROUND_COLOR, SETTINGS_FILENAME},
         rendering::{FOV, MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
-    },
-    eadk::{self, Color, Point, SCREEN_RECT, input::KeyboardState},
-    menu::{Menu, MenuElement, TextAnchor},
-    player::Player,
-    renderer::Renderer,
-    save_manager::SaveManager,
-    storage_lib::{
+    }, eadk::{self, input::KeyboardState, Color, Point, SCREEN_RECT}, inventory::Inventory, menu::{Menu, MenuElement, TextAnchor}, player::Player, renderer::Renderer, save_manager::SaveManager, storage_lib::{
         storage_extapp_file_erase, storage_extapp_file_exists, storage_extapp_file_read,
         storage_file_write,
-    },
-    world::World,
+    }, world::World
 };
 
 pub struct Game {
@@ -647,6 +640,14 @@ impl Game {
                 GameState::CreateWorld(file_name) => self.create_world_menu_loop(&file_name),
                 GameState::Quit => break,
             }
+        }
+    }
+
+    pub fn test_loop(&mut self) {
+        let test_inventory = Inventory::new(24);
+        loop {
+            self.renderer.draw_inventory(&test_inventory);
+            eadk::display::wait_for_vblank();
         }
     }
 }

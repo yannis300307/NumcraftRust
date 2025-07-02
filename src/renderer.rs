@@ -24,6 +24,7 @@ use crate::{
         display::{push_rect_uniform, wait_for_vblank},
     },
     frustum::Frustum,
+    inventory::Inventory,
     menu::{Menu, MenuElement, TextAnchor},
     mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D},
     player::Player,
@@ -971,7 +972,7 @@ impl Renderer {
                     }
                     push_rect_uniform(
                         Rect {
-                            x: (text_x + value.len() * 10 ) as u16,
+                            x: (text_x + value.len() * 10) as u16,
                             y: (element_y + 6) as u16,
                             width: 2,
                             height: 18,
@@ -1023,5 +1024,24 @@ impl Renderer {
         }
 
         wait_for_vblank();
+    }
+
+    pub fn draw_inventory(&mut self, inventory: &Inventory) {
+        let slots = inventory.get_all_slots();
+
+        for i in 0..slots.len() {
+            let x = i % 6;
+            let y = i / 6;
+
+            push_rect_uniform(
+                Rect {
+                    x: 16 + (x * 48) as u16,
+                    y: 16 + (y * 48) as u16,
+                    width: 40,
+                    height: 40,
+                },
+                Color::from_888(100, 100, 100),
+            );
+        }
     }
 }

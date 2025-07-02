@@ -3,7 +3,7 @@ use core::{mem, usize};
 use alloc::vec::{self, Vec};
 
 #[repr(u8)]
-enum ItemType {
+pub enum ItemType {
     Air = 0,
 
     StoneBlock = 1,
@@ -11,7 +11,7 @@ enum ItemType {
     DirtBlock = 3,
 }
 
-struct ItemStack {
+pub struct ItemStack {
     item_type: ItemType,
     amount: u8,
 }
@@ -25,14 +25,18 @@ impl ItemStack {
     }
 }
 
-struct Inventory {
+pub struct Inventory {
     slots: Vec<ItemStack>,
+
 }
 
 /// A generic inventory. Can be the player inventory, a chest inventory, etc... All operations works by swaping items to avoid duplication.
 impl Inventory {
     pub fn new(size: usize) -> Self {
-        let slots = Vec::with_capacity(size);
+        let mut slots = Vec::with_capacity(size);
+        for _ in 0..size {
+            slots.push(ItemStack::void());
+        }
         Inventory { slots: slots }
     }
 
@@ -76,5 +80,9 @@ impl Inventory {
 
             Some(())
         }
+    }
+
+    pub fn get_all_slots(&self) -> &Vec<ItemStack> {
+        &self.slots
     }
 }
