@@ -4,6 +4,8 @@ pub struct Color {
     pub rgb565: u16,
 }
 
+pub const COLOR_BLACK: Color = Color::from_888(0, 0, 0);
+
 impl Color {
     #[inline]
     pub const fn from_components(r: u16, g: u16, b: u16) -> Self {
@@ -90,12 +92,30 @@ pub mod display {
     use super::Color;
     use super::Point;
     use super::Rect;
+    use alloc::vec::Vec;
 
     #[cfg(target_os = "none")]
     pub fn push_rect(rect: Rect, pixels: &[Color]) {
         unsafe {
             eadk_display_push_rect(rect, pixels.as_ptr());
         }
+    }
+
+    #[cfg(target_os = "none")]
+    pub fn pull_rect(rect: Rect) -> Vec<Color> {
+        let size = rect.width as usize * rect.height as usize;
+        let mut vec: Vec<Color> = Vec::with_capacity(size);
+        for _ in 0..size {
+            use crate::eadk::COLOR_BLACK;
+
+            vec.push(COLOR_BLACK);
+        }
+
+        unsafe {
+            eadk_display_pull_rect(rect, vec.as_mut_slice().as_mut_ptr());
+        }
+
+        vec
     }
 
     #[cfg(not(target_os = "none"))]
@@ -163,6 +183,7 @@ pub mod display {
         fn eadk_display_push_rect_uniform(rect: Rect, color: Color);
         fn eadk_display_push_rect(rect: Rect, color: *const Color);
         fn eadk_display_wait_for_vblank();
+        fn eadk_display_pull_rect(rect: Rect, color: *mut Color);
         fn eadk_display_draw_string(
             text: *const u8,
             point: Point,
@@ -513,33 +534,37 @@ pub mod input {
 
 use core::panic::PanicInfo;
 
-use core::cmp::min;
+use alloc::string::String;
 
 fn write_wrapped(text: &str, limit: usize) {
-    let lines = text.len().div_ceil(limit); // Calcul du nombre de lignes
+    let mut line_count = 0;
 
-    if !text.is_empty() {
-        for i in 0..lines {
-            let start = i * limit;
-            let end = min(start + limit, text.len());
-            let tt = &text[start..end];
+    let mut line = String::new();
+    for i in 0..text.len() {
+        line.push(text.as_bytes()[i] as char);
+
+        if line.len() >= limit || text.as_bytes()[i] as char == '\n' || i >= text.len() - 1 {
             display::draw_string(
-                tt,
+                line.as_str(),
                 Point {
                     x: 10,
-                    y: (10 + 20 * i) as u16,
+                    y: (10 + 20 * line_count) as u16,
                 },
                 false,
                 Color { rgb565: 65503 },
                 Color { rgb565: 63488 },
             );
+            line.clear();
+            line_count += 1;
         }
     }
 }
 
 #[cfg(target_os = "none")]
 #[panic_handler]
-fn panic(_panic: &PanicInfo<'_>) -> ! {
+fn panic(panic: &PanicInfo<'_>) -> ! {
+    use alloc::format;
+
     display::push_rect_uniform(
         Rect {
             x: 0,
@@ -550,8 +575,10 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
         Color { rgb565: 63488 },
     ); // Show a red screen
 
-    if let Some(message) = _panic.message().as_str() {
-        if let Some(loc) = _panic.location() {
+    write_wrapped(format!("{}", panic).as_str(), 42);
+
+    /*if let Some(message) = panic.message().as_str() {
+        if let Some(loc) = panic.location() {
             let mut buf = [0u8; 512];
             let f = format_no_std::show(
                 &mut buf,
@@ -569,7 +596,7 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
         } else {
             write_wrapped(message, 42);
         };
-    } else if let Some(loc) = _panic.location() {
+    } else if let Some(loc) = panic.location() {
         let mut buf = [0u8; 512];
         let f = format_no_std::show(
             &mut buf,
@@ -591,8 +618,10 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
             Color { rgb565: 65503 },
             Color { rgb565: 63488 },
         );
-    }
-    loop {} // FIXME: Do something better. Exit the app maybe?
+    }*/
+    loop {
+        timing::msleep(50);
+    } // FIXME: Do something better. Exit the app maybe?
 }
 
 pub fn debug_info(text: &str, wait: usize) {
