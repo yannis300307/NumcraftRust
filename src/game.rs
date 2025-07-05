@@ -645,6 +645,7 @@ impl Game {
 
     pub fn test_loop(&mut self) {
         let test_inventory = Inventory::new(24);
+        self.renderer.blur_screen();
         loop {
             self.renderer.draw_inventory(&test_inventory);
             eadk::display::wait_for_vblank();

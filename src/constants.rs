@@ -14,6 +14,8 @@ pub mod rendering {
     pub const MAX_TRIANGLES: usize = 1300;
 
     pub const MAX_RENDER_DISTANCE: usize = 2; // You shouldn't go higher
+
+    pub const BLURING_SCREEN_SUBDIVISION: usize = 5;
 }
 
 pub mod menu {

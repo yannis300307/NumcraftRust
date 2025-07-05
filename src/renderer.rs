@@ -4,6 +4,7 @@ use alloc::format;
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
 
+use libm::sqrtf;
 use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
 use core::{cmp::Ordering, f32, mem::swap};
@@ -20,8 +21,8 @@ use crate::{
         world::CHUNK_SIZE,
     },
     eadk::{
-        self, Color, Rect,
-        display::{push_rect_uniform, wait_for_vblank},
+        self, COLOR_BLACK, Color, Rect, debug_info,
+        display::{push_rect, push_rect_uniform, wait_for_vblank},
     },
     frustum::Frustum,
     inventory::Inventory,
@@ -1026,6 +1027,60 @@ impl Renderer {
         wait_for_vblank();
     }
 
+    pub fn blur_screen(&self) {
+        const BLURING_TILE_WIDTH: usize = SCREEN_WIDTH / BLURING_SCREEN_SUBDIVISION;
+        const BLURING_TILE_HEIGHT: usize = SCREEN_HEIGHT / BLURING_SCREEN_SUBDIVISION;
+        const BLURING_RADIUS: isize = 2;
+
+        for x in 0..BLURING_SCREEN_SUBDIVISION {
+            for y in 0..BLURING_SCREEN_SUBDIVISION {
+                let tile_x = BLURING_TILE_WIDTH * x;
+                let tile_y = BLURING_TILE_HEIGHT * y;
+                let rect = Rect {
+                    x: tile_x as u16,
+                    y: tile_y as u16,
+                    width: BLURING_TILE_WIDTH as u16,
+                    height: BLURING_TILE_HEIGHT as u16,
+                };
+                let pixels = eadk::display::pull_rect(rect);
+
+                let mut new_pixels = [COLOR_BLACK; BLURING_TILE_WIDTH * BLURING_TILE_HEIGHT];
+                for p_x in 0..BLURING_TILE_WIDTH {
+                    for p_y in 0..BLURING_TILE_HEIGHT {
+                        let mut total_color = (0, 0, 0);
+                        let mut pixels_count = 0;
+                        for neighbor_x in (p_x as isize - BLURING_RADIUS).max(0) as usize
+                            ..(p_x as isize + BLURING_RADIUS).min(BLURING_TILE_WIDTH as isize)
+                                as usize
+                        {
+                            for neighbor_y in (p_y as isize - BLURING_RADIUS).max(0) as usize
+                                ..(p_y as isize + BLURING_RADIUS).min(BLURING_TILE_HEIGHT as isize)
+                                    as usize
+                            {
+                                let components = pixels
+                                    [neighbor_x + neighbor_y * BLURING_TILE_WIDTH]
+                                    .get_components();
+                                total_color.0 += components.0 as usize;
+                                total_color.1 += components.1 as usize;
+                                total_color.2 += components.2 as usize;
+
+                                pixels_count += 1;
+                            }
+                        }
+
+                        new_pixels[p_x + p_y * BLURING_TILE_WIDTH] = Color::from_components(
+                            (total_color.0 / pixels_count) as u16,
+                            (total_color.1 / pixels_count) as u16,
+                            (total_color.2 / pixels_count) as u16,
+                        );
+                    }
+                }
+
+                push_rect(rect, &new_pixels);
+            }
+        }
+    }
+
     pub fn draw_inventory(&mut self, inventory: &Inventory) {
         let slots = inventory.get_all_slots();
 
@@ -1035,8 +1090,8 @@ impl Renderer {
 
             push_rect_uniform(
                 Rect {
-                    x: 16 + (x * 48) as u16,
-                    y: 16 + (y * 48) as u16,
+                    x: 20 + (x * 48) as u16,
+                    y: 20 + (y * 48) as u16,
                     width: 40,
                     height: 40,
                 },

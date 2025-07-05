@@ -577,48 +577,6 @@ fn panic(panic: &PanicInfo<'_>) -> ! {
 
     write_wrapped(format!("{}", panic).as_str(), 42);
 
-    /*if let Some(message) = panic.message().as_str() {
-        if let Some(loc) = panic.location() {
-            let mut buf = [0u8; 512];
-            let f = format_no_std::show(
-                &mut buf,
-                format_args!(
-                    "Error occured at {} line {} col {} : {}",
-                    loc.file(),
-                    loc.line(),
-                    loc.column(),
-                    message
-                ),
-            )
-            .unwrap();
-
-            write_wrapped(f, 42);
-        } else {
-            write_wrapped(message, 42);
-        };
-    } else if let Some(loc) = panic.location() {
-        let mut buf = [0u8; 512];
-        let f = format_no_std::show(
-            &mut buf,
-            format_args!(
-                "Error occured at {} line {} col {}",
-                loc.file(),
-                loc.line(),
-                loc.column(),
-            ),
-        )
-        .unwrap();
-
-        write_wrapped(f, 42);
-    } else {
-        display::draw_string(
-            "Unknow Error Occured",
-            Point { x: 10, y: 10 },
-            false,
-            Color { rgb565: 65503 },
-            Color { rgb565: 63488 },
-        );
-    }*/
     loop {
         timing::msleep(50);
     } // FIXME: Do something better. Exit the app maybe?
