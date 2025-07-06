@@ -2,14 +2,7 @@ use core::{mem, usize};
 
 use alloc::vec::{self, Vec};
 
-#[repr(u8)]
-pub enum ItemType {
-    Air = 0,
-
-    StoneBlock = 1,
-    GrassBlock = 2,
-    DirtBlock = 3,
-}
+use crate::constants::ItemType;
 
 pub struct ItemStack {
     item_type: ItemType,
@@ -27,7 +20,8 @@ impl ItemStack {
 
 pub struct Inventory {
     slots: Vec<ItemStack>,
-
+    pub modified: bool,
+    selected_slot: usize,
 }
 
 /// A generic inventory. Can be the player inventory, a chest inventory, etc... All operations works by swaping items to avoid duplication.
@@ -37,7 +31,11 @@ impl Inventory {
         for _ in 0..size {
             slots.push(ItemStack::void());
         }
-        Inventory { slots: slots }
+        Inventory {
+            slots: slots,
+            modified: true,
+            selected_slot: 9,
+        }
     }
 
     pub fn swap_item_stack(&mut self, slot_index: usize, other: &mut ItemStack) -> Option<()> {
@@ -47,6 +45,7 @@ impl Inventory {
             let item_stack = &mut self.slots[slot_index];
 
             mem::swap(other, item_stack);
+            self.modified = true;
 
             Some(())
         }
@@ -67,16 +66,22 @@ impl Inventory {
             None
         } else {
             self.slots.swap(first, second);
+            self.modified = true;
 
             Some(())
         }
     }
 
-    pub fn replace_slot_item_stack(&mut self, slot_index: usize, item_stack: ItemStack) -> Option<()> {
+    pub fn replace_slot_item_stack(
+        &mut self,
+        slot_index: usize,
+        item_stack: ItemStack,
+    ) -> Option<()> {
         if slot_index >= self.slots.len() {
             None
         } else {
             self.slots[slot_index] = item_stack;
+            self.modified = true;
 
             Some(())
         }

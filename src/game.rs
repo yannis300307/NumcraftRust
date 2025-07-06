@@ -619,6 +619,7 @@ impl Game {
 
         self.renderer
             .draw_game(&mut self.world, &self.player, 1.0 / delta);
+        self.renderer.blur_screen();
 
         //eadk::timing::msleep(20);
         true
@@ -644,11 +645,14 @@ impl Game {
     }
 
     pub fn test_loop(&mut self) {
-        let test_inventory = Inventory::new(24);
+        let mut test_inventory = Inventory::new(24);
         self.renderer.blur_screen();
         loop {
-            self.renderer.draw_inventory(&test_inventory);
+            self.renderer.draw_inventory(&test_inventory, "Player inventory");
+
+            test_inventory.modified = false;
             eadk::display::wait_for_vblank();
+            eadk::timing::msleep(100);
         }
     }
 }

@@ -49,6 +49,26 @@ pub enum BlockType {
     Dirt = 3,
 }
 
+#[repr(u8)]
+pub enum ItemType {
+    Air = 0,
+
+    StoneBlock = 1,
+    GrassBlock = 2,
+    DirtBlock = 3,
+}
+
+impl ItemType {
+     pub fn get_texture_id(&self) -> u8 {
+        match *self {
+            ItemType::StoneBlock => 1,
+            ItemType::GrassBlock => 2,
+            ItemType::DirtBlock => 3,
+            _=> 0
+        }
+    }
+}
+
 impl BlockType {
     pub fn is_air(&self) -> bool {
         *self == BlockType::Air

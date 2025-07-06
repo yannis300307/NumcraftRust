@@ -22,7 +22,7 @@ use crate::{
     },
     eadk::{
         self, COLOR_BLACK, Color, Rect, debug_info,
-        display::{push_rect, push_rect_uniform, wait_for_vblank},
+        display::{pull_rect, push_rect, push_rect_uniform, wait_for_vblank},
     },
     frustum::Frustum,
     inventory::Inventory,
@@ -62,7 +62,9 @@ const CROSS_WIDTH: usize = 14;
 const CROSS_HEIGHT: usize = 14;
 
 const FONT_CHAR_WIDTH: usize = 11;
-static FONT_ORDER: &str = "!\"_$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^+`abcdefghijklmnopqrstuvwxyz{|}~€";
+static FONT_ORDER: &str = "!\" $%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^+`abcdefghijklmnopqrstuvwxyz{|}~€";
+
+static TILESET_DATA: &[u8] = include_bytes!("../target/tileset.bin");
 
 /// Fill a triangle in the frame buffer
 fn fill_triangle(
@@ -571,7 +573,7 @@ impl Renderer {
 
                     let pix_x = pos.x + x + text_cursor;
 
-                    if pix_x > SCREEN_TILE_WIDTH {
+                    if pix_x >= SCREEN_TILE_WIDTH {
                         continue;
                     }
 
@@ -580,6 +582,45 @@ impl Renderer {
             }
             text_cursor += FONT_CHAR_WIDTH;
         }
+    }
+
+    fn draw_string_no_bg_on_screen(&mut self, text: &str, pos: Vector2<usize>) {
+        let mut text_cursor: usize = 0;
+
+        let rect_width = FONT_CHAR_WIDTH * text.len();
+        let rect = Rect {
+            x: pos.x as u16,
+            y: pos.y as u16,
+            width: rect_width as u16,
+            height: FONT_HEIGHT as u16,
+        };
+
+        let mut bg_pixels = pull_rect(rect);
+
+        for char in text.chars() {
+            let font_index = FONT_ORDER.chars().position(|c| c == char).unwrap();
+
+            let font_pixel_index = font_index * FONT_CHAR_WIDTH;
+
+            for x in 0..FONT_CHAR_WIDTH {
+                for y in 0..FONT_HEIGHT {
+                    let pixel_value = FONT_DATA[(font_pixel_index + x) + y * FONT_WIDTH];
+
+                    let pix_x = x + text_cursor;
+
+                    if pix_x >= rect_width {
+                        continue;
+                    }
+
+                    let rgb565 = bg_pixels[pix_x + y * rect_width].apply_light(255 - pixel_value);
+
+                    bg_pixels[pix_x + y * rect_width] = rgb565;
+                }
+            }
+            text_cursor += FONT_CHAR_WIDTH;
+        }
+
+        push_rect(rect, &bg_pixels);
     }
 
     fn add_quad_to_render(
@@ -1081,9 +1122,47 @@ impl Renderer {
         }
     }
 
-    pub fn draw_inventory(&mut self, inventory: &Inventory) {
+    fn draw_scalled_tile_on_screen(&mut self, texture_id: u8, pos: Vector2<u16>, scale: usize) {
+        let tileset_x = (texture_id % 16) as usize * 8;
+        let tileset_y = (texture_id / 16) as usize * 8;
+        //let size = (8*scale).pow(2);
+
+        //let pixels: Vec<Color> = Vec::with_capacity(size);
+
+        for x in 0..8 {
+            for y in 0..8 {
+                let texture_pixel_index = ((tileset_x + x) + (tileset_y + y) * 128) * 2;
+                let pixel = u16::from_be_bytes([
+                    TILESET_DATA[texture_pixel_index],
+                    TILESET_DATA[texture_pixel_index + 1],
+                ]);
+
+                push_rect_uniform(
+                    Rect {
+                        x: pos.x + (x * scale) as u16,
+                        y: pos.y + (y * scale) as u16,
+                        width: scale as u16,
+                        height: scale as u16,
+                    },
+                    Color { rgb565: pixel },
+                );
+            }
+        }
+    }
+
+    pub fn draw_inventory(&mut self, inventory: &Inventory, title: &str) {
+        if !inventory.modified {
+            return;
+        }
+
         let slots = inventory.get_all_slots();
 
+        self.draw_string_no_bg_on_screen(
+            title,
+            Vector2::new((320 - title.len() * FONT_CHAR_WIDTH) / 2, 10),
+        );
+
+        // Draw the inventory slots
         for i in 0..slots.len() {
             let x = i % 6;
             let y = i / 6;
@@ -1091,11 +1170,63 @@ impl Renderer {
             push_rect_uniform(
                 Rect {
                     x: 20 + (x * 48) as u16,
-                    y: 20 + (y * 48) as u16,
+                    y: 40 + (y * 48) as u16,
                     width: 40,
                     height: 40,
                 },
+                Color::from_888(200, 200, 200),
+            );
+            push_rect_uniform(
+                Rect {
+                    x: 19 + (x * 48) as u16,
+                    y: 40 + (y * 48) as u16,
+                    width: 1,
+                    height: 40,
+                },
                 Color::from_888(100, 100, 100),
+            );
+            push_rect_uniform(
+                Rect {
+                    x: 20 + (x * 48) as u16 + 40,
+                    y: 40 + (y * 48) as u16,
+                    width: 1,
+                    height: 40,
+                },
+                Color::from_888(100, 100, 100),
+            );
+            push_rect_uniform(
+                Rect {
+                    x: 19 + (x * 48) as u16,
+                    y: 39 + (y * 48) as u16,
+                    width: 42,
+                    height: 1,
+                },
+                Color::from_888(100, 100, 100),
+            );
+            push_rect_uniform(
+                Rect {
+                    x: 19 + (x * 48) as u16,
+                    y: 40 + (y * 48) as u16 + 40,
+                    width: 42,
+                    height: 1,
+                },
+                Color::from_888(100, 100, 100),
+            );
+
+            push_rect_uniform(
+                Rect {
+                    x: 22 + (x * 48) as u16,
+                    y: 42 + (y * 48) as u16,
+                    width: 36,
+                    height: 36,
+                },
+                Color::from_888(150, 150, 150),
+            );
+
+            self.draw_scalled_tile_on_screen(
+                2,
+                Vector2::new(24 + (x * 48) as u16, 44 + (y * 48) as u16),
+                4,
             );
         }
     }

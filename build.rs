@@ -59,6 +59,24 @@ fn main() {
     println!("Converting cross");
     convert_image("cross");
 
+    // Convert tileset
+    println!("cargo:rerun-if-changed=assets/tileset.png");
+    println!("Converting tileset");
+
+    let img = ImageReader::open(format!("assets/tileset.png").as_str())
+        .unwrap()
+        .decode()
+        .unwrap();
+
+    let mut data:Vec<u8> = Vec::new();
+
+    for pix in img.pixels() {
+        data.extend((((pix.2.0[0] as u16 & 0b11111000) << 8) | ((pix.2.0[1] as u16  & 0b11111100) << 3) | (pix.2.0[2] as u16 >> 3)).to_be_bytes());
+    }
+
+    fs::write(format!("target/tileset.bin").as_str(), data).unwrap();
+
+    // Compile storage.c
     unsafe { std::env::set_var("CC", "arm-none-eabi-gcc") };
 
     let program = if cfg!(windows) {"C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx.cmd"} else {"npx"};
