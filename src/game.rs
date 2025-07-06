@@ -653,16 +653,6 @@ impl Game {
     }
 
     pub fn player_inventory_loop(&mut self) {
-        let mut test_inventory = Inventory::new(24);
-
-        test_inventory.replace_slot_item_stack(3, ItemStack::new(crate::constants::ItemType::DirtBlock, 4));
-        test_inventory.replace_slot_item_stack(7, ItemStack::new(crate::constants::ItemType::GrassBlock, 1));
-        test_inventory.replace_slot_item_stack(16, ItemStack::new(crate::constants::ItemType::StoneBlock, 16));
-        test_inventory.replace_slot_item_stack(11, ItemStack::new(crate::constants::ItemType::DirtBlock, 10));
-        test_inventory.replace_slot_item_stack(12, ItemStack::new(crate::constants::ItemType::DirtBlock, 20));
-        test_inventory.replace_slot_item_stack(13, ItemStack::new(crate::constants::ItemType::DirtBlock, 30));
-        test_inventory.replace_slot_item_stack(14, ItemStack::new(crate::constants::ItemType::DirtBlock, 45));
-
         self.renderer.blur_screen();
         loop {
             let keyboard_state = eadk::input::KeyboardState::scan();
@@ -670,12 +660,12 @@ impl Game {
                 keyboard_state.get_just_pressed(self.last_keyboard_state);
             self.last_keyboard_state = keyboard_state;
 
-            test_inventory.update(just_pressed_keyboard_state);
+            self.player.inventory.update(just_pressed_keyboard_state);
 
             self.renderer
-                .draw_inventory(&test_inventory, "Player inventory");
+                .draw_inventory(&self.player.inventory, "Player inventory");
 
-            test_inventory.modified = false;
+            self.player.inventory.modified = false;
             eadk::display::wait_for_vblank();
             eadk::timing::msleep(50);
         }

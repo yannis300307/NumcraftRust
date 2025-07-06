@@ -172,6 +172,7 @@ impl Inventory {
             Some(item_stack)
         }
     }
+    
     pub fn get_ref_to_slot(&self, slot_index: usize) -> Option<&ItemStack> {
         if slot_index >= self.slots.len() {
             None

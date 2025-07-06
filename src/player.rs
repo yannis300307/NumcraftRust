@@ -4,17 +4,14 @@ use libm::sincosf;
 use nalgebra::{ComplexField, Vector3};
 
 use crate::{
-    camera::Camera,
-    constants::{BlockType, player::MOVEMENT_SPEED},
-    eadk,
-    mesh::{Mesh, Quad, QuadDir},
-    world::World,
+    camera::Camera, constants::{player::MOVEMENT_SPEED, BlockType}, eadk, inventory::Inventory, mesh::{Mesh, Quad, QuadDir}, world::World
 };
 
 pub struct Player {
     pub pos: Vector3<f32>,
     pub rotation: Vector3<f32>,
     ray_cast_result: Option<RaycastResult>,
+    pub inventory: Inventory,
 }
 
 impl Player {
@@ -23,6 +20,7 @@ impl Player {
             pos: Vector3::new(0., 0., 0.),
             rotation: Vector3::new(0., 0., 0.),
             ray_cast_result: None,
+            inventory: Inventory::new(24),
         }
     }
 
