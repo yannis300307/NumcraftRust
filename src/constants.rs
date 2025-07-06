@@ -49,6 +49,7 @@ pub enum BlockType {
     Dirt = 3,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum ItemType {
     Air = 0,
@@ -59,12 +60,21 @@ pub enum ItemType {
 }
 
 impl ItemType {
-     pub fn get_texture_id(&self) -> u8 {
+    pub fn get_texture_id(&self) -> u8 {
         match *self {
             ItemType::StoneBlock => 1,
             ItemType::GrassBlock => 2,
             ItemType::DirtBlock => 3,
-            _=> 0
+            _ => 0,
+        }
+    }
+
+    pub fn get_max_stack_amount(&self) -> u8 {
+        match *self {
+            ItemType::Air => 0,
+            ItemType::StoneBlock => 64,
+            ItemType::GrassBlock => 64,
+            ItemType::DirtBlock => 64,
         }
     }
 }

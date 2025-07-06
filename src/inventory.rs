@@ -1,6 +1,6 @@
 use core::{mem, usize};
 
-use alloc::vec::{self, Vec};
+use alloc::vec::Vec;
 
 use crate::{
     constants::ItemType,
@@ -19,11 +19,23 @@ impl ItemStack {
             amount: 0,
         }
     }
+
+    pub fn new(item_type: ItemType, amount: u8) -> Self {
+        ItemStack { item_type, amount }
+    }
+
+    pub fn get_item_type(&self) -> ItemType {
+        self.item_type
+    }
+    pub fn get_amount(&self) -> u8 {
+        self.amount
+    }
 }
 
 pub struct Inventory {
     slots: Vec<ItemStack>,
     pub modified: bool,
+    cursor_slot: Option<usize>,
     selected_slot: Option<usize>,
 }
 
@@ -37,8 +49,13 @@ impl Inventory {
         Inventory {
             slots: slots,
             modified: true,
-            selected_slot: Some(9),
+            cursor_slot: Some(0),
+            selected_slot: None,
         }
+    }
+
+    pub fn get_cursor_slot_index(&self) -> Option<usize> {
+        self.cursor_slot
     }
 
     pub fn get_selected_slot_index(&self) -> Option<usize> {
@@ -46,43 +63,91 @@ impl Inventory {
     }
 
     pub fn update(&mut self, just_pressed_keyboard: KeyboardState) {
-        if let Some(selected_slot) = &mut self.selected_slot {
+        if let Some(cursor_slot) = &mut self.cursor_slot {
             if just_pressed_keyboard.key_down(Key::Right) {
-                if *selected_slot == self.slots.len() - 1
-                {
-                    *selected_slot = 0;
+                if *cursor_slot == self.slots.len() - 1 {
+                    *cursor_slot = 0;
                 } else {
-                    *selected_slot += 1;
+                    *cursor_slot += 1;
                 }
                 self.modified = true;
             }
 
             if just_pressed_keyboard.key_down(Key::Left) {
-                if *selected_slot == 0 {
-                    *selected_slot = self.slots.len() - 1;
+                if *cursor_slot == 0 {
+                    *cursor_slot = self.slots.len() - 1;
                 } else {
-                    *selected_slot -= 1;
+                    *cursor_slot -= 1;
                 }
                 self.modified = true;
             }
 
             if just_pressed_keyboard.key_down(Key::Up) {
-                if *selected_slot < 6 {
-                    *selected_slot = 0;
+                if *cursor_slot < 6 {
+                    *cursor_slot = 0;
                 } else {
-                    *selected_slot -= 6;
+                    *cursor_slot -= 6;
                 }
                 self.modified = true;
             }
             if just_pressed_keyboard.key_down(Key::Down) {
-                if *selected_slot >= self.slots.len()-6 {
-                    *selected_slot = self.slots.len() - 1;
+                if *cursor_slot >= self.slots.len() - 6 {
+                    *cursor_slot = self.slots.len() - 1;
                 } else {
-                    *selected_slot += 6;
+                    *cursor_slot += 6;
+                }
+                self.modified = true;
+            }
+
+            if just_pressed_keyboard.key_down(Key::Ok) {
+                if self.selected_slot.is_none() {
+                    self.selected_slot = self.cursor_slot;
+                } else if let (Some(selected), Some(cursor)) =
+                    (self.selected_slot, self.cursor_slot)
+                {
+                    self.move_item(selected, cursor)
                 }
                 self.modified = true;
             }
         }
+    }
+
+    fn move_item(&mut self, start_slot: usize, end_slot: usize) {
+        if start_slot == end_slot {
+            self.selected_slot = None;
+            return;
+        }
+
+        let start_slot_itemstack = self.get_ref_to_slot(start_slot).unwrap();
+        let end_slot_itemstack = self.get_ref_to_slot(end_slot).unwrap();
+
+        let start_max_stack_amount =
+            start_slot_itemstack.get_item_type().get_max_stack_amount() as usize;
+        let end_max_stack_amount =
+            end_slot_itemstack.get_item_type().get_max_stack_amount() as usize;
+
+        if start_slot_itemstack.get_item_type() == end_slot_itemstack.get_item_type()
+            && start_slot_itemstack.amount as usize != start_max_stack_amount
+            && end_slot_itemstack.amount as usize != end_max_stack_amount
+        {
+            let item_type = start_slot_itemstack.get_item_type();
+            let total_amount =
+                end_slot_itemstack.amount as usize + start_slot_itemstack.amount as usize;
+            let bigger_amount = total_amount.min(start_max_stack_amount);
+            let remaining_amount = total_amount - bigger_amount;
+            self.replace_slot_item_stack(end_slot, ItemStack::new(item_type, bigger_amount as u8));
+            if remaining_amount > 0 {
+                self.replace_slot_item_stack(
+                    start_slot,
+                    ItemStack::new(item_type, remaining_amount as u8),
+                );
+            } else {
+                self.replace_slot_item_stack(start_slot, ItemStack::new(ItemType::Air, 0));
+            }
+        } else {
+            self.swap_slots(start_slot, end_slot);
+        }
+        self.selected_slot = None;
     }
 
     pub fn swap_item_stack(&mut self, slot_index: usize, other: &mut ItemStack) -> Option<()> {
@@ -98,11 +163,20 @@ impl Inventory {
         }
     }
 
-    pub fn get_ref_to_slot(&mut self, slot_index: usize) -> Option<&mut ItemStack> {
+    pub fn get_ref_to_slot_mut(&mut self, slot_index: usize) -> Option<&mut ItemStack> {
         if slot_index >= self.slots.len() {
             None
         } else {
             let item_stack = &mut self.slots[slot_index];
+
+            Some(item_stack)
+        }
+    }
+    pub fn get_ref_to_slot(&self, slot_index: usize) -> Option<&ItemStack> {
+        if slot_index >= self.slots.len() {
+            None
+        } else {
+            let item_stack = &self.slots[slot_index];
 
             Some(item_stack)
         }

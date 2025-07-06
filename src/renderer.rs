@@ -21,8 +21,7 @@ use crate::{
         world::CHUNK_SIZE,
     },
     eadk::{
-        self, COLOR_BLACK, Color, Rect, debug_info,
-        display::{pull_rect, push_rect, push_rect_uniform, wait_for_vblank},
+        self, debug_info, display::{pull_rect, push_rect, push_rect_uniform, wait_for_vblank}, Color, Point, Rect, COLOR_BLACK
     },
     frustum::Frustum,
     inventory::Inventory,
@@ -1176,7 +1175,7 @@ impl Renderer {
                 },
                 Color::from_888(200, 200, 200),
             );
-            if inventory.get_selected_slot_index().is_some_and(|v| v == i) {
+            if inventory.get_cursor_slot_index().is_some_and(|v| v == i) {
                 push_rect_uniform(
                     Rect {
                         x: 19 + (x * 48) as u16,
@@ -1259,14 +1258,25 @@ impl Renderer {
                     width: 36,
                     height: 36,
                 },
-                Color::from_888(150, 150, 150),
+                if inventory.get_selected_slot_index().is_some_and(|v| v == i) {
+                    Color::from_888(255, 242, 0)
+                } else {
+                    Color::from_888(150, 150, 150)
+                },
             );
 
-            self.draw_scalled_tile_on_screen(
-                2,
-                Vector2::new(24 + (x * 48) as u16, 44 + (y * 48) as u16),
-                4,
-            );
+            let texture_id = slots[i].get_item_type().get_texture_id();
+
+            if texture_id != 0 {
+                self.draw_scalled_tile_on_screen(
+                    texture_id,
+                    Vector2::new(24 + (x * 48) as u16, 44 + (y * 48) as u16),
+                    4,
+                );
+                
+                let amount_text = format!("{}", slots[i].get_amount());
+                eadk::display::draw_string(amount_text.as_str(), Point {x: (58 - 7 * amount_text.len() + (x * 48)) as u16, y: 42 + (y * 48) as u16}, false, Color::from_888(0, 0, 0), Color::from_888(200, 200, 200));
+            }
         }
     }
 }
