@@ -1176,42 +1176,81 @@ impl Renderer {
                 },
                 Color::from_888(200, 200, 200),
             );
-            push_rect_uniform(
-                Rect {
-                    x: 19 + (x * 48) as u16,
-                    y: 40 + (y * 48) as u16,
-                    width: 1,
-                    height: 40,
-                },
-                Color::from_888(100, 100, 100),
-            );
-            push_rect_uniform(
-                Rect {
-                    x: 20 + (x * 48) as u16 + 40,
-                    y: 40 + (y * 48) as u16,
-                    width: 1,
-                    height: 40,
-                },
-                Color::from_888(100, 100, 100),
-            );
-            push_rect_uniform(
-                Rect {
-                    x: 19 + (x * 48) as u16,
-                    y: 39 + (y * 48) as u16,
-                    width: 42,
-                    height: 1,
-                },
-                Color::from_888(100, 100, 100),
-            );
-            push_rect_uniform(
-                Rect {
-                    x: 19 + (x * 48) as u16,
-                    y: 40 + (y * 48) as u16 + 40,
-                    width: 42,
-                    height: 1,
-                },
-                Color::from_888(100, 100, 100),
-            );
+            if inventory.get_selected_slot_index().is_some_and(|v| v == i) {
+                push_rect_uniform(
+                    Rect {
+                        x: 19 + (x * 48) as u16,
+                        y: 40 + (y * 48) as u16,
+                        width: 3,
+                        height: 40,
+                    },
+                    Color::from_888(255, 0, 0),
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: 18 + (x * 48) as u16 + 40,
+                        y: 40 + (y * 48) as u16,
+                        width: 3,
+                        height: 40,
+                    },
+                    Color::from_888(255, 0, 0),
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: 19 + (x * 48) as u16,
+                        y: 39 + (y * 48) as u16,
+                        width: 42,
+                        height: 3,
+                    },
+                    Color::from_888(255, 0, 0),
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: 19 + (x * 48) as u16,
+                        y: 38 + (y * 48) as u16 + 40,
+                        width: 42,
+                        height: 3,
+                    },
+                    Color::from_888(255, 0, 0),
+                );
+            } else {
+                push_rect_uniform(
+                    Rect {
+                        x: 19 + (x * 48) as u16,
+                        y: 40 + (y * 48) as u16,
+                        width: 1,
+                        height: 40,
+                    },
+                    Color::from_888(100, 100, 100),
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: 20 + (x * 48) as u16 + 40,
+                        y: 40 + (y * 48) as u16,
+                        width: 1,
+                        height: 40,
+                    },
+                    Color::from_888(100, 100, 100),
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: 19 + (x * 48) as u16,
+                        y: 39 + (y * 48) as u16,
+                        width: 42,
+                        height: 1,
+                    },
+                    Color::from_888(100, 100, 100),
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: 19 + (x * 48) as u16,
+                        y: 40 + (y * 48) as u16 + 40,
+                        width: 42,
+                        height: 1,
+                    },
+                    Color::from_888(100, 100, 100),
+                );
+            }
 
             push_rect_uniform(
                 Rect {

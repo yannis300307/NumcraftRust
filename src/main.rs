@@ -27,11 +27,11 @@ mod world;
 use game::Game;
 
 mod frustum;
+mod inventory;
 mod menu;
 mod player;
-mod storage_lib;
 mod save_manager;
-mod inventory;
+mod storage_lib;
 
 #[used]
 #[cfg(target_os = "none")]
@@ -65,7 +65,7 @@ fn main() -> isize {
     let mut game = Game::new();
 
     //game.main_loop();
-    game.test_loop();
+    game.player_inventory_loop();
 
     0
 }

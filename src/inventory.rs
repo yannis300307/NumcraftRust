@@ -2,7 +2,10 @@ use core::{mem, usize};
 
 use alloc::vec::{self, Vec};
 
-use crate::constants::ItemType;
+use crate::{
+    constants::ItemType,
+    eadk::input::{Key, KeyboardState},
+};
 
 pub struct ItemStack {
     item_type: ItemType,
@@ -21,7 +24,7 @@ impl ItemStack {
 pub struct Inventory {
     slots: Vec<ItemStack>,
     pub modified: bool,
-    selected_slot: usize,
+    selected_slot: Option<usize>,
 }
 
 /// A generic inventory. Can be the player inventory, a chest inventory, etc... All operations works by swaping items to avoid duplication.
@@ -34,7 +37,51 @@ impl Inventory {
         Inventory {
             slots: slots,
             modified: true,
-            selected_slot: 9,
+            selected_slot: Some(9),
+        }
+    }
+
+    pub fn get_selected_slot_index(&self) -> Option<usize> {
+        self.selected_slot
+    }
+
+    pub fn update(&mut self, just_pressed_keyboard: KeyboardState) {
+        if let Some(selected_slot) = &mut self.selected_slot {
+            if just_pressed_keyboard.key_down(Key::Right) {
+                if *selected_slot == self.slots.len() - 1
+                {
+                    *selected_slot = 0;
+                } else {
+                    *selected_slot += 1;
+                }
+                self.modified = true;
+            }
+
+            if just_pressed_keyboard.key_down(Key::Left) {
+                if *selected_slot == 0 {
+                    *selected_slot = self.slots.len() - 1;
+                } else {
+                    *selected_slot -= 1;
+                }
+                self.modified = true;
+            }
+
+            if just_pressed_keyboard.key_down(Key::Up) {
+                if *selected_slot < 6 {
+                    *selected_slot = 0;
+                } else {
+                    *selected_slot -= 6;
+                }
+                self.modified = true;
+            }
+            if just_pressed_keyboard.key_down(Key::Down) {
+                if *selected_slot >= self.slots.len()-6 {
+                    *selected_slot = self.slots.len() - 1;
+                } else {
+                    *selected_slot += 6;
+                }
+                self.modified = true;
+            }
         }
     }
 

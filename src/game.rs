@@ -11,10 +11,18 @@ use crate::{
     constants::{
         menu::{MENU_BACKGROUND_COLOR, SETTINGS_FILENAME},
         rendering::{FOV, MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
-    }, eadk::{self, input::KeyboardState, Color, Point, SCREEN_RECT}, inventory::Inventory, menu::{Menu, MenuElement, TextAnchor}, player::Player, renderer::Renderer, save_manager::SaveManager, storage_lib::{
+    },
+    eadk::{self, Color, Point, SCREEN_RECT, input::KeyboardState},
+    inventory::Inventory,
+    menu::{Menu, MenuElement, TextAnchor},
+    player::Player,
+    renderer::Renderer,
+    save_manager::SaveManager,
+    storage_lib::{
         storage_extapp_file_erase, storage_extapp_file_exists, storage_extapp_file_read,
         storage_file_write,
-    }, world::World
+    },
+    world::World,
 };
 
 pub struct Game {
@@ -644,15 +652,23 @@ impl Game {
         }
     }
 
-    pub fn test_loop(&mut self) {
+    pub fn player_inventory_loop(&mut self) {
         let mut test_inventory = Inventory::new(24);
         self.renderer.blur_screen();
         loop {
-            self.renderer.draw_inventory(&test_inventory, "Player inventory");
+            let keyboard_state = eadk::input::KeyboardState::scan();
+            let just_pressed_keyboard_state =
+                keyboard_state.get_just_pressed(self.last_keyboard_state);
+            self.last_keyboard_state = keyboard_state;
+
+            test_inventory.update(just_pressed_keyboard_state);
+
+            self.renderer
+                .draw_inventory(&test_inventory, "Player inventory");
 
             test_inventory.modified = false;
             eadk::display::wait_for_vblank();
-            eadk::timing::msleep(100);
+            eadk::timing::msleep(50);
         }
     }
 }
