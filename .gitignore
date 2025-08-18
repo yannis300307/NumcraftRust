@@ -1,3 +1,4 @@
 /target
 /node_modules
 .DS_store
+/epsilon_simulator

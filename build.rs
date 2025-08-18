@@ -59,30 +59,36 @@ fn main() {
     println!("Converting cross");
     convert_image("cross");
 
-    unsafe { std::env::set_var("CC", "arm-none-eabi-gcc") };
+    if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "none" {
+        unsafe { std::env::set_var("CC", "arm-none-eabi-gcc") };
 
-    let program = if cfg!(windows) {"C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx.cmd"} else {"npx"};
+        let program = if cfg!(windows) {
+            "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx.cmd"
+        } else {
+            "npx"
+        };
 
-    let nwlink_flags = String::from_utf8(
-        Command::new(program)
-            .args(["--yes", "--", "nwlink@0.0.19", "eadk-cflags"])
-            .output()
-            .expect("Failed to get nwlink eadk-cflags")
-            .stdout,
-    )
-    .expect("Invalid UTF-8 in nwlink flags");
+        let nwlink_flags = String::from_utf8(
+            Command::new(program)
+                .args(["--yes", "--", "nwlink@0.0.19", "eadk-cflags"])
+                .output()
+                .expect("Failed to get nwlink eadk-cflags")
+                .stdout,
+        )
+        .expect("Invalid UTF-8 in nwlink flags");
 
-    let mut build = cc::Build::new();
-    build.file("src/storage.c");
-    build.flag("-std=c99");
-    build.flag("-Os");
-    build.flag("-Wall");
-    build.flag("-ggdb");
-    build.warnings(false);
+        let mut build = cc::Build::new();
+        build.file("src/storage.c");
+        build.flag("-std=c99");
+        build.flag("-Os");
+        build.flag("-Wall");
+        build.flag("-ggdb");
+        build.warnings(false);
 
-    for flag in nwlink_flags.split_whitespace() {
-        build.flag(flag);
+        for flag in nwlink_flags.split_whitespace() {
+            build.flag(flag);
+        }
+
+        build.compile("storage_c");
     }
-
-    build.compile("storage_c");
 }

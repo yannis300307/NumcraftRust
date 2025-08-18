@@ -5,12 +5,18 @@ version = "0.0.7"
 authors = ["Yannis300307"]
 edition = "2024"
 
-[[bin]]
+[[target.'cfg(target_os="none")'.bin]]
 name = "Numcraft"
 path = "src/main.rs"
 test = false
 doctest = false
 bench = false
+
+[target.'cfg(not(target_os="none"))'.lib]
+path = "src/main.rs"
+bench = false
+crate-type=["cdylib"]
+name = "app"
 
 [profile.dev]
 panic="abort"
