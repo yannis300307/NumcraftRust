@@ -112,10 +112,8 @@ pub mod display {
         text_color: Color,
         background_color: Color,
     ) {
-        return;
-        // TODO : fix segfault
         let c_string =
-            CString::new("test").expect("Can't convert str to C_String. Maybe invalid caracter.");
+            CString::new(text).expect("Can't convert str to C_String. Maybe invalid caracter.");
         unsafe {
             eadk_display_draw_string(
                 c_string.as_ptr(),
@@ -440,9 +438,10 @@ pub mod input {
     }
 }
 
-use core::panic::PanicInfo;
 
 use core::cmp::min;
+#[cfg(target_os = "none")]
+use core::panic::PanicInfo;
 
 fn write_wrapped(text: &str, limit: usize) {
     let lines = text.len().div_ceil(limit); // Calcul du nombre de lignes

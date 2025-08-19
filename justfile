@@ -8,7 +8,7 @@ run:
 
 [private]
 setup_emulator jobs:
-    -git clone https://github.com/numworks/epsilon.git epsilon_simulator
+    -git clone https://github.com/numworks/epsilon.git epsilon_simulator -b version-20 # Broken with version 21. Nice!
     cd epsilon_simulator && make PLATFORM=simulator -j {{jobs}}
 
 [macos]
