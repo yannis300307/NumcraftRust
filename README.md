@@ -78,7 +78,7 @@ cargo install just # Similar to makefile
 just build
 ```
 
-## Build and send the app to the actual calculator
+## Build and send the app to an actual calculator
 
 Connect the calculator to your computer and run
 ```shell
@@ -90,6 +90,9 @@ just send
 ```shell
 just sim
 ```
+The simulator inputs will be automatically remapped for a better experience.
+
+Use `w`, `s`, `a` and `d` to move the player, `shift` and `space` to go up and down, arrows to turn the camera, `return` to place a block or select in a menu and `backspace` to break a block or to go back in a menu.
 
 You can speed up the simulator build by setting the job number.
 ```shell
