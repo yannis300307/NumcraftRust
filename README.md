@@ -17,7 +17,7 @@ Note that this is not the final result but the current state of the project.
 ## Current project state
 [See Roadmap below]
 
-The program runs at 10-20 FPS on N0110 and 30-50 FPS on N0120.
+The program runs at 10-20 FPS on N0110 and 30-50 FPS on N0120. It runs perfectly on the simulator (it depends on your hardware though).
 
 ## Support
 
@@ -91,7 +91,7 @@ just send
 just sim
 ```
 
-You can speedup the simulator build speed by setting the job number.
+You can speed up the simulator build by setting the job number.
 ```shell
 just sim 5
 ```
