@@ -1,4 +1,6 @@
+#[cfg(target_os = "none")]
 use alloc::{string::String, vec::Vec};
+
 use lz4_flex::{compress, compress_prepend_size, decompress, decompress_size_prepended};
 use nalgebra::Vector3;
 use postcard::{from_bytes, to_allocvec};

@@ -1,16 +1,22 @@
 cargo-features = ["profile-rustflags"]
 [package]
 name = "Numcraft"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["Yannis300307"]
 edition = "2024"
 
-[[bin]]
+[[target.'cfg(target_os="none")'.bin]]
 name = "Numcraft"
 path = "src/main.rs"
 test = false
 doctest = false
 bench = false
+
+[target.'cfg(not(target_os="none"))'.lib]
+path = "src/main.rs"
+bench = false
+crate-type=["cdylib"]
+name = "app"
 
 [profile.dev]
 panic="abort"
@@ -46,3 +52,4 @@ rand = "0.9.1"
 [build-dependencies]
 image = "0.25.6"
 cc = "1.2.27"
+regex = "1.11.1"

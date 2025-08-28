@@ -17,7 +17,7 @@ Note that this is not the final result but the current state of the project.
 ## Current project state
 [See Roadmap below]
 
-The program runs at 10-20 FPS on N0110 and 30-50 FPS on N0120.
+The program runs at 10-20 FPS on N0110 and 30-50 FPS on N0120. It runs perfectly on the simulator (it depends on your hardware though).
 
 ## Support
 
@@ -52,27 +52,46 @@ Good ideas but I will never have the time to do that :
 - [ ] Multiplayer (impossible at that time)
 
 ## Known Bugs:
-- ~Weird beahaviors in the negative coordinates~
+- Weird beahaviors in the negative coordinates
 - Rendering issues with the block selection marker
 - Can randomly crash on start on N0120. You have to reset your calculator before downloading a new version (I can't do anything about that, it's related to the OS)
 - Rendering issues and memory corruption if too many triangles are shown at the same time on the screen
 
-## Build the app
+## Setup the build environment
 
-To build this app, you will need to install an embedded ARM rust compiler, the [Arm GCC compiler](https://developer.arm.com/downloads/-/gnu-rm) as well as [Node.js](https://nodejs.org/en/). The SDK for Epsilon apps is shipped as an npm module called [nwlink](https://www.npmjs.com/package/nwlink) that will automatically be installed at compile time. Make sure that `arm-none-eabi-gcc`is in your path.
+To build this app, you will need to install an embedded ARM rust compiler, the [Arm GCC compiler](https://developer.arm.com/downloads/-/gnu-rm) as well as [Node.js](https://nodejs.org/en/). 
+The SDK for Epsilon apps is shipped as an npm module called [nwlink](https://www.npmjs.com/package/nwlink) that will automatically be installed at compile time.
+**Make sure that `arm-none-eabi-gcc`is in your path.**
 
+For more explanations on how to install the c sdk, follow [this guide](https://www.numworks.com/engineering/software/build/).
+
+Then, you can setup the dependencies as follow :
 ```shell
 brew install rustup node # Or equivalent on your OS
 rustup-init
 rustup target add thumbv7em-none-eabihf
-cargo build --release
+cargo install just # Similar to makefile
 ```
 
-## Run the app
+## Build the app
+```shell
+just build
+```
 
-The app is sent over to the calculator using the DFU protocol over USB.
+## Build and send the app to the actual calculator
+
+Connect the calculator to your computer and run
+```shell
+just send
+```
+
+## Run the app on the simulator
 
 ```shell
-# Now connect your NumWorks calculator to your computer using the USB cable
-cargo run --release
+just sim
+```
+
+You can speed up the simulator build by setting the job number.
+```shell
+just sim 5
 ```

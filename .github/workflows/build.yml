@@ -19,7 +19,7 @@ jobs:
         with:
           toolchain: nightly
           target: thumbv7em-none-eabihf
-      - name: Run cargo build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
+      - name: Install just
+        uses: extractions/setup-just@v3
+      - name: Build app
+        run: just build

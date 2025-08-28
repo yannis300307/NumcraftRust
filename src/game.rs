@@ -1,3 +1,4 @@
+#[cfg(target_os = "none")]
 use alloc::{
     borrow::ToOwned,
     format,
