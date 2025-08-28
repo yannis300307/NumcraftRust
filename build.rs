@@ -87,8 +87,8 @@ fn main() {
         }
 
         build.compile("storage_c");
-    }
-    println!("cargo:rerun-if-changed=epsilon_simulator/ion/src/simulator/shared/keyboard.cpp");
+    } else {
+        println!("cargo:rerun-if-changed=epsilon_simulator/ion/src/simulator/shared/keyboard.cpp");
         let remapped = "constexpr static KeySDLKeyPair sKeyPairs[] = {\
   KeySDLKeyPair(Key::OK,        SDL_SCANCODE_RETURN),\
   KeySDLKeyPair(Key::Back,      SDL_SCANCODE_BACKSPACE),\
@@ -108,11 +108,16 @@ fn main() {
 };";
 
         let file_content = fs::read_to_string("epsilon_simulator/ion/src/simulator/shared/keyboard.cpp")
-        .expect("Cannot open keyboard.cpp file from emulator. Please check if the simulator is. clonned properly.");
+        .expect("Cannot open keyboard.cpp file from emulator. Please check if the simulator is clonned properly.");
 
         let re =
             Regex::new(r"constexpr static KeySDLKeyPair sKeyPairs\[] ?= ?\{[\S\s]*?};").unwrap();
         let result = re.replace(&file_content, remapped);
 
-        fs::write("epsilon_simulator/ion/src/simulator/shared/keyboard.cpp", result.as_bytes()).unwrap();
+        fs::write(
+            "epsilon_simulator/ion/src/simulator/shared/keyboard.cpp",
+            result.as_bytes(),
+        )
+        .unwrap();
+    }
 }

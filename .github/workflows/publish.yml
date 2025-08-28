@@ -22,11 +22,10 @@ jobs:
               with:
                   toolchain: nightly
                   target: thumbv7em-none-eabihf
-            - name: Run cargo build
-              uses: actions-rs/cargo@v1
-              with:
-                  command: build
-                  args: --release
+            - name: Install just
+              uses: extractions/setup-just@v3
+            - name: Build app
+              run: just build
             - run: mv target/thumbv7em-none-eabihf/release/Numcraft target/thumbv7em-none-eabihf/release/Numcraft.nwa
             - uses: actions/upload-artifact@v4
               with:
