@@ -6,7 +6,6 @@ build:
 run:
     cargo run --release
 
-[private]
 setup_emulator jobs:
     -git clone https://github.com/numworks/epsilon.git epsilon_simulator -b version-20 # Broken with version 21. Nice!
     cd epsilon_simulator && make PLATFORM=simulator -j {{jobs}}
@@ -25,8 +24,9 @@ run_nwb:
 run_nwb:
     ./epsilon_simulator/output/release/simulator/windows/epsilon.exe --nwb ./target/{{current_target}}/release/Numcraft
 
-sim jobs="1": (setup_emulator jobs)
+sim jobs="1":
     cargo build --release --target={{current_target}}
+    just setup_emulator {{jobs}}
     just run_nwb
 
 [confirm("This will clean the built app AND the simulator. Do you want to continue ?")]
