@@ -23,7 +23,6 @@ run_nwb:
 sim jobs="1":
     -git clone https://github.com/numworks/epsilon.git epsilon_simulator -b version-20 # Broken with version 21. Nice!
     cargo build --release --target={{current_target}}
-    just setup_emulator {{jobs}}
     cd epsilon_simulator && make PLATFORM=simulator -j {{jobs}}
     just run_nwb
 
