@@ -1,3 +1,4 @@
+#[cfg(target_os = "none")]
 use alloc::{
     borrow::ToOwned,
     format,
@@ -446,6 +447,11 @@ impl Game {
                 is_pressed: false,
                 allow_margin: true,
                 id: 4,
+            })
+            .with_element(MenuElement::Label {
+                text: format!("Numcraft v{} by Yannis", env!("CARGO_PKG_VERSION")),
+                text_anchor: TextAnchor::Left,
+                allow_margin: false,
             });
 
         // Clear the screen

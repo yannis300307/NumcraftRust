@@ -1,7 +1,9 @@
+#[cfg(target_os = "none")]
 use alloc::{
     string::{String, ToString},
     vec::Vec,
 };
+
 use nalgebra::Vector2;
 
 use crate::eadk::input::{Key, KeyboardState};

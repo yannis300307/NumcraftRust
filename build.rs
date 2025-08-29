@@ -1,4 +1,5 @@
 use image::{self, GenericImageView, ImageReader};
+use regex::Regex;
 use std::{fs, process::Command};
 
 fn convert_image(file_name: &str) {
@@ -27,10 +28,8 @@ fn main() {
             .arg("npx --yes -- nwlink@0.0.19 png-nwi assets/icon.png target/icon.nwi")
             .output()
         {
-            println!("Unix detected");
             out
         } else {
-            println!("Windows detected");
             Command::new("cmd")
                 .args([
                     "/c",
@@ -51,12 +50,10 @@ fn main() {
 
     // Convert font to usable data
     println!("cargo:rerun-if-changed=assets/font.png");
-    println!("Converting font");
     convert_image("font");
 
     // Convert other textures
     println!("cargo:rerun-if-changed=assets/cross.png");
-    println!("Converting cross");
     convert_image("cross");
 
     // Convert tileset
@@ -77,30 +74,68 @@ fn main() {
     fs::write(format!("target/tileset.bin").as_str(), data).unwrap();
 
     // Compile storage.c
-    unsafe { std::env::set_var("CC", "arm-none-eabi-gcc") };
+    if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "none" {
+        unsafe { std::env::set_var("CC", "arm-none-eabi-gcc") };
 
-    let program = if cfg!(windows) {"C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx.cmd"} else {"npx"};
+        let program = if cfg!(windows) {
+            "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx.cmd"
+        } else {
+            "npx"
+        };
 
-    let nwlink_flags = String::from_utf8(
-        Command::new(program)
-            .args(["--yes", "--", "nwlink@0.0.19", "eadk-cflags"])
-            .output()
-            .expect("Failed to get nwlink eadk-cflags")
-            .stdout,
-    )
-    .expect("Invalid UTF-8 in nwlink flags");
+        let nwlink_flags = String::from_utf8(
+            Command::new(program)
+                .args(["--yes", "--", "nwlink@0.0.19", "eadk-cflags"])
+                .output()
+                .expect("Failed to get nwlink eadk-cflags")
+                .stdout,
+        )
+        .expect("Invalid UTF-8 in nwlink flags");
 
-    let mut build = cc::Build::new();
-    build.file("src/storage.c");
-    build.flag("-std=c99");
-    build.flag("-Os");
-    build.flag("-Wall");
-    build.flag("-ggdb");
-    build.warnings(false);
+        let mut build = cc::Build::new();
+        build.file("src/storage.c");
+        build.flag("-std=c99");
+        build.flag("-Os");
+        build.flag("-Wall");
+        build.flag("-ggdb");
+        build.warnings(false);
 
-    for flag in nwlink_flags.split_whitespace() {
-        build.flag(flag);
+        for flag in nwlink_flags.split_whitespace() {
+            build.flag(flag);
+        }
+
+        build.compile("storage_c");
+    } else {
+        println!("cargo:rerun-if-changed=epsilon_simulator/ion/src/simulator/shared/keyboard.cpp");
+        let remapped = "constexpr static KeySDLKeyPair sKeyPairs[] = {\
+  KeySDLKeyPair(Key::OK,        SDL_SCANCODE_RETURN),\
+  KeySDLKeyPair(Key::Back,      SDL_SCANCODE_BACKSPACE),\
+  KeySDLKeyPair(Key::EXE,       SDL_SCANCODE_ESCAPE),\
+\
+  KeySDLKeyPair(Key::Toolbox,   SDL_SCANCODE_W),\
+  KeySDLKeyPair(Key::Imaginary, SDL_SCANCODE_A),\
+  KeySDLKeyPair(Key::Power,     SDL_SCANCODE_D),\
+  KeySDLKeyPair(Key::Comma,     SDL_SCANCODE_S),\
+  KeySDLKeyPair(Key::Shift,     SDL_SCANCODE_SPACE),\
+  KeySDLKeyPair(Key::Exp,       SDL_SCANCODE_LSHIFT),\
+\
+  KeySDLKeyPair(Key::Down,      SDL_SCANCODE_DOWN),\
+  KeySDLKeyPair(Key::Up,        SDL_SCANCODE_UP),\
+  KeySDLKeyPair(Key::Left,      SDL_SCANCODE_LEFT),\
+  KeySDLKeyPair(Key::Right,     SDL_SCANCODE_RIGHT),\
+};";
+
+        let file_content = fs::read_to_string("epsilon_simulator/ion/src/simulator/shared/keyboard.cpp")
+        .expect("Cannot open keyboard.cpp file from emulator. Please check if the simulator is clonned properly.");
+
+        let re =
+            Regex::new(r"constexpr static KeySDLKeyPair sKeyPairs\[] ?= ?\{[\S\s]*?};").unwrap();
+        let result = re.replace(&file_content, remapped);
+
+        fs::write(
+            "epsilon_simulator/ion/src/simulator/shared/keyboard.cpp",
+            result.as_bytes(),
+        )
+        .unwrap();
     }
-
-    build.compile("storage_c");
 }

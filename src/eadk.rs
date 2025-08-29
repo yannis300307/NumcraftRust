@@ -61,7 +61,6 @@ pub struct Point {
     pub y: u16,
 }
 
-#[cfg(target_os = "none")]
 pub mod backlight {
     pub fn set_brightness(brightness: u8) {
         unsafe {
@@ -78,16 +77,6 @@ pub mod backlight {
     }
 }
 
-#[cfg(not(target_os = "none"))]
-pub mod backlight {
-    pub fn set_brightness(brightness: u8) {
-        // println!("Brightness set to {}", brightness)
-    }
-    pub fn brightness() -> u8 {
-        0
-    }
-}
-
 pub mod display {
     use super::Color;
     use super::Point;
@@ -95,6 +84,12 @@ pub mod display {
     use alloc::vec::Vec;
 
     #[cfg(target_os = "none")]
+    use alloc::ffi::CString;
+
+    use core::ffi::c_char;
+    #[cfg(not(target_os = "none"))]
+    use std::ffi::CString;
+
     pub fn push_rect(rect: Rect, pixels: &[Color]) {
         unsafe {
             eadk_display_push_rect(rect, pixels.as_ptr());
@@ -118,34 +113,18 @@ pub mod display {
         vec
     }
 
-    #[cfg(not(target_os = "none"))]
-    pub fn push_rect(rect: Rect, pixels: &[Color]) {
-        // println!("Push rect call");
-    }
-
-    #[cfg(target_os = "none")]
     pub fn push_rect_uniform(rect: Rect, color: Color) {
         unsafe {
             eadk_display_push_rect_uniform(rect, color);
         }
     }
 
-    #[cfg(not(target_os = "none"))]
-    pub fn push_rect_uniform(rect: Rect, color: Color) {
-        // println!("Push rect uniform call");
-    }
-
-    #[cfg(target_os = "none")]
     pub fn wait_for_vblank() {
         unsafe {
             eadk_display_wait_for_vblank();
         }
     }
 
-    #[cfg(not(target_os = "none"))]
-    pub fn wait_for_vblank() {}
-
-    #[cfg(target_os = "none")]
     pub fn draw_string(
         text: &str,
         point: Point,
@@ -153,10 +132,8 @@ pub mod display {
         text_color: Color,
         background_color: Color,
     ) {
-        use alloc::ffi;
-
-        let c_string = ffi::CString::new(text)
-            .expect("Can't convert str to C_String. Maybe invalid caracter.");
+        let c_string =
+            CString::new(text).expect("Can't convert str to C_String. Maybe invalid caracter.");
         unsafe {
             eadk_display_draw_string(
                 c_string.as_ptr(),
@@ -168,24 +145,13 @@ pub mod display {
         }
     }
 
-    #[cfg(not(target_os = "none"))]
-    pub fn draw_string(
-        text: &str,
-        _point: Point,
-        _large_font: bool,
-        _text_color: Color,
-        _background_color: Color,
-    ) {
-        println!("{}", text);
-    }
-
     unsafe extern "C" {
         fn eadk_display_push_rect_uniform(rect: Rect, color: Color);
         fn eadk_display_push_rect(rect: Rect, color: *const Color);
         fn eadk_display_wait_for_vblank();
         fn eadk_display_pull_rect(rect: Rect, color: *mut Color);
         fn eadk_display_draw_string(
-            text: *const u8,
+            text: *const c_char,
             point: Point,
             large_font: bool,
             text_color: Color,
@@ -195,46 +161,22 @@ pub mod display {
 }
 
 pub mod timing {
-    #[cfg(target_os = "none")]
     pub fn usleep(us: u32) {
         unsafe {
             eadk_timing_usleep(us);
         }
     }
 
-    #[cfg(not(target_os = "none"))]
-    pub fn usleep(us: u32) {
-        use std::{thread, time};
-
-        thread::sleep(time::Duration::from_micros(us as u64));
-    }
-
-    #[cfg(target_os = "none")]
     pub fn msleep(ms: u32) {
         unsafe {
             eadk_timing_msleep(ms);
         }
     }
 
-    #[cfg(not(target_os = "none"))]
-    pub fn msleep(ms: u32) {
-        use std::{thread, time};
-
-        thread::sleep(time::Duration::from_millis(ms as u64));
-    }
-
-    #[cfg(target_os = "none")]
     pub fn millis() -> u64 {
         unsafe { eadk_timing_millis() }
     }
 
-    #[cfg(not(target_os = "none"))]
-    pub fn millis() -> u64 {
-        use std::time::Instant;
-        Instant::now().elapsed().as_millis() as u64
-    }
-
-    #[cfg(target_os = "none")]
     unsafe extern "C" {
         fn eadk_timing_usleep(us: u32);
         fn eadk_timing_msleep(us: u32);
@@ -242,17 +184,10 @@ pub mod timing {
     }
 }
 
-#[cfg(target_os = "none")]
 pub fn random() -> u32 {
     unsafe { eadk_random() }
 }
 
-#[cfg(not(target_os = "none"))]
-pub fn random() -> u32 {
-    rand::random_range(0..u32::MAX)
-}
-
-#[cfg(target_os = "none")]
 unsafe extern "C" {
     fn eadk_random() -> u32;
 }
@@ -312,7 +247,6 @@ pub mod input {
         Exe = 52,
     }
 
-    #[cfg(target_os = "none")]
     unsafe extern "C" {
         fn eadk_keyboard_scan() -> EadkKeyboardState;
     }
@@ -327,19 +261,12 @@ pub mod input {
     }
 
     impl KeyboardState {
-        #[cfg(target_os = "none")]
         pub fn scan() -> Self {
             Self::from_raw(unsafe { eadk_keyboard_scan() })
         }
 
         pub fn new() -> Self {
             KeyboardState(0)
-        }
-
-        #[cfg(not(target_os = "none"))]
-        pub fn scan() -> Self {
-            // println!("Scan call");
-            KeyboardState::from_raw(0)
         }
 
         pub fn from_raw(state: EadkKeyboardState) -> Self {
@@ -532,8 +459,12 @@ pub mod input {
     }
 }
 
+
+use core::cmp::min;
+#[cfg(target_os = "none")]
 use core::panic::PanicInfo;
 
+#[cfg(target_os = "none")]
 use alloc::string::String;
 
 fn write_wrapped(text: &str, limit: usize) {
