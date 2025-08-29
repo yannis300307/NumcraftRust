@@ -3,7 +3,7 @@ current_target := shell("rustc -vV | grep \"host:\" | awk '{print $2}'")
 build:
     cargo build --release
 
-run:
+send:
     cargo run --release
 
 [macos]
