@@ -81,14 +81,17 @@ pub mod display {
     use super::Color;
     use super::Point;
     use super::Rect;
+
+    #[cfg(target_os = "none")]
     use alloc::vec::Vec;
 
     #[cfg(target_os = "none")]
     use alloc::ffi::CString;
 
-    use core::ffi::c_char;
     #[cfg(not(target_os = "none"))]
     use std::ffi::CString;
+
+    use core::ffi::c_char;
 
     pub fn push_rect(rect: Rect, pixels: &[Color]) {
         unsafe {
@@ -96,7 +99,6 @@ pub mod display {
         }
     }
 
-    #[cfg(target_os = "none")]
     pub fn pull_rect(rect: Rect) -> Vec<Color> {
         let size = rect.width as usize * rect.height as usize;
         let mut vec: Vec<Color> = Vec::with_capacity(size);
@@ -460,7 +462,6 @@ pub mod input {
 }
 
 
-use core::cmp::min;
 #[cfg(target_os = "none")]
 use core::panic::PanicInfo;
 

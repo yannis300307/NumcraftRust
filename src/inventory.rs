@@ -1,5 +1,6 @@
 use core::{mem, usize};
 
+#[cfg(target_os = "none")]
 use alloc::vec::Vec;
 
 use crate::{
