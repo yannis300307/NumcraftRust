@@ -2,10 +2,12 @@
 runner = 'npm exec --yes -- nwlink@0.0.19 install-nwa'
 rustflags = ["-C", "link-arg=--relocatable", "-C", "link-arg=-no-gc-sections"]
 
-[target.'cfg(not(target_os="none"))']
+[target.'cfg(target_os="macos")']
 rustflags = [
     "-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup", "-C", "link-arg=-lSystem"
 ]
 
-[build]
-target = "thumbv7em-none-eabihf"
+[target.'cfg(target_os="linux")']
+rustflags = [
+    "-C", "link-arg=-Wl,-undefined,dynamic_lookup", "-C", "link-arg=-Wl,-z,undefs"
+]
