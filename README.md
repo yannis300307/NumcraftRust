@@ -6,11 +6,14 @@ Numcraft Rust is a (WIP) cube sandbox game running natively on Numworks calculat
 
 ## Screenshot
 
+<img width="470" height="378" alt="image" src="https://github.com/user-attachments/assets/e704a3fb-6b2d-4f88-a660-9e3f469bf65d" />
+
+
 <img src="https://github.com/user-attachments/assets/f247677e-0f19-4170-92b9-51563961c862" width="512" alt="screenshot">
 
 
 
-Numcraft running on actual N0110 Numworks on latest Epsilon. (more than 40 FPS on N120)
+Numcraft running on actual N0110 Numworks on latest Epsilon (more than 40 FPS on N120) and on the simulator.
 
 Note that this is not the final result but the current state of the project.
 
