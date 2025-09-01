@@ -16,7 +16,7 @@ bench = false
 path = "src/main.rs"
 bench = false
 crate-type=["cdylib"]
-name = "app"
+name = "NumcraftSim"
 
 [profile.dev]
 panic="abort"
@@ -31,7 +31,6 @@ strip=true
 opt-level= 3
 lto = true
 codegen-units = 1
-
 
 [dependencies]
 nalgebra = {version = "0.33.2", default-features = false, features = [ "libm" ]}
