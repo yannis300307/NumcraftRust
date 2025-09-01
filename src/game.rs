@@ -13,7 +13,8 @@ use crate::{
         menu::{MENU_BACKGROUND_COLOR, SETTINGS_FILENAME},
         rendering::{FOV, MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
-    eadk::{self, input::KeyboardState, Color, Point, SCREEN_RECT},
+    eadk::{self, Color, Point, SCREEN_RECT, input::KeyboardState},
+    input_manager::InputManager,
     inventory::{Inventory, ItemStack},
     menu::{Menu, MenuElement, TextAnchor},
     player::Player,
@@ -33,6 +34,7 @@ pub struct Game {
     last_keyboard_state: KeyboardState,
     save_manager: SaveManager,
     settings: Settings,
+    input_manager: InputManager,
 }
 
 impl Game {
@@ -44,6 +46,7 @@ impl Game {
             last_keyboard_state: KeyboardState::new(),
             save_manager: SaveManager::new(),
             settings: Settings::new(),
+            input_manager: InputManager::new(),
         }
     }
 
@@ -101,7 +104,7 @@ impl Game {
                 message,
                 Point {
                     x: ((320 - message.len() * 10) / 2) as u16,
-                    y: y,
+                    y,
                 },
                 true,
                 Color::from_888(0, 0, 0),
@@ -166,19 +169,15 @@ impl Game {
         eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         loop {
-            // Get keyboard state and calculate the new presses
-            let keyboard_state = eadk::input::KeyboardState::scan();
-            let just_pressed_keyboard_state =
-                keyboard_state.get_just_pressed(self.last_keyboard_state);
-            self.last_keyboard_state = keyboard_state;
+            self.input_manager.update();
 
             // Exit the menu when [Back] is pressed
-            if keyboard_state.key_down(eadk::input::Key::Back) {
+            if self.input_manager.is_keydown(eadk::input::Key::Back) {
                 return GameState::GoSelectWorld;
             }
 
             // Handle the navigation in the menu
-            menu.check_inputs(just_pressed_keyboard_state);
+            menu.check_inputs(&self.input_manager);
             for element in menu.get_elements() {
                 match element {
                     MenuElement::Button {
@@ -252,19 +251,15 @@ impl Game {
         eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         loop {
-            // Get keyboard state and calculate the new presses
-            let keyboard_state = eadk::input::KeyboardState::scan();
-            let just_pressed_keyboard_state =
-                keyboard_state.get_just_pressed(self.last_keyboard_state);
-            self.last_keyboard_state = keyboard_state;
+            self.input_manager.update();
 
             // Exit the menu when [Back] is pressed
-            if keyboard_state.key_down(eadk::input::Key::Back) {
+            if self.input_manager.is_keydown(eadk::input::Key::Back) {
                 return GameState::GoSelectWorld;
             }
 
             // Handle the navigation in the menu
-            menu.check_inputs(just_pressed_keyboard_state);
+            menu.check_inputs(&self.input_manager);
             for element in menu.get_elements() {
                 match element {
                     MenuElement::Button {
@@ -340,17 +335,13 @@ impl Game {
         eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         loop {
-            // Get keyboard state and calculate the new presses
-            let keyboard_state = eadk::input::KeyboardState::scan();
-            let just_pressed_keyboard_state =
-                keyboard_state.get_just_pressed(self.last_keyboard_state);
-            self.last_keyboard_state = keyboard_state;
+            self.input_manager.update();
 
             // Handle the navigation in the menu
-            menu.check_inputs(just_pressed_keyboard_state);
+            menu.check_inputs(&self.input_manager);
 
             // Exit the menu when [Back] is pressed
-            if keyboard_state.key_down(eadk::input::Key::Back) {
+            if self.input_manager.is_keydown(eadk::input::Key::Back) {
                 return GameState::GoMainMenu;
             }
 
@@ -458,16 +449,13 @@ impl Game {
         eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         loop {
-            let keyboard_state = eadk::input::KeyboardState::scan();
-            let just_pressed_keyboard_state =
-                keyboard_state.get_just_pressed(self.last_keyboard_state);
-            self.last_keyboard_state = keyboard_state;
+            self.input_manager.update();
 
-            if keyboard_state.key_down(eadk::input::Key::Back) {
+            if self.input_manager.is_keydown(eadk::input::Key::Back) {
                 return GameState::GoMainMenu;
             }
 
-            menu.check_inputs(just_pressed_keyboard_state);
+            menu.check_inputs(&self.input_manager);
 
             let mut need_redraw = false;
 
@@ -558,14 +546,11 @@ impl Game {
         eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         loop {
-            let keyboard_state = eadk::input::KeyboardState::scan();
-            let just_pressed_keyboard_state =
-                keyboard_state.get_just_pressed(self.last_keyboard_state);
-            self.last_keyboard_state = keyboard_state;
+            self.input_manager.update();
+            
+            menu.check_inputs(&self.input_manager);
 
-            menu.check_inputs(just_pressed_keyboard_state);
-
-            if just_pressed_keyboard_state.key_down(eadk::input::Key::Home) {
+            if self.input_manager.is_keydown(eadk::input::Key::Home) {
                 return GameState::Quit;
             }
 
@@ -633,7 +618,6 @@ impl Game {
 
         self.renderer
             .draw_game(&mut self.world, &self.player, 1.0 / delta);
-        self.renderer.blur_screen();
 
         //eadk::timing::msleep(20);
         true

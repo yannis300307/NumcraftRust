@@ -32,6 +32,8 @@ mod menu;
 mod player;
 mod save_manager;
 mod storage_lib;
+mod game_ui;
+mod input_manager;
 
 #[used]
 #[cfg(target_os = "none")]
@@ -64,8 +66,8 @@ fn main() -> isize {
 
     let mut game = Game::new();
 
-    //game.main_loop();
-    game.player_inventory_loop();
+    game.main_loop();
+    //game.player_inventory_loop();
 
     0
 }
