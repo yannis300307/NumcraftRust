@@ -1,10 +1,10 @@
 current_target := shell("rustc -vV | grep \"host:\" | awk '{print $2}'")
 
 build:
-    cargo build --release
+    cargo build --release --bin Numcraft --target=thumbv7em-none-eabihf
 
 send:
-    cargo run --release
+    cargo run --release --release --bin Numcraft --target=thumbv7em-none-eabihf
 
 [macos]
 run_nwb:
@@ -16,7 +16,7 @@ run_nwb:
 
 sim jobs="1":
     -git clone https://github.com/numworks/epsilon.git epsilon_simulator -b version-20 # Broken with version 21. Nice!
-    cargo build --release --target={{current_target}}
+    cargo build --release --target={{current_target}} --lib
     cd epsilon_simulator && make PLATFORM=simulator -j {{jobs}}
     just run_nwb
 

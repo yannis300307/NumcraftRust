@@ -11,6 +11,3 @@ rustflags = [
 rustflags = [
     "-C", "link-arg=-Wl,-undefined,dynamic_lookup", "-C", "link-arg=-Wl,-z,undefs"
 ]
-
-[build]
-target = "thumbv7em-none-eabihf"
