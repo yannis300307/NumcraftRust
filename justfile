@@ -4,7 +4,7 @@ build:
     cargo build --release --bin Numcraft --target=thumbv7em-none-eabihf
 
 send:
-    cargo run --release --release --bin Numcraft --target=thumbv7em-none-eabihf
+    cargo run --release --bin Numcraft --target=thumbv7em-none-eabihf
 
 [macos]
 run_nwb:
