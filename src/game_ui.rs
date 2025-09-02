@@ -2,6 +2,9 @@ use nalgebra::Vector2;
 
 use crate::{eadk::input, input_manager::InputManager, inventory::ItemStack};
 
+#[cfg(target_os = "none")]
+use alloc::{string::String, vec::Vec};
+
 pub enum GameUIElements {
     /// A simple button
     Button {
