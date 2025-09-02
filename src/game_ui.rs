@@ -17,21 +17,21 @@ pub enum GameUIElements {
     },
 }
 
-struct AnchorContainer {
-    element: GameUIElements,
+pub struct AnchorContainer {
+    pub element: GameUIElements,
 
-    pos: Vector2<u16>,
-    selectable: bool,
-    id: usize,
+    pub pos: Vector2<u16>,
+    pub selectable: bool,
+    pub id: usize,
 
-    neighbors: ContainerNeighbors,
+    pub neighbors: ContainerNeighbors,
 }
 
 pub struct ContainerNeighbors {
-    up_id: Option<usize>,
-    down_id: Option<usize>,
-    left_id: Option<usize>,
-    right_id: Option<usize>,
+    pub up_id: Option<usize>,
+    pub down_id: Option<usize>,
+    pub left_id: Option<usize>,
+    pub right_id: Option<usize>,
 }
 
 pub struct GameUI {
@@ -51,13 +51,17 @@ impl GameUI {
         }
     }
 
+    pub fn get_elements(&self) -> &Vec<AnchorContainer> {
+        &self.elements
+    }
+
     pub fn with_element(
-        mut self,
+        &mut self,
         element: GameUIElements,
         pos: Vector2<u16>,
         id: usize,
         neighbors: ContainerNeighbors,
-    ) -> Self {
+    ) -> &Self {
         let selectable = match element {
             GameUIElements::Button { .. } => true,
             GameUIElements::ItemSlot { .. } => true,
@@ -87,7 +91,9 @@ impl GameUI {
         }
 
         let elem_or_none = self.get_element_with_id(self.selected_index);
-        if let Some(elem) = elem_or_none && elem.neighbors.right_id.is_some() {
+        if let Some(elem) = elem_or_none
+            && elem.neighbors.right_id.is_some()
+        {
             let neighbor = match key {
                 input::Key::Right => elem.neighbors.right_id,
                 input::Key::Left => elem.neighbors.right_id,

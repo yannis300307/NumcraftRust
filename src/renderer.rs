@@ -24,6 +24,7 @@ use crate::{
         self, debug_info, display::{pull_rect, push_rect, push_rect_uniform, wait_for_vblank}, Color, Point, Rect, COLOR_BLACK
     },
     frustum::Frustum,
+    game_ui::{GameUI, GameUIElements},
     inventory::Inventory,
     menu::{Menu, MenuElement, TextAnchor},
     mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D},
@@ -1149,6 +1150,142 @@ impl Renderer {
         }
     }
 
+    pub fn draw_game_UI(&mut self, game_ui: &mut GameUI) {
+        if game_ui.blur_background {
+            self.blur_screen();
+        }
+
+        let elements = game_ui.get_elements();
+
+        for element in elements {
+            let x = element.pos.x;
+            let y = element.pos.y;
+
+            if let GameUIElements::ItemSlot { item_stack, selected_amount} = &element.element {
+                push_rect_uniform(
+                    Rect {
+                        x: 20 + (x * 48) as u16,
+                        y: 40 + (y * 48) as u16,
+                        width: 40,
+                        height: 40,
+                    },
+                    Color::from_888(200, 200, 200),
+                );
+                if game_ui.selected_index == element.id {
+                    push_rect_uniform(
+                        Rect {
+                            x: 19 + (x * 48) as u16,
+                            y: 40 + (y * 48) as u16,
+                            width: 3,
+                            height: 40,
+                        },
+                        Color::from_888(255, 0, 0),
+                    );
+                    push_rect_uniform(
+                        Rect {
+                            x: 18 + (x * 48) as u16 + 40,
+                            y: 40 + (y * 48) as u16,
+                            width: 3,
+                            height: 40,
+                        },
+                        Color::from_888(255, 0, 0),
+                    );
+                    push_rect_uniform(
+                        Rect {
+                            x: 19 + (x * 48) as u16,
+                            y: 39 + (y * 48) as u16,
+                            width: 42,
+                            height: 3,
+                        },
+                        Color::from_888(255, 0, 0),
+                    );
+                    push_rect_uniform(
+                        Rect {
+                            x: 19 + (x * 48) as u16,
+                            y: 38 + (y * 48) as u16 + 40,
+                            width: 42,
+                            height: 3,
+                        },
+                        Color::from_888(255, 0, 0),
+                    );
+                } else {
+                    push_rect_uniform(
+                        Rect {
+                            x: 19 + (x * 48) as u16,
+                            y: 40 + (y * 48) as u16,
+                            width: 1,
+                            height: 40,
+                        },
+                        Color::from_888(100, 100, 100),
+                    );
+                    push_rect_uniform(
+                        Rect {
+                            x: 20 + (x * 48) as u16 + 40,
+                            y: 40 + (y * 48) as u16,
+                            width: 1,
+                            height: 40,
+                        },
+                        Color::from_888(100, 100, 100),
+                    );
+                    push_rect_uniform(
+                        Rect {
+                            x: 19 + (x * 48) as u16,
+                            y: 39 + (y * 48) as u16,
+                            width: 42,
+                            height: 1,
+                        },
+                        Color::from_888(100, 100, 100),
+                    );
+                    push_rect_uniform(
+                        Rect {
+                            x: 19 + (x * 48) as u16,
+                            y: 40 + (y * 48) as u16 + 40,
+                            width: 42,
+                            height: 1,
+                        },
+                        Color::from_888(100, 100, 100),
+                    );
+                }
+
+                push_rect_uniform(
+                    Rect {
+                        x: 22 + (x * 48) as u16,
+                        y: 42 + (y * 48) as u16,
+                        width: 36,
+                        height: 36,
+                    },
+                    if game_ui.selected_index == element.id {
+                        Color::from_888(255, 242, 0)
+                    } else {
+                        Color::from_888(150, 150, 150)
+                    },
+                );
+
+                let texture_id = item_stack.get_item_type().get_texture_id();
+
+                if texture_id != 0 {
+                    self.draw_scalled_tile_on_screen(
+                        texture_id,
+                        Vector2::new(24 + (x * 48) as u16, 44 + (y * 48) as u16),
+                        4,
+                    );
+
+                    let amount_text = format!("{}", item_stack.get_amount());
+                    eadk::display::draw_string(
+                        amount_text.as_str(),
+                        Point {
+                            x: (58 - 7 * amount_text.len() + (x as usize * 48)) as u16,
+                            y: 42 + (y * 48) as u16,
+                        },
+                        false,
+                        Color::from_888(0, 0, 0),
+                        Color::from_888(200, 200, 200),
+                    );
+                }
+            }
+        }
+    }
+
     pub fn draw_inventory(&mut self, inventory: &Inventory, title: &str) {
         if !inventory.modified {
             return;
@@ -1273,9 +1410,18 @@ impl Renderer {
                     Vector2::new(24 + (x * 48) as u16, 44 + (y * 48) as u16),
                     4,
                 );
-                
+
                 let amount_text = format!("{}", slots[i].get_amount());
-                eadk::display::draw_string(amount_text.as_str(), Point {x: (58 - 7 * amount_text.len() + (x * 48)) as u16, y: 42 + (y * 48) as u16}, false, Color::from_888(0, 0, 0), Color::from_888(200, 200, 200));
+                eadk::display::draw_string(
+                    amount_text.as_str(),
+                    Point {
+                        x: (58 - 7 * amount_text.len() + (x * 48)) as u16,
+                        y: 42 + (y * 48) as u16,
+                    },
+                    false,
+                    Color::from_888(0, 0, 0),
+                    Color::from_888(200, 200, 200),
+                );
             }
         }
     }
