@@ -65,10 +65,15 @@ fn main() {
         .decode()
         .unwrap();
 
-    let mut data:Vec<u8> = Vec::new();
+    let mut data: Vec<u8> = Vec::new();
 
     for pix in img.pixels() {
-        data.extend((((pix.2.0[0] as u16 & 0b11111000) << 8) | ((pix.2.0[1] as u16  & 0b11111100) << 3) | (pix.2.0[2] as u16 >> 3)).to_be_bytes());
+        data.extend(
+            (((pix.2.0[0] as u16 & 0b11111000) << 8)
+                | ((pix.2.0[1] as u16 & 0b11111100) << 3)
+                | (pix.2.0[2] as u16 >> 3))
+                .to_be_bytes(),
+        );
     }
 
     fs::write(format!("target/tileset.bin").as_str(), data).unwrap();
@@ -128,14 +133,16 @@ fn main() {
         let file_content = fs::read_to_string("epsilon_simulator/ion/src/simulator/shared/keyboard.cpp")
         .expect("Cannot open keyboard.cpp file from emulator. Please check if the simulator is clonned properly.");
 
-        let re =
-            Regex::new(r"constexpr static KeySDLKeyPair sKeyPairs\[] ?= ?\{[\S\s]*?};").unwrap();
-        let result = re.replace(&file_content, remapped);
+        if !file_content.contains(remapped) {
+            let re = Regex::new(r"constexpr static KeySDLKeyPair sKeyPairs\[] ?= ?\{[\S\s]*?};")
+                .unwrap();
+            let result = re.replace(&file_content, remapped);
 
-        fs::write(
-            "epsilon_simulator/ion/src/simulator/shared/keyboard.cpp",
-            result.as_bytes(),
-        )
-        .unwrap();
+            fs::write(
+                "epsilon_simulator/ion/src/simulator/shared/keyboard.cpp",
+                result.as_bytes(),
+            )
+            .unwrap();
+        }
     }
 }
