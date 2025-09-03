@@ -21,10 +21,11 @@ use crate::{
         world::CHUNK_SIZE,
     },
     eadk::{
-        self, debug_info, display::{pull_rect, push_rect, push_rect_uniform, wait_for_vblank}, Color, Point, Rect, COLOR_BLACK
+        self, COLOR_BLACK, Color, Point, Rect, debug_info,
+        display::{pull_rect, push_rect, push_rect_uniform, wait_for_vblank},
     },
     frustum::Frustum,
-    game_ui::{GameUI, GameUIElements},
+    game_ui::{self, GameUI, GameUIElements},
     inventory::Inventory,
     menu::{Menu, MenuElement, TextAnchor},
     mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D},
@@ -1151,9 +1152,19 @@ impl Renderer {
     }
 
     pub fn draw_game_UI(&mut self, game_ui: &mut GameUI) {
-        if game_ui.blur_background {
+        if game_ui.blur_background && game_ui.need_complete_redraw {
             self.blur_screen();
         }
+
+        push_rect_uniform(
+            Rect {
+                x: 0,
+                y: 0,
+                width: 320,
+                height: 240,
+            },
+            Color::from_888(255, 255, 255),
+        );
 
         let elements = game_ui.get_elements();
 
@@ -1161,21 +1172,23 @@ impl Renderer {
             let x = element.pos.x;
             let y = element.pos.y;
 
-            if let GameUIElements::ItemSlot { item_stack, selected_amount} = &element.element {
+            if let GameUIElements::ItemSlot { item_stack } = &element.element {
+                // Background
                 push_rect_uniform(
                     Rect {
-                        x: 20 + (x * 48) as u16,
-                        y: 40 + (y * 48) as u16,
+                        x: x,
+                        y: y,
                         width: 40,
                         height: 40,
                     },
                     Color::from_888(200, 200, 200),
                 );
-                if game_ui.selected_index == element.id {
+                if game_ui.cursor_index == element.id {
+                    // Red outline
                     push_rect_uniform(
                         Rect {
-                            x: 19 + (x * 48) as u16,
-                            y: 40 + (y * 48) as u16,
+                            x: x - 1,
+                            y: y,
                             width: 3,
                             height: 40,
                         },
@@ -1183,8 +1196,8 @@ impl Renderer {
                     );
                     push_rect_uniform(
                         Rect {
-                            x: 18 + (x * 48) as u16 + 40,
-                            y: 40 + (y * 48) as u16,
+                            x: x + 38,
+                            y: y - 1,
                             width: 3,
                             height: 40,
                         },
@@ -1192,8 +1205,8 @@ impl Renderer {
                     );
                     push_rect_uniform(
                         Rect {
-                            x: 19 + (x * 48) as u16,
-                            y: 39 + (y * 48) as u16,
+                            x: x - 1,
+                            y: 38 + y,
                             width: 42,
                             height: 3,
                         },
@@ -1201,18 +1214,19 @@ impl Renderer {
                     );
                     push_rect_uniform(
                         Rect {
-                            x: 19 + (x * 48) as u16,
-                            y: 38 + (y * 48) as u16 + 40,
+                            x: x - 1,
+                            y: y - 1,
                             width: 42,
                             height: 3,
                         },
                         Color::from_888(255, 0, 0),
                     );
                 } else {
+                    // Normal outline
                     push_rect_uniform(
                         Rect {
-                            x: 19 + (x * 48) as u16,
-                            y: 40 + (y * 48) as u16,
+                            x: x - 1,
+                            y: y,
                             width: 1,
                             height: 40,
                         },
@@ -1220,8 +1234,8 @@ impl Renderer {
                     );
                     push_rect_uniform(
                         Rect {
-                            x: 20 + (x * 48) as u16 + 40,
-                            y: 40 + (y * 48) as u16,
+                            x: x + 40,
+                            y: y,
                             width: 1,
                             height: 40,
                         },
@@ -1229,8 +1243,8 @@ impl Renderer {
                     );
                     push_rect_uniform(
                         Rect {
-                            x: 19 + (x * 48) as u16,
-                            y: 39 + (y * 48) as u16,
+                            x: x - 1,
+                            y: y - 1,
                             width: 42,
                             height: 1,
                         },
@@ -1238,8 +1252,8 @@ impl Renderer {
                     );
                     push_rect_uniform(
                         Rect {
-                            x: 19 + (x * 48) as u16,
-                            y: 40 + (y * 48) as u16 + 40,
+                            x: x - 1,
+                            y: y + 40,
                             width: 42,
                             height: 1,
                         },
@@ -1247,182 +1261,65 @@ impl Renderer {
                     );
                 }
 
+                // Sub background (yellow if selected)
                 push_rect_uniform(
                     Rect {
-                        x: 22 + (x * 48) as u16,
-                        y: 42 + (y * 48) as u16,
+                        x: 2 + x,
+                        y: 2 + y,
                         width: 36,
                         height: 36,
                     },
-                    if game_ui.selected_index == element.id {
+                    if game_ui.selected_index.is_some_and(|id| id == element.id) {
                         Color::from_888(255, 242, 0)
                     } else {
                         Color::from_888(150, 150, 150)
                     },
                 );
 
+                // Item texture
                 let texture_id = item_stack.get_item_type().get_texture_id();
 
                 if texture_id != 0 {
-                    self.draw_scalled_tile_on_screen(
-                        texture_id,
-                        Vector2::new(24 + (x * 48) as u16, 44 + (y * 48) as u16),
-                        4,
-                    );
+                    self.draw_scalled_tile_on_screen(texture_id, Vector2::new(4 + x, 4 + y), 4);
 
                     let amount_text = format!("{}", item_stack.get_amount());
                     eadk::display::draw_string(
                         amount_text.as_str(),
                         Point {
-                            x: (58 - 7 * amount_text.len() + (x as usize * 48)) as u16,
-                            y: 42 + (y * 48) as u16,
+                            x: (38 - 7 * amount_text.len() + x as usize) as u16,
+                            y: 2 + y,
                         },
                         false,
                         Color::from_888(0, 0, 0),
                         Color::from_888(200, 200, 200),
                     );
                 }
+
+                // Amount selection bar
+                if let Some(amount) = game_ui.selected_amount && game_ui.selected_index.is_some_and(|id| id == element.id) {
+                    let amount_bar_lenght = 34 * amount / item_stack.get_amount() as usize;
+
+                    eadk::display::push_rect_uniform(
+                        Rect {
+                            x: x + 3,
+                            y: y + 32,
+                            width: amount_bar_lenght as u16,
+                            height: 5,
+                        },
+                        Color::from_888(0, 0, 255),
+                    );
+                    eadk::display::push_rect_uniform(
+                        Rect {
+                            x: x + 3 + amount_bar_lenght as u16,
+                            y: y + 32,
+                            width: (34 - amount_bar_lenght) as u16,
+                            height: 5,
+                        },
+                        Color::from_888(100, 100, 100),
+                    );
+                }
             }
         }
-    }
-
-    pub fn draw_inventory(&mut self, inventory: &Inventory, title: &str) {
-        if !inventory.modified {
-            return;
-        }
-
-        let slots = inventory.get_all_slots();
-
-        self.draw_string_no_bg_on_screen(
-            title,
-            Vector2::new((320 - title.len() * FONT_CHAR_WIDTH) / 2, 10),
-        );
-
-        // Draw the inventory slots
-        for i in 0..slots.len() {
-            let x = i % 6;
-            let y = i / 6;
-
-            push_rect_uniform(
-                Rect {
-                    x: 20 + (x * 48) as u16,
-                    y: 40 + (y * 48) as u16,
-                    width: 40,
-                    height: 40,
-                },
-                Color::from_888(200, 200, 200),
-            );
-            if inventory.get_cursor_slot_index().is_some_and(|v| v == i) {
-                push_rect_uniform(
-                    Rect {
-                        x: 19 + (x * 48) as u16,
-                        y: 40 + (y * 48) as u16,
-                        width: 3,
-                        height: 40,
-                    },
-                    Color::from_888(255, 0, 0),
-                );
-                push_rect_uniform(
-                    Rect {
-                        x: 18 + (x * 48) as u16 + 40,
-                        y: 40 + (y * 48) as u16,
-                        width: 3,
-                        height: 40,
-                    },
-                    Color::from_888(255, 0, 0),
-                );
-                push_rect_uniform(
-                    Rect {
-                        x: 19 + (x * 48) as u16,
-                        y: 39 + (y * 48) as u16,
-                        width: 42,
-                        height: 3,
-                    },
-                    Color::from_888(255, 0, 0),
-                );
-                push_rect_uniform(
-                    Rect {
-                        x: 19 + (x * 48) as u16,
-                        y: 38 + (y * 48) as u16 + 40,
-                        width: 42,
-                        height: 3,
-                    },
-                    Color::from_888(255, 0, 0),
-                );
-            } else {
-                push_rect_uniform(
-                    Rect {
-                        x: 19 + (x * 48) as u16,
-                        y: 40 + (y * 48) as u16,
-                        width: 1,
-                        height: 40,
-                    },
-                    Color::from_888(100, 100, 100),
-                );
-                push_rect_uniform(
-                    Rect {
-                        x: 20 + (x * 48) as u16 + 40,
-                        y: 40 + (y * 48) as u16,
-                        width: 1,
-                        height: 40,
-                    },
-                    Color::from_888(100, 100, 100),
-                );
-                push_rect_uniform(
-                    Rect {
-                        x: 19 + (x * 48) as u16,
-                        y: 39 + (y * 48) as u16,
-                        width: 42,
-                        height: 1,
-                    },
-                    Color::from_888(100, 100, 100),
-                );
-                push_rect_uniform(
-                    Rect {
-                        x: 19 + (x * 48) as u16,
-                        y: 40 + (y * 48) as u16 + 40,
-                        width: 42,
-                        height: 1,
-                    },
-                    Color::from_888(100, 100, 100),
-                );
-            }
-
-            push_rect_uniform(
-                Rect {
-                    x: 22 + (x * 48) as u16,
-                    y: 42 + (y * 48) as u16,
-                    width: 36,
-                    height: 36,
-                },
-                if inventory.get_selected_slot_index().is_some_and(|v| v == i) {
-                    Color::from_888(255, 242, 0)
-                } else {
-                    Color::from_888(150, 150, 150)
-                },
-            );
-
-            let texture_id = slots[i].get_item_type().get_texture_id();
-
-            if texture_id != 0 {
-                self.draw_scalled_tile_on_screen(
-                    texture_id,
-                    Vector2::new(24 + (x * 48) as u16, 44 + (y * 48) as u16),
-                    4,
-                );
-
-                let amount_text = format!("{}", slots[i].get_amount());
-                eadk::display::draw_string(
-                    amount_text.as_str(),
-                    Point {
-                        x: (58 - 7 * amount_text.len() + (x * 48)) as u16,
-                        y: 42 + (y * 48) as u16,
-                    },
-                    false,
-                    Color::from_888(0, 0, 0),
-                    Color::from_888(200, 200, 200),
-                );
-            }
-        }
+        game_ui.need_complete_redraw = false;
     }
 }

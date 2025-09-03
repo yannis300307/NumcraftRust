@@ -63,56 +63,6 @@ impl Inventory {
         self.selected_slot
     }
 
-    pub fn update(&mut self, just_pressed_keyboard: KeyboardState) {
-        if let Some(cursor_slot) = &mut self.cursor_slot {
-            if just_pressed_keyboard.key_down(Key::Right) {
-                if *cursor_slot == self.slots.len() - 1 {
-                    *cursor_slot = 0;
-                } else {
-                    *cursor_slot += 1;
-                }
-                self.modified = true;
-            }
-
-            if just_pressed_keyboard.key_down(Key::Left) {
-                if *cursor_slot == 0 {
-                    *cursor_slot = self.slots.len() - 1;
-                } else {
-                    *cursor_slot -= 1;
-                }
-                self.modified = true;
-            }
-
-            if just_pressed_keyboard.key_down(Key::Up) {
-                if *cursor_slot < 6 {
-                    *cursor_slot = 0;
-                } else {
-                    *cursor_slot -= 6;
-                }
-                self.modified = true;
-            }
-            if just_pressed_keyboard.key_down(Key::Down) {
-                if *cursor_slot >= self.slots.len() - 6 {
-                    *cursor_slot = self.slots.len() - 1;
-                } else {
-                    *cursor_slot += 6;
-                }
-                self.modified = true;
-            }
-
-            if just_pressed_keyboard.key_down(Key::Ok) {
-                if self.selected_slot.is_none() {
-                    self.selected_slot = self.cursor_slot;
-                } else if let (Some(selected), Some(cursor)) =
-                    (self.selected_slot, self.cursor_slot)
-                {
-                    self.move_item(selected, cursor)
-                }
-                self.modified = true;
-            }
-        }
-    }
-
     fn move_item(&mut self, start_slot: usize, end_slot: usize) {
         if start_slot == end_slot {
             self.selected_slot = None;

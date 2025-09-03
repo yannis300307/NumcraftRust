@@ -16,7 +16,6 @@ pub enum GameUIElements {
     },
     ItemSlot {
         item_stack: ItemStack,
-        selected_amount: usize,
     },
 }
 
@@ -37,19 +36,39 @@ pub struct ContainerNeighbors {
     pub right_id: Option<usize>,
 }
 
+impl ContainerNeighbors {
+    pub fn new(
+        up_id: Option<usize>,
+        down_id: Option<usize>,
+        left_id: Option<usize>,
+        right_id: Option<usize>,
+    ) -> Self {
+        ContainerNeighbors {
+            up_id,
+            down_id,
+            left_id,
+            right_id,
+        }
+    }
+}
+
 pub struct GameUI {
     elements: Vec<AnchorContainer>,
-    pub selected_index: usize,
-    pub need_redraw: bool,
+    pub cursor_index: usize,
+    pub selected_index: Option<usize>,
+    pub selected_amount: Option<usize>,
+    pub need_complete_redraw: bool,
     pub blur_background: bool,
 }
 
 impl GameUI {
-    fn new(blur_background: bool) -> Self {
+    pub fn new(blur_background: bool) -> Self {
         GameUI {
             elements: Vec::new(),
-            selected_index: 0,
-            need_redraw: true,
+            cursor_index: 0,
+            selected_index: None,
+            selected_amount: None,
+            need_complete_redraw: true,
             blur_background,
         }
     }
@@ -59,12 +78,12 @@ impl GameUI {
     }
 
     pub fn with_element(
-        &mut self,
+        mut self,
         element: GameUIElements,
         pos: Vector2<u16>,
         id: usize,
         neighbors: ContainerNeighbors,
-    ) -> &Self {
+    ) -> Self {
         let selectable = match element {
             GameUIElements::Button { .. } => true,
             GameUIElements::ItemSlot { .. } => true,
@@ -89,24 +108,22 @@ impl GameUI {
     }
 
     fn move_cursor_if_possible(&mut self, input_manager: &InputManager, key: input::Key) {
-        if !input_manager.is_just_pressed(input::Key::Right) {
+        if !input_manager.is_just_pressed(key) {
             return;
         }
 
-        let elem_or_none = self.get_element_with_id(self.selected_index);
-        if let Some(elem) = elem_or_none
-            && elem.neighbors.right_id.is_some()
-        {
+        let elem_or_none = self.get_element_with_id(self.cursor_index);
+        if let Some(elem) = elem_or_none {
             let neighbor = match key {
                 input::Key::Right => elem.neighbors.right_id,
-                input::Key::Left => elem.neighbors.right_id,
-                input::Key::Up => elem.neighbors.right_id,
-                input::Key::Down => elem.neighbors.right_id,
+                input::Key::Left => elem.neighbors.left_id,
+                input::Key::Up => elem.neighbors.up_id,
+                input::Key::Down => elem.neighbors.down_id,
                 _ => None,
             };
 
             if let Some(neighbor_id) = neighbor {
-                self.selected_index = neighbor_id
+                self.cursor_index = neighbor_id;
             }
         }
     }
@@ -116,5 +133,12 @@ impl GameUI {
         self.move_cursor_if_possible(input_manager, input::Key::Left);
         self.move_cursor_if_possible(input_manager, input::Key::Up);
         self.move_cursor_if_possible(input_manager, input::Key::Down);
+
+        if input_manager.is_just_pressed(input::Key::Ok) {
+            self.selected_index = Some(self.cursor_index);
+        }
+        if input_manager.is_just_pressed(input::Key::Back) {
+            self.selected_index = None;
+        }
     }
 }

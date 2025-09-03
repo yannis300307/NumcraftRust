@@ -14,6 +14,7 @@ use crate::{
         rendering::{FOV, MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
     eadk::{self, Color, Point, SCREEN_RECT, input::KeyboardState},
+    game_ui::{ContainerNeighbors, GameUI},
     input_manager::InputManager,
     inventory::{Inventory, ItemStack},
     menu::{Menu, MenuElement, TextAnchor},
@@ -547,7 +548,7 @@ impl Game {
 
         loop {
             self.input_manager.update();
-            
+
             menu.check_inputs(&self.input_manager);
 
             if self.input_manager.is_keydown(eadk::input::Key::Home) {
@@ -643,17 +644,31 @@ impl Game {
     }
 
     pub fn player_inventory_loop(&mut self) {
-        self.renderer.blur_screen();
+        let mut ui = GameUI::new(true)
+            .with_element(
+                crate::game_ui::GameUIElements::ItemSlot {
+                    item_stack: ItemStack::new(crate::constants::ItemType::GrassBlock, 14),
+                },
+                Vector2::new(20, 20),
+                0,
+                ContainerNeighbors::new(None, None, None, Some(1)),
+            )
+            .with_element(
+                crate::game_ui::GameUIElements::ItemSlot {
+                    item_stack: ItemStack::void(),
+                },
+                Vector2::new(68, 20),
+                1,
+                ContainerNeighbors::new(None, None, Some(0), None),
+            );
+
+        ui.selected_amount = Some(5);
         loop {
-            let keyboard_state = eadk::input::KeyboardState::scan();
-            let just_pressed_keyboard_state =
-                keyboard_state.get_just_pressed(self.last_keyboard_state);
-            self.last_keyboard_state = keyboard_state;
+            self.input_manager.update();
 
-            self.player.inventory.update(just_pressed_keyboard_state);
+            ui.update(&self.input_manager);
 
-            self.renderer
-                .draw_inventory(&self.player.inventory, "Player inventory");
+            self.renderer.draw_game_UI(&mut ui);
 
             self.player.inventory.modified = false;
             eadk::display::wait_for_vblank();
