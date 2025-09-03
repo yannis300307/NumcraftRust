@@ -1296,7 +1296,10 @@ impl Renderer {
                 }
 
                 // Amount selection bar
-                if let Some(amount) = game_ui.selected_amount && game_ui.selected_index.is_some_and(|id| id == element.id) {
+                if let Some(amount) = game_ui.selected_amount
+                    && game_ui.selected_index.is_some_and(|id| id == element.id)
+                    && item_stack.get_amount() != 0
+                {
                     let amount_bar_lenght = 34 * amount / item_stack.get_amount() as usize;
 
                     eadk::display::push_rect_uniform(
@@ -1306,7 +1309,11 @@ impl Renderer {
                             width: amount_bar_lenght as u16,
                             height: 5,
                         },
-                        Color::from_888(0, 0, 255),
+                        if game_ui.is_selecting_amount {
+                            Color::from_888(100, 150, 255)
+                        } else {
+                            Color::from_888(50, 100, 255)
+                        },
                     );
                     eadk::display::push_rect_uniform(
                         Rect {

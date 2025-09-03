@@ -662,7 +662,7 @@ impl Game {
                 ContainerNeighbors::new(None, None, Some(0), None),
             );
 
-        ui.selected_amount = Some(5);
+        ui.selected_amount = None;
         loop {
             self.input_manager.update();
 
