@@ -1172,7 +1172,7 @@ impl Renderer {
             let x = element.pos.x;
             let y = element.pos.y;
 
-            if let GameUIElements::ItemSlot { item_stack , ..} = &element.element {
+            if let GameUIElements::ItemSlot { item_stack, .. } = &element.element {
                 // Background
                 push_rect_uniform(
                     Rect {
@@ -1282,7 +1282,14 @@ impl Renderer {
                 if texture_id != 0 {
                     self.draw_scalled_tile_on_screen(texture_id, Vector2::new(4 + x, 4 + y), 4);
 
-                    let amount_text = format!("{}", item_stack.get_amount());
+                    let amount_text = if let Some(selected_id) = game_ui.selected_id && selected_id == element.id
+                        && let Some(amount) = game_ui.selected_amount
+                    {
+                        format!("{}/{}", amount, item_stack.get_amount())
+                    } else {
+                        format!("{}", item_stack.get_amount())
+                    };
+
                     eadk::display::draw_string(
                         amount_text.as_str(),
                         Point {
