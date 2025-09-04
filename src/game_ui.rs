@@ -270,7 +270,7 @@ impl GameUI {
                 *item_stack = inventories[*inventory_id]
                     .get_ref_to_slot(*inventory_slot_index)
                     .unwrap()
-                    .to_owned();
+                    .clone();
             }
         }
     }

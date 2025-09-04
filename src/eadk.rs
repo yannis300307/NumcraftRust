@@ -461,7 +461,6 @@ pub mod input {
     }
 }
 
-
 #[cfg(target_os = "none")]
 use core::panic::PanicInfo;
 

@@ -33,11 +33,7 @@ impl Camera {
         self.fov = degrees * PI / 180.0;
     }
 
-    pub fn update(
-        &mut self,
-        delta: f32,
-        keyboard_state: eadk::input::KeyboardState,
-    ) {
+    pub fn update(&mut self, delta: f32, keyboard_state: eadk::input::KeyboardState) {
         // Rotation
         if keyboard_state.key_down(eadk::input::Key::Right) {
             self.rotation.y += delta * ROTATION_SPEED;

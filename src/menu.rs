@@ -6,7 +6,10 @@ use alloc::{
 
 use nalgebra::Vector2;
 
-use crate::{eadk::input::{Key, KeyboardState}, input_manager::InputManager};
+use crate::{
+    eadk::input::{Key, KeyboardState},
+    input_manager::InputManager,
+};
 
 pub enum MenuElement {
     /// A simple button

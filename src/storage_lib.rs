@@ -10,7 +10,9 @@ pub fn storage_file_write(filename: &str, content: &[u8]) -> bool {
 }
 
 #[cfg(not(target_os = "none"))]
-pub fn storage_file_write(filename: &str, content: &[u8]) -> bool {true}
+pub fn storage_file_write(filename: &str, content: &[u8]) -> bool {
+    true
+}
 
 #[cfg(target_os = "none")]
 pub fn storage_extapp_file_exists(filename: &str) -> bool {
@@ -19,7 +21,9 @@ pub fn storage_extapp_file_exists(filename: &str) -> bool {
 }
 
 #[cfg(not(target_os = "none"))]
-pub fn storage_extapp_file_exists(filename: &str) -> bool {false}
+pub fn storage_extapp_file_exists(filename: &str) -> bool {
+    false
+}
 
 #[cfg(target_os = "none")]
 pub fn storage_extapp_file_read(filename: &str) -> Option<Vec<u8>> {
@@ -35,7 +39,9 @@ pub fn storage_extapp_file_read(filename: &str) -> Option<Vec<u8>> {
 }
 
 #[cfg(not(target_os = "none"))]
-pub fn storage_extapp_file_read(filename: &str) -> Option<Vec<u8>> {None}
+pub fn storage_extapp_file_read(filename: &str) -> Option<Vec<u8>> {
+    None
+}
 
 #[cfg(target_os = "none")]
 pub fn storage_extapp_file_read_header(filename: &str, header_len: usize) -> Option<Vec<u8>> {
@@ -51,7 +57,9 @@ pub fn storage_extapp_file_read_header(filename: &str, header_len: usize) -> Opt
 }
 
 #[cfg(not(target_os = "none"))]
-pub fn storage_extapp_file_read_header(filename: &str, header_len: usize) -> Option<Vec<u8>> {None}
+pub fn storage_extapp_file_read_header(filename: &str, header_len: usize) -> Option<Vec<u8>> {
+    None
+}
 
 #[cfg(target_os = "none")]
 pub fn storage_extapp_file_erase(filename: &str) -> bool {
@@ -60,7 +68,9 @@ pub fn storage_extapp_file_erase(filename: &str) -> bool {
 }
 
 #[cfg(not(target_os = "none"))]
-pub fn storage_extapp_file_erase(filename: &str) -> bool {true}
+pub fn storage_extapp_file_erase(filename: &str) -> bool {
+    true
+}
 
 #[cfg(target_os = "none")]
 pub fn storage_extapp_file_list_with_extension(max_records: usize, extension: &str) -> Vec<String> {
@@ -88,7 +98,9 @@ pub fn storage_extapp_file_list_with_extension(max_records: usize, extension: &s
 }
 
 #[cfg(not(target_os = "none"))]
-pub fn storage_extapp_file_list_with_extension(max_records: usize, extension: &str) -> Vec<String> {Vec::new()}
+pub fn storage_extapp_file_list_with_extension(max_records: usize, extension: &str) -> Vec<String> {
+    Vec::new()
+}
 
 #[cfg(target_os = "none")]
 unsafe extern "C" {

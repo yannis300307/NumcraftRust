@@ -1282,7 +1282,8 @@ impl Renderer {
                 if texture_id != 0 {
                     self.draw_scalled_tile_on_screen(texture_id, Vector2::new(4 + x, 4 + y), 4);
 
-                    let amount_text = if let Some(selected_id) = game_ui.selected_id && selected_id == element.id
+                    let amount_text = if let Some(selected_id) = game_ui.selected_id
+                        && selected_id == element.id
                         && let Some(amount) = game_ui.selected_amount
                     {
                         format!("{}/{}", amount, item_stack.get_amount())

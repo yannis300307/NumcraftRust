@@ -4,7 +4,12 @@ use libm::sincosf;
 use nalgebra::{ComplexField, Vector3};
 
 use crate::{
-    camera::Camera, constants::{player::MOVEMENT_SPEED, BlockType}, eadk, inventory::Inventory, mesh::{Mesh, Quad, QuadDir}, world::World
+    camera::Camera,
+    constants::{BlockType, player::MOVEMENT_SPEED},
+    eadk,
+    inventory::Inventory,
+    mesh::{Mesh, Quad, QuadDir},
+    world::World,
 };
 
 pub struct Player {
@@ -41,7 +46,12 @@ impl Player {
         self.rotation = *camera.get_rotation();
     }
 
-    pub fn set_pos_rotation(&mut self, camera: &mut Camera, rotation: Vector3<f32>, pos: Vector3<f32>) {
+    pub fn set_pos_rotation(
+        &mut self,
+        camera: &mut Camera,
+        rotation: Vector3<f32>,
+        pos: Vector3<f32>,
+    ) {
         self.pos = pos;
         camera.set_rotation(rotation);
         self.sync_with_camera(camera);

@@ -1,4 +1,7 @@
-use crate::eadk::{self, input::{Key, KeyboardState}};
+use crate::eadk::{
+    self,
+    input::{Key, KeyboardState},
+};
 
 pub struct InputManager {
     keyboard_state: KeyboardState,
@@ -18,7 +21,9 @@ impl InputManager {
     pub fn update(&mut self) {
         self.last_keyboard_state = self.keyboard_state;
         self.keyboard_state = eadk::input::KeyboardState::scan();
-        self.just_pressed = self.keyboard_state.get_just_pressed(self.last_keyboard_state);
+        self.just_pressed = self
+            .keyboard_state
+            .get_just_pressed(self.last_keyboard_state);
     }
 
     pub fn is_just_pressed(&self, key: Key) -> bool {

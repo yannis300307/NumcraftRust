@@ -650,9 +650,10 @@ impl Game {
         self.player
             .inventory
             .replace_slot_item_stack(1, ItemStack::new(crate::constants::ItemType::DirtBlock, 1));
-        self.player
-            .inventory
-            .replace_slot_item_stack(2, ItemStack::new(crate::constants::ItemType::GrassBlock, 50));
+        self.player.inventory.replace_slot_item_stack(
+            2,
+            ItemStack::new(crate::constants::ItemType::GrassBlock, 50),
+        );
 
         let mut inventories = [&mut self.player.inventory];
 
@@ -668,7 +669,8 @@ impl Game {
                 Vector2::new(68, 20),
                 1,
                 ContainerNeighbors::new(None, None, Some(0), Some(2)),
-            ).with_element(
+            )
+            .with_element(
                 crate::game_ui::GameUIElements::create_slot(0, 2),
                 Vector2::new(116, 20),
                 2,
