@@ -8,6 +8,7 @@ use crate::{
     eadk::input::{Key, KeyboardState},
 };
 
+#[derive(Clone, Copy, Debug)]
 pub struct ItemStack {
     item_type: ItemType,
     amount: u8,
@@ -36,8 +37,6 @@ impl ItemStack {
 pub struct Inventory {
     slots: Vec<ItemStack>,
     pub modified: bool,
-    cursor_slot: Option<usize>,
-    selected_slot: Option<usize>,
 }
 
 /// A generic inventory. Can be the player inventory, a chest inventory, etc... All operations works by swaping items to avoid duplication.
@@ -50,55 +49,104 @@ impl Inventory {
         Inventory {
             slots: slots,
             modified: true,
-            cursor_slot: Some(0),
-            selected_slot: None,
         }
     }
 
-    pub fn get_cursor_slot_index(&self) -> Option<usize> {
-        self.cursor_slot
-    }
-
-    pub fn get_selected_slot_index(&self) -> Option<usize> {
-        self.selected_slot
-    }
-
-    fn move_item(&mut self, start_slot: usize, end_slot: usize) {
+    pub fn move_item(
+        &mut self,
+        start_slot: usize,
+        end_slot: usize,
+        selected_amount_or_none: Option<usize>,
+    ) {
         if start_slot == end_slot {
-            self.selected_slot = None;
             return;
         }
 
-        let start_slot_itemstack = self.get_ref_to_slot(start_slot).unwrap();
-        let end_slot_itemstack = self.get_ref_to_slot(end_slot).unwrap();
+        let start_slot_itemstack = self.get_ref_to_slot(start_slot).unwrap().clone();
+        let end_slot_itemstack = self.get_ref_to_slot(end_slot).unwrap().clone();
 
         let start_max_stack_amount =
             start_slot_itemstack.get_item_type().get_max_stack_amount() as usize;
         let end_max_stack_amount =
             end_slot_itemstack.get_item_type().get_max_stack_amount() as usize;
 
+        let selected_amount = if let Some(amount) = selected_amount_or_none {
+            amount
+        } else {
+            start_slot_itemstack.get_amount() as usize
+        };
+
         if start_slot_itemstack.get_item_type() == end_slot_itemstack.get_item_type()
             && start_slot_itemstack.amount as usize != start_max_stack_amount
             && end_slot_itemstack.amount as usize != end_max_stack_amount
         {
-            let item_type = start_slot_itemstack.get_item_type();
-            let total_amount =
-                end_slot_itemstack.amount as usize + start_slot_itemstack.amount as usize;
-            let bigger_amount = total_amount.min(start_max_stack_amount);
-            let remaining_amount = total_amount - bigger_amount;
-            self.replace_slot_item_stack(end_slot, ItemStack::new(item_type, bigger_amount as u8));
-            if remaining_amount > 0 {
+            let total_amount = end_slot_itemstack.amount as usize + selected_amount;
+
+            if total_amount < start_max_stack_amount {
+                if selected_amount == start_slot_itemstack.amount as usize {
+                    self.replace_slot_item_stack(start_slot, ItemStack::void());
+                    self.replace_slot_item_stack(
+                        end_slot,
+                        ItemStack::new(
+                            end_slot_itemstack.item_type,
+                            end_slot_itemstack.amount + selected_amount as u8,
+                        ),
+                    );
+                } else {
+                    self.replace_slot_item_stack(
+                        start_slot,
+                        ItemStack::new(
+                            start_slot_itemstack.item_type,
+                            start_slot_itemstack.amount - selected_amount as u8,
+                        ),
+                    );
+                    self.replace_slot_item_stack(
+                        end_slot,
+                        ItemStack::new(
+                            end_slot_itemstack.item_type,
+                            end_slot_itemstack.amount + selected_amount as u8,
+                        ),
+                    );
+                }
+            } else if total_amount == start_max_stack_amount {
+                self.replace_slot_item_stack(start_slot, ItemStack::void());
                 self.replace_slot_item_stack(
-                    start_slot,
-                    ItemStack::new(item_type, remaining_amount as u8),
+                    end_slot,
+                    ItemStack::new(end_slot_itemstack.item_type, start_max_stack_amount as u8),
                 );
             } else {
-                self.replace_slot_item_stack(start_slot, ItemStack::new(ItemType::Air, 0));
+                self.replace_slot_item_stack(
+                    start_slot,
+                    ItemStack::new(
+                        start_slot_itemstack.item_type,
+                        (total_amount - start_max_stack_amount) as u8,
+                    ),
+                );
+                self.replace_slot_item_stack(
+                    end_slot,
+                    ItemStack::new(end_slot_itemstack.item_type, end_max_stack_amount as u8),
+                );
             }
         } else {
-            self.swap_slots(start_slot, end_slot);
+            if start_slot_itemstack.item_type != ItemType::Air
+                && end_slot_itemstack.item_type == ItemType::Air
+                && selected_amount != start_slot_itemstack.get_amount() as usize
+            {
+                self.replace_slot_item_stack(
+                    end_slot,
+                    ItemStack::new(start_slot_itemstack.item_type, selected_amount as u8),
+                );
+                self.replace_slot_item_stack(
+                    start_slot,
+                    ItemStack::new(
+                        start_slot_itemstack.item_type,
+                        start_slot_itemstack.get_amount() - selected_amount as u8,
+                    ),
+                );
+            } else {
+                self.swap_slots(start_slot, end_slot);
+            }
         }
-        self.selected_slot = None;
     }
 
     pub fn swap_item_stack(&mut self, slot_index: usize, other: &mut ItemStack) -> Option<()> {
@@ -123,7 +171,7 @@ impl Inventory {
             Some(item_stack)
         }
     }
-    
+
     pub fn get_ref_to_slot(&self, slot_index: usize) -> Option<&ItemStack> {
         if slot_index >= self.slots.len() {
             None

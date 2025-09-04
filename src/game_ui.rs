@@ -1,6 +1,11 @@
 use nalgebra::Vector2;
 
-use crate::{constants::ItemType, eadk::input, input_manager::InputManager, inventory::ItemStack};
+use crate::{
+    constants::ItemType,
+    eadk::input,
+    input_manager::InputManager,
+    inventory::{Inventory, ItemStack},
+};
 
 #[cfg(target_os = "none")]
 use alloc::{string::String, vec::Vec};
@@ -16,7 +21,19 @@ pub enum GameUIElements {
     },
     ItemSlot {
         item_stack: ItemStack,
+        inventory_id: usize,
+        inventory_slot_index: usize,
     },
+}
+
+impl GameUIElements {
+    pub fn create_slot(inventory_id: usize, inventory_slot_index: usize) -> Self {
+        Self::ItemSlot {
+            item_stack: ItemStack::void(),
+            inventory_id,
+            inventory_slot_index,
+        }
+    }
 }
 
 pub struct AnchorContainer {
@@ -54,8 +71,8 @@ impl ContainerNeighbors {
 
 pub struct GameUI {
     elements: Vec<AnchorContainer>,
-    pub cursor_index: usize,
-    pub selected_index: Option<usize>,
+    pub cursor_id: usize,
+    pub selected_id: Option<usize>,
     pub selected_amount: Option<usize>,
     pub need_complete_redraw: bool,
     pub blur_background: bool,
@@ -65,15 +82,22 @@ pub struct GameUI {
 
 impl GameUI {
     pub fn new(blur_background: bool) -> Self {
-        GameUI {
+        let ui = GameUI {
             elements: Vec::new(),
-            cursor_index: 0,
-            selected_index: None,
+            cursor_id: 0,
+            selected_id: None,
             selected_amount: None,
             need_complete_redraw: true,
             blur_background,
             is_selecting_amount: false,
-        }
+        };
+        ui
+    }
+
+    /// Sync the the slots with the inventories at the end of the game ui creation pipeline
+    pub fn sync(mut self, inventories: &[&mut Inventory]) -> Self {
+        self.update_slots(inventories);
+        self
     }
 
     pub fn get_elements(&self) -> &Vec<AnchorContainer> {
@@ -110,12 +134,16 @@ impl GameUI {
         self.elements.iter().find(|&elem| elem.id == id)
     }
 
+    fn get_element_with_id_mut(&mut self, id: usize) -> Option<&mut AnchorContainer> {
+        self.elements.iter_mut().find(|elem| elem.id == id)
+    }
+
     fn move_cursor_if_possible(&mut self, input_manager: &InputManager, key: input::Key) {
         if !input_manager.is_just_pressed(key) {
             return;
         }
 
-        let elem_or_none = self.get_element_with_id(self.cursor_index);
+        let elem_or_none = self.get_element_with_id(self.cursor_id);
         if let Some(elem) = elem_or_none {
             let neighbor = match key {
                 input::Key::Right => elem.neighbors.right_id,
@@ -126,25 +154,22 @@ impl GameUI {
             };
 
             if let Some(neighbor_id) = neighbor {
-                self.cursor_index = neighbor_id;
+                self.cursor_id = neighbor_id;
             }
         }
     }
 
-    pub fn update(&mut self, input_manager: &InputManager) {
+    pub fn update(&mut self, input_manager: &InputManager, inventories: &mut [&mut Inventory]) {
         if self.is_selecting_amount
             && let Some(amount) = &mut self.selected_amount
         {
             if input_manager.is_just_pressed(input::Key::Right) {
                 *amount += 1;
-            }
-            else if input_manager.is_just_pressed(input::Key::Left) {
+            } else if input_manager.is_just_pressed(input::Key::Left) {
                 *amount -= 1;
-            }
-            else if input_manager.is_just_pressed(input::Key::Up) {
+            } else if input_manager.is_just_pressed(input::Key::Up) {
                 *amount += 4;
-            }
-            else if input_manager.is_just_pressed(input::Key::Down) {
+            } else if input_manager.is_just_pressed(input::Key::Down) {
                 if *amount > 4 {
                     *amount -= 4;
                 } else {
@@ -159,8 +184,9 @@ impl GameUI {
         }
 
         // Check for stack overflow
-        if let Some(index) = self.selected_index && let Some(element) = self.get_element_with_id(index)
-            && let GameUIElements::ItemSlot { item_stack } = &element.element
+        if let Some(index) = self.selected_id
+            && let Some(element) = self.get_element_with_id(index)
+            && let GameUIElements::ItemSlot { item_stack, .. } = &element.element
         {
             if self.selected_amount.is_some_and(|v| v < 1) {
                 self.selected_amount = Some(1);
@@ -174,12 +200,12 @@ impl GameUI {
 
         if input_manager.is_just_pressed(input::Key::Ok) {
             if self
-                .selected_index
-                .is_some_and(|index| index == self.cursor_index)
+                .selected_id
+                .is_some_and(|index| index == self.cursor_id)
                 && !self.is_selecting_amount
             {
-                if let Some(element) = self.get_element_with_id(self.cursor_index)
-                    && let GameUIElements::ItemSlot { item_stack } = &element.element
+                if let Some(element) = self.get_element_with_id(self.cursor_id)
+                    && let GameUIElements::ItemSlot { item_stack, .. } = &element.element
                 {
                     self.selected_amount = Some(item_stack.get_amount() as usize / 2);
                     self.is_selecting_amount = true;
@@ -187,17 +213,65 @@ impl GameUI {
             } else {
                 if self.is_selecting_amount {
                     self.is_selecting_amount = false;
-                } else if let Some(element) = self.get_element_with_id(self.cursor_index)
-                    && let GameUIElements::ItemSlot { item_stack } = &element.element && item_stack.get_item_type() != ItemType::Air
+                } else if let Some(selected_id) = self.selected_id
+                    && selected_id != self.cursor_id
+                    && let Some(start_elem) = self.get_element_with_id(selected_id)
+                    && let Some(end_elem) = self.get_element_with_id(self.cursor_id)
+                    && let GameUIElements::ItemSlot {
+                        inventory_id: start_inventory_id,
+                        inventory_slot_index: start_inventory_slot_index,
+                        ..
+                    } = start_elem.element
+                    && let GameUIElements::ItemSlot {
+                        inventory_id: end_inventory_id,
+                        inventory_slot_index: end_inventory_slot_index,
+                        ..
+                    } = end_elem.element
                 {
-                    self.selected_index = Some(self.cursor_index);
+                    if start_inventory_id == end_inventory_id {
+                        inventories[start_inventory_id].move_item(
+                            start_inventory_slot_index,
+                            end_inventory_slot_index,
+                            self.selected_amount,
+                        );
+                    } else {
+                        todo!();
+                    }
+
+                    self.selected_id = None;
+                    self.selected_amount = None;
+                    self.is_selecting_amount = false;
+
+                    self.update_slots(inventories);
+                } else if let Some(element) = self.get_element_with_id(self.cursor_id)
+                    && let GameUIElements::ItemSlot { item_stack, .. } = &element.element
+                    && item_stack.get_item_type() != ItemType::Air
+                {
+                    self.selected_id = Some(self.cursor_id);
                 }
             }
         }
         if input_manager.is_just_pressed(input::Key::Back) {
-            self.selected_index = None;
+            self.selected_id = None;
             self.selected_amount = None;
             self.is_selecting_amount = false;
+        }
+    }
+
+    /// Sync the GameUI slots elements with the matching inventories slots
+    fn update_slots(&mut self, inventories: &[&mut Inventory]) {
+        for element in &mut self.elements {
+            if let GameUIElements::ItemSlot {
+                item_stack,
+                inventory_id,
+                inventory_slot_index,
+            } = &mut element.element
+            {
+                *item_stack = inventories[*inventory_id]
+                    .get_ref_to_slot(*inventory_slot_index)
+                    .unwrap()
+                    .to_owned();
+            }
         }
     }
 }

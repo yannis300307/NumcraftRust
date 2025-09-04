@@ -49,7 +49,7 @@ pub enum BlockType {
     Dirt = 3,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 #[repr(u8)]
 pub enum ItemType {
     Air = 0,

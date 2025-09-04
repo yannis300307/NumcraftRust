@@ -1172,7 +1172,7 @@ impl Renderer {
             let x = element.pos.x;
             let y = element.pos.y;
 
-            if let GameUIElements::ItemSlot { item_stack } = &element.element {
+            if let GameUIElements::ItemSlot { item_stack , ..} = &element.element {
                 // Background
                 push_rect_uniform(
                     Rect {
@@ -1183,7 +1183,7 @@ impl Renderer {
                     },
                     Color::from_888(200, 200, 200),
                 );
-                if game_ui.cursor_index == element.id {
+                if game_ui.cursor_id == element.id {
                     // Red outline
                     push_rect_uniform(
                         Rect {
@@ -1269,7 +1269,7 @@ impl Renderer {
                         width: 36,
                         height: 36,
                     },
-                    if game_ui.selected_index.is_some_and(|id| id == element.id) {
+                    if game_ui.selected_id.is_some_and(|id| id == element.id) {
                         Color::from_888(255, 242, 0)
                     } else {
                         Color::from_888(150, 150, 150)
@@ -1297,7 +1297,7 @@ impl Renderer {
 
                 // Amount selection bar
                 if let Some(amount) = game_ui.selected_amount
-                    && game_ui.selected_index.is_some_and(|id| id == element.id)
+                    && game_ui.selected_id.is_some_and(|id| id == element.id)
                     && item_stack.get_amount() != 0
                 {
                     let amount_bar_lenght = 34 * amount / item_stack.get_amount() as usize;
