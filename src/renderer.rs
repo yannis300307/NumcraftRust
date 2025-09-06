@@ -4,7 +4,6 @@ use alloc::format;
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
 
-use libm::sqrtf;
 use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
 use core::{cmp::Ordering, f32, mem::swap};
@@ -21,12 +20,11 @@ use crate::{
         world::CHUNK_SIZE,
     },
     eadk::{
-        self, COLOR_BLACK, Color, Point, Rect, debug_info,
+        self, COLOR_BLACK, Color, Point, Rect,
         display::{pull_rect, push_rect, push_rect_uniform, wait_for_vblank},
     },
     frustum::Frustum,
-    game_ui::{self, GameUI, GameUIElements},
-    inventory::Inventory,
+    game_ui::{GameUI, GameUIElements},
     menu::{Menu, MenuElement, TextAnchor},
     mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D},
     player::Player,

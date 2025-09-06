@@ -12,20 +12,10 @@ use crate::{
     constants::{
         menu::{MENU_BACKGROUND_COLOR, SETTINGS_FILENAME},
         rendering::{FOV, MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
-    },
-    eadk::{self, Color, Point, SCREEN_RECT, input::KeyboardState},
-    game_ui::{ContainerNeighbors, GameUI},
-    input_manager::InputManager,
-    inventory::{Inventory, ItemStack},
-    menu::{Menu, MenuElement, TextAnchor},
-    player::Player,
-    renderer::Renderer,
-    save_manager::SaveManager,
-    storage_lib::{
+    }, eadk::{self, input::KeyboardState, Color, Point, SCREEN_RECT}, game_ui::{ContainerNeighbors, GameUI}, input_manager::InputManager, inventory::{Inventory, ItemStack}, menu::{Menu, MenuElement, TextAnchor}, player::Player, renderer::Renderer, save_manager::SaveManager, settings::Settings, storage_lib::{
         storage_extapp_file_erase, storage_extapp_file_exists, storage_extapp_file_read,
         storage_file_write,
-    },
-    world::World,
+    }, world::World
 };
 
 pub struct Game {
@@ -700,40 +690,4 @@ pub enum GameState {
     CreateWorld(String), // String: file_name
     DeleteWorld(String),
     Quit,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct Settings {
-    render_distance: usize,
-    fov: f32,
-    vsync: bool,
-}
-
-impl Settings {
-    pub fn new() -> Self {
-        Settings {
-            render_distance: MAX_RENDER_DISTANCE,
-            fov: FOV,
-            vsync: true,
-        }
-    }
-
-    pub fn save(&self) {
-        if storage_extapp_file_exists(SETTINGS_FILENAME) {
-            storage_extapp_file_erase(SETTINGS_FILENAME);
-        }
-        let raw = postcard::to_allocvec(self).unwrap();
-
-        storage_file_write(SETTINGS_FILENAME, &raw);
-    }
-
-    pub fn load(&mut self) {
-        if storage_extapp_file_exists(SETTINGS_FILENAME) {
-            let raw = storage_extapp_file_read(SETTINGS_FILENAME).unwrap();
-
-            let object: Settings = from_bytes(&raw).unwrap();
-
-            *self = object;
-        }
-    }
 }
