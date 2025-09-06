@@ -66,8 +66,8 @@ fn main() -> isize {
 
     let mut game = Game::new();
 
-    //game.main_loop();
-    game.player_inventory_loop();
+    game.main_loop();
+    //game.player_inventory_loop();
 
     0
 }
