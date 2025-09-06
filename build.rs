@@ -85,7 +85,7 @@ fn main() {
         .expect("Invalid UTF-8 in nwlink flags");
 
         let mut build = cc::Build::new();
-        build.file("src/storage.c");
+        build.file("src/libs/storage.c");
         build.flag("-std=c99");
         build.flag("-Os");
         build.flag("-Wall");
