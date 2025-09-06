@@ -52,6 +52,10 @@ impl Inventory {
         }
     }
 
+    pub fn move_item_in_other_inventory(&mut self, other_inventory: &mut Inventory, start_slot: usize, end_slot: usize, selected_amount_or_none: Option<usize>) {
+        todo!()
+    }
+
     pub fn move_item(
         &mut self,
         start_slot: usize,
