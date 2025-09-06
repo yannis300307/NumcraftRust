@@ -5,17 +5,12 @@ use alloc::{
     string::{String, ToString},
 };
 use nalgebra::{Vector2, Vector3};
-use postcard::from_bytes;
-use serde::{Deserialize, Serialize};
 
 use crate::{
     constants::{
-        menu::{MENU_BACKGROUND_COLOR, SETTINGS_FILENAME},
-        rendering::{FOV, MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
-    }, eadk::{self, input::KeyboardState, Color, Point, SCREEN_RECT}, game_ui::{ContainerNeighbors, GameUI}, input_manager::InputManager, inventory::{Inventory, ItemStack}, menu::{Menu, MenuElement, TextAnchor}, player::Player, renderer::Renderer, save_manager::SaveManager, settings::Settings, storage_lib::{
-        storage_extapp_file_erase, storage_extapp_file_exists, storage_extapp_file_read,
-        storage_file_write,
-    }, world::World
+        menu::MENU_BACKGROUND_COLOR,
+        rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
+    }, eadk::{self, input::KeyboardState, Color, Point, SCREEN_RECT}, game_ui::{ContainerNeighbors, GameUI}, input_manager::InputManager, inventory::ItemStack, menu::{Menu, MenuElement, TextAnchor}, player::Player, renderer::Renderer, save_manager::SaveManager, settings::Settings, world::World
 };
 
 mod game_menus;

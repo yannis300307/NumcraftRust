@@ -69,6 +69,13 @@ impl ContainerNeighbors {
     }
 }
 
+pub enum NeighborDirection {
+    Top,
+    Bottom,
+    Left,
+    Right,
+}
+
 pub struct GameUI {
     elements: Vec<AnchorContainer>,
     pub cursor_id: usize,
@@ -128,6 +135,53 @@ impl GameUI {
         self.elements.push(container);
 
         self
+    }
+
+    pub fn with_links(mut self, links: &[(usize, usize, NeighborDirection)]) -> Self {
+        for id in links {
+            let elem1 = self.get_element_with_id_mut(id.0).expect("Invalid ID1.");
+
+            match id.2 {
+                NeighborDirection::Top => elem1.neighbors.up_id = Some(id.1),
+                NeighborDirection::Bottom => elem1.neighbors.down_id = Some(id.1),
+                NeighborDirection::Left => elem1.neighbors.left_id = Some(id.1),
+                NeighborDirection::Right => elem1.neighbors.right_id = Some(id.1),
+            }
+
+            let elem2 = self.get_element_with_id_mut(id.1).expect("Invalid ID2.");
+
+             match id.2 {
+                NeighborDirection::Top => elem2.neighbors.down_id = Some(id.0),
+                NeighborDirection::Bottom => elem2.neighbors.up_id = Some(id.0),
+                NeighborDirection::Left => elem2.neighbors.right_id = Some(id.0),
+                NeighborDirection::Right => elem2.neighbors.left_id = Some(id.0),
+            }
+        }
+        self
+    }
+
+    pub fn add_element(
+        &mut self,
+        element: GameUIElements,
+        pos: Vector2<u16>,
+        id: usize,
+        neighbors: ContainerNeighbors,
+    ) {
+        let selectable = match element {
+            GameUIElements::Button { .. } => true,
+            GameUIElements::ItemSlot { .. } => true,
+            GameUIElements::Label { .. } => false,
+        };
+
+        let container = AnchorContainer {
+            element,
+            pos,
+            selectable,
+            id,
+            neighbors,
+        };
+
+        self.elements.push(container);
     }
 
     fn get_element_with_id(&self, id: usize) -> Option<&AnchorContainer> {
@@ -273,5 +327,54 @@ impl GameUI {
                     .clone();
             }
         }
+    }
+
+    pub fn with_slot_grid(
+        mut self,
+        pos: Vector2<u16>,
+        width: u16,
+        height: u16,
+        inventory_id: usize,
+        start_id: usize,
+        start_inventory_index: usize,
+    ) -> Self {
+        let mut last_inventory_index = start_inventory_index;
+        let mut last_element_id = start_id;
+
+        for y in 0..height {
+            for x in 0..width {
+                let slot = GameUIElements::create_slot(inventory_id, last_inventory_index);
+                let neighbors = ContainerNeighbors {
+                    up_id: if y != 0 {
+                        Some(last_element_id - width as usize)
+                    } else {
+                        None
+                    },
+                    down_id: if y != height - 1 {
+                        Some(last_element_id + width as usize)
+                    } else {
+                        None
+                    },
+                    left_id: if x != 0 {
+                        Some(last_element_id - 1)
+                    } else {
+                        None
+                    },
+                    right_id: if x != width - 1 {
+                        Some(last_element_id + 1)
+                    } else {
+                        None
+                    },
+                };
+
+                let slot_pos = Vector2::new(48 * x, 48 * y) + pos;
+                self.add_element(slot, slot_pos, last_element_id, neighbors);
+
+                last_inventory_index += 1;
+                last_element_id += 1;
+            }
+        }
+
+        self
     }
 }

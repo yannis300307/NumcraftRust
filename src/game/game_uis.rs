@@ -1,4 +1,4 @@
-use crate::game::*;
+use crate::{game::*, game_ui::NeighborDirection};
 
 impl Game {
     pub fn player_inventory_loop(&mut self) {
@@ -16,24 +16,16 @@ impl Game {
         let mut inventories = [&mut self.player.inventory];
 
         let mut ui = GameUI::new(true)
-            .with_element(
-                crate::game_ui::GameUIElements::create_slot(0, 0),
-                Vector2::new(20, 20),
-                0,
-                ContainerNeighbors::new(None, None, None, Some(1)),
-            )
-            .with_element(
-                crate::game_ui::GameUIElements::create_slot(0, 1),
-                Vector2::new(68, 20),
-                1,
-                ContainerNeighbors::new(None, None, Some(0), Some(2)),
-            )
-            .with_element(
-                crate::game_ui::GameUIElements::create_slot(0, 2),
-                Vector2::new(116, 20),
-                2,
-                ContainerNeighbors::new(None, None, Some(1), None),
-            )
+            .with_slot_grid(Vector2::new(22, 30), 6, 3, 0, 0, 0)
+            .with_slot_grid(Vector2::new(22, 184), 6, 1, 0, 18, 18)
+            .with_links(&[
+                (12, 18, NeighborDirection::Bottom),
+                (13, 19, NeighborDirection::Bottom),
+                (14, 20, NeighborDirection::Bottom),
+                (15, 21, NeighborDirection::Bottom),
+                (16, 22, NeighborDirection::Bottom),
+                (17, 23, NeighborDirection::Bottom),
+            ])
             .sync(&inventories);
 
         ui.selected_amount = None;
