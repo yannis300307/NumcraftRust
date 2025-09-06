@@ -30,16 +30,7 @@ fn main() {
         {
             out
         } else {
-            Command::new("cmd")
-                .args([
-                    "/c",
-                    "nwlink",
-                    "png-nwi",
-                    "assets/icon.png",
-                    "target/icon.nwi",
-                ])
-                .output()
-                .expect("Unable to convert icon.")
+            panic!("Your OS is not supported! If you're using Windows, please compile Numcraft in WSL.");
         }
     };
     assert!(
@@ -82,11 +73,7 @@ fn main() {
     if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "none" {
         unsafe { std::env::set_var("CC", "arm-none-eabi-gcc") };
 
-        let program = if cfg!(windows) {
-            "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx.cmd"
-        } else {
-            "npx"
-        };
+        let program = "npx";
 
         let nwlink_flags = String::from_utf8(
             Command::new(program)
