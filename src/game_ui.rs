@@ -209,7 +209,6 @@ impl GameUI {
                 _ => None,
             };
 
-
             if let Some(neighbor_id) = neighbor {
                 self.cursor_id = neighbor_id;
                 self.ask_redraw();
@@ -221,7 +220,11 @@ impl GameUI {
         self.need_redraw = true;
     }
 
-    pub fn update(&mut self, input_manager: &InputManager, inventories: &mut [&mut Inventory]) {
+    pub fn update(
+        &mut self,
+        input_manager: &InputManager,
+        inventories: &mut [&mut Inventory],
+    ) -> bool {
         if self.is_selecting_amount
             && let Some(amount) = &mut self.selected_amount
         {
@@ -325,10 +328,19 @@ impl GameUI {
             }
         }
         if input_manager.is_just_pressed(input::Key::Back) {
-            self.selected_id = None;
-            self.selected_amount = None;
-            self.is_selecting_amount = false;
+            if self.selected_id.is_some() {
+                self.selected_id = None;
+                self.selected_amount = None;
+                self.is_selecting_amount = false;
+            } else {
+                return false;
+            }
         }
+
+        if input_manager.is_just_pressed(input::Key::Var) {
+            return false;
+        }
+        true
     }
 
     /// Sync the GameUI slots elements with the matching inventories slots

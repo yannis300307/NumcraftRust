@@ -3,6 +3,7 @@ use libm::roundf;
 use crate::chunk::{self, Chunk};
 use crate::constants::BlockType;
 use crate::constants::world::CHUNK_SIZE;
+use crate::inventory::Inventory;
 use crate::mesh::{Mesh, Quad};
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
@@ -15,6 +16,12 @@ const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 pub struct World {
     pub chunks: Vec<chunk::Chunk>,
     gen_noise: FastNoiseLite,
+    registered_inventories: Vec<Inventory>
+}
+
+pub struct RegisteredInventory {
+    inventory: Inventory,
+    block_pos: Option<Vector3<usize>>,
 }
 
 /// Convert the block position from world space to chunk space
@@ -47,6 +54,7 @@ impl World {
         let mut world = World {
             chunks: Vec::new(),
             gen_noise: FastNoiseLite::new(),
+            registered_inventories: Vec::new()
         };
 
         world
@@ -264,5 +272,9 @@ impl World {
         } else {
             false
         }
+    }
+
+    fn register_inventory(&mut self, inventory: Inventory) {
+        self.registered_inventories.push(inventory);
     }
 }

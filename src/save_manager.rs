@@ -1,6 +1,9 @@
 #[cfg(target_os = "none")]
 use alloc::{string::String, vec::Vec};
 
+#[cfg(target_os = "none")]
+use crate::alloc::borrow::ToOwned;
+
 use lz4_flex::{compress, compress_prepend_size, decompress, decompress_size_prepended};
 use nalgebra::Vector3;
 use postcard::{from_bytes, to_allocvec};
@@ -52,6 +55,7 @@ pub struct SaveManager {
     chunks_data: [Vec<u8>; 64],
     player_data: PlayerData,
     world_info: WorldInfo,
+    pub file_name: Option<String>,
 }
 
 impl SaveManager {
@@ -60,6 +64,7 @@ impl SaveManager {
             chunks_data: [const { Vec::new() }; 64],
             player_data: PlayerData::new(),
             world_info: WorldInfo::new(),
+            file_name: None,
         }
     }
 
@@ -110,13 +115,15 @@ impl SaveManager {
         }
     }
 
-    pub fn save_world_to_file(&self, filename: &str) {
+    pub fn save_world_to_file(&self) {
         let data = self.get_raw();
 
-        if storage_extapp_file_exists(filename) {
-            storage_extapp_file_erase(filename);
+        if let Some(file_name) = &self.file_name {
+            if storage_extapp_file_exists(&file_name) {
+                storage_extapp_file_erase(&file_name);
+            }
+            storage_file_write(&file_name, &data);
         }
-        storage_file_write(filename, &data);
     }
 
     fn get_raw(&self) -> Vec<u8> {
@@ -236,6 +243,7 @@ impl SaveManager {
                         return Err(SaveFileLoadError::CorruptedWorld);
                     }
 
+                    self.file_name = Some(filename.to_owned());
                     Ok(())
                 } else {
                     Err(SaveFileLoadError::CorruptedWorld)
@@ -302,6 +310,7 @@ impl SaveManager {
         }
 
         self.player_data = PlayerData::new();
+        self.file_name = None;
     }
 }
 

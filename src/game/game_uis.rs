@@ -1,8 +1,22 @@
-use crate::{game::*, game_ui::NeighborDirection};
+use crate::{game::*, game_ui::NeighborDirection, input_manager};
+
+pub enum PlayerInventoryPage {
+    Normal,
+    Creative,
+}
 
 impl Game {
-    pub fn player_inventory_loop(&mut self) {
-        self.player
+    pub fn player_inventory_loop(&mut self, page: PlayerInventoryPage) -> GameState {
+        match page {
+            PlayerInventoryPage::Normal => self.player_inventory_normal_loop(),
+            PlayerInventoryPage::Creative => todo!(),
+        }
+
+        GameState::InGame
+    }
+
+    fn player_inventory_normal_loop(&mut self) {
+         self.player
             .inventory
             .replace_slot_item_stack(0, ItemStack::new(crate::constants::ItemType::DirtBlock, 24));
         self.player
@@ -11,6 +25,11 @@ impl Game {
         self.player.inventory.replace_slot_item_stack(
             2,
             ItemStack::new(crate::constants::ItemType::GrassBlock, 50),
+        );
+
+        self.player.inventory.replace_slot_item_stack(
+            12,
+            ItemStack::new(crate::constants::ItemType::StoneBlock, 13),
         );
 
         let mut inventories = [&mut self.player.inventory];
@@ -32,7 +51,9 @@ impl Game {
         loop {
             self.input_manager.update();
 
-            ui.update(&self.input_manager, &mut inventories);
+            if !ui.update(&self.input_manager, &mut inventories) {
+                break;
+            }
 
             self.renderer.draw_game_UI(&mut ui);
 

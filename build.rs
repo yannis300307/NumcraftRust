@@ -30,7 +30,9 @@ fn main() {
         {
             out
         } else {
-            panic!("Your OS is not supported! If you're using Windows, please compile Numcraft in WSL.");
+            panic!(
+                "Your OS is not supported! If you're using Windows, please compile Numcraft in WSL."
+            );
         }
     };
     assert!(
@@ -103,6 +105,8 @@ fn main() {
   KeySDLKeyPair(Key::OK,        SDL_SCANCODE_RETURN),\
   KeySDLKeyPair(Key::Back,      SDL_SCANCODE_BACKSPACE),\
   KeySDLKeyPair(Key::EXE,       SDL_SCANCODE_ESCAPE),\
+\
+  KeySDLKeyPair(Key::Var,       SDL_SCANCODE_I),\
 \
   KeySDLKeyPair(Key::Toolbox,   SDL_SCANCODE_W),\
   KeySDLKeyPair(Key::Imaginary, SDL_SCANCODE_A),\

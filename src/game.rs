@@ -10,7 +10,17 @@ use crate::{
     constants::{
         menu::MENU_BACKGROUND_COLOR,
         rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
-    }, eadk::{self, input::KeyboardState, Color, Point, SCREEN_RECT}, game_ui::{ContainerNeighbors, GameUI}, input_manager::InputManager, inventory::ItemStack, menu::{Menu, MenuElement, TextAnchor}, player::Player, renderer::Renderer, save_manager::SaveManager, settings::Settings, world::World
+    },
+    eadk::{self, Color, Point, SCREEN_RECT, input::KeyboardState},
+    game_ui::GameUI,
+    input_manager::InputManager,
+    inventory::ItemStack,
+    menu::{Menu, MenuElement, TextAnchor},
+    player::Player,
+    renderer::Renderer,
+    save_manager::SaveManager,
+    settings::Settings,
+    world::World,
 };
 
 mod game_menus;
@@ -39,8 +49,7 @@ impl Game {
         }
     }
 
-    /// The game loop. Handle physic, rendering etc ...
-    pub fn game_loop(&mut self, file_name: &String) -> GameState {
+    pub fn load_world(&mut self, file_name: &String) -> GameState {
         // Load the world or create it if it doesn't exists yet
         if self.save_manager.load_from_file(file_name.as_str()).is_ok()
         // TODO: Show an error message instead
@@ -86,7 +95,7 @@ impl Game {
 
         self.save_manager.clean(); // Clear save manager to save memory
 
-        // Show a warning messge
+        // Show a warning message
         eadk::display::push_rect_uniform(SCREEN_RECT, Color::from_888(255, 255, 255));
         let show_msg = |message, y| {
             eadk::display::draw_string(
@@ -104,16 +113,42 @@ impl Game {
         show_msg("DON'T press [Home]", 110);
 
         eadk::timing::msleep(3000);
+        GameState::InGame
+    }
 
+    /// The game loop. Handle physic, rendering etc ...
+    pub fn game_loop(&mut self) -> GameState {
         // Delta time calculation stuff and loop
         let mut last = eadk::timing::millis();
         loop {
             let current = eadk::timing::millis();
             let delta = (current - last) as f32 / 1000.0;
             last = current;
-            if !self.update_in_game(delta, file_name) {
+
+            self.input_manager.update();
+
+            if self.input_manager.is_just_pressed(eadk::input::Key::Exe) {
+                self.exit_world();
+
                 return GameState::GoMainMenu;
             }
+            if self.input_manager.is_just_pressed(eadk::input::Key::Var) {
+                return GameState::OpenPlayerInventory(game_uis::PlayerInventoryPage::Normal);
+            };
+
+            self.player.update(
+                delta,
+                &self.input_manager,
+                &mut self.world,
+                &mut self.renderer.camera,
+            );
+
+            self.renderer.camera.update(delta, &self.input_manager);
+
+            self.world.check_mesh_regeneration();
+
+            self.renderer
+                .draw_game(&mut self.world, &self.player, 1.0 / delta);
         }
     }
 
@@ -122,7 +157,7 @@ impl Game {
         self.renderer.enable_vsync = self.settings.vsync;
     }
 
-    fn exit_world(&mut self, world_name: &String) {
+    fn exit_world(&mut self) {
         for chunk in self.world.chunks.iter() {
             self.save_manager.set_chunk(chunk);
         }
@@ -130,40 +165,9 @@ impl Game {
 
         self.save_manager.update_player_data(&self.player);
 
-        self.save_manager.save_world_to_file(world_name.as_str());
+        self.save_manager.save_world_to_file();
 
         self.save_manager.clean();
-    }
-
-    pub fn update_in_game(&mut self, delta: f32, world_name: &String) -> bool {
-        let keyboard_state = eadk::input::KeyboardState::scan();
-        let just_pressed_keyboard_state = keyboard_state.get_just_pressed(self.last_keyboard_state);
-        self.last_keyboard_state = keyboard_state;
-
-        if keyboard_state.key_down(eadk::input::Key::Exe) {
-            self.exit_world(world_name);
-
-            return false;
-        }
-
-        self.player.update(
-            delta,
-            keyboard_state,
-            just_pressed_keyboard_state,
-            &mut self.world,
-            &mut self.renderer.camera,
-        );
-
-        self.renderer.camera.update(delta, keyboard_state);
-
-        //self.world.generate_world_around_pos(*self.renderer.camera.get_pos(), self.settings.render_distance as isize);
-        self.world.check_mesh_regeneration();
-
-        self.renderer
-            .draw_game(&mut self.world, &self.player, 1.0 / delta);
-
-        //eadk::timing::msleep(20);
-        true
     }
 
     pub fn main_loop(&mut self) {
@@ -177,9 +181,11 @@ impl Game {
                 GameState::GoMainMenu => self.main_menu_loop(),
                 GameState::GoSetting => self.settings_menu_loop(),
                 GameState::GoSelectWorld => self.worlds_select_menu_loop(),
-                GameState::LoadWorld(filename) => self.game_loop(&filename),
+                GameState::LoadWorld(filename) => self.load_world(&filename),
+                GameState::InGame => self.game_loop(),
                 GameState::DeleteWorld(filename) => self.delete_world_menu_loop(&filename),
                 GameState::CreateWorld(file_name) => self.create_world_menu_loop(&file_name),
+                GameState::OpenPlayerInventory(page) => self.player_inventory_loop(page),
                 GameState::Quit => break,
             }
         }
@@ -190,6 +196,8 @@ pub enum GameState {
     GoMainMenu,
     GoSetting,
     GoSelectWorld,
+    InGame,
+    OpenPlayerInventory(game_uis::PlayerInventoryPage),
     LoadWorld(String),   // String: filename, String: world name
     CreateWorld(String), // String: file_name
     DeleteWorld(String),

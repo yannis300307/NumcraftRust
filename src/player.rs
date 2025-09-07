@@ -4,12 +4,7 @@ use libm::sincosf;
 use nalgebra::{ComplexField, Vector3};
 
 use crate::{
-    camera::Camera,
-    constants::{BlockType, player::MOVEMENT_SPEED},
-    eadk,
-    inventory::Inventory,
-    mesh::{Mesh, Quad, QuadDir},
-    world::World,
+    camera::Camera, constants::{player::MOVEMENT_SPEED, BlockType}, eadk, input_manager::InputManager, inventory::Inventory, mesh::{Mesh, Quad, QuadDir}, world::World
 };
 
 pub struct Player {
@@ -60,8 +55,7 @@ impl Player {
     pub fn update(
         &mut self,
         delta: f32,
-        keyboard_state: eadk::input::KeyboardState,
-        just_pressed_keyboard_state: eadk::input::KeyboardState,
+        input_manager: &InputManager,
         world: &mut World,
         camera: &mut Camera,
     ) {
@@ -71,47 +65,47 @@ impl Player {
         self.ray_cast_result = self.ray_cast(camera, world, 10);
 
         // Movements
-        if keyboard_state.key_down(eadk::input::Key::Toolbox) {
+        if input_manager.is_keydown(eadk::input::Key::Toolbox) {
             // Forward
             let translation = sincosf(self.rotation.y);
             self.pos.x += translation.0 * delta * MOVEMENT_SPEED;
             self.pos.z += translation.1 * delta * MOVEMENT_SPEED;
         }
-        if keyboard_state.key_down(eadk::input::Key::Comma) {
+        if input_manager.is_keydown(eadk::input::Key::Comma) {
             // Backward
             let translation = sincosf(self.rotation.y);
             self.pos.x -= translation.0 * delta * MOVEMENT_SPEED;
             self.pos.z -= translation.1 * delta * MOVEMENT_SPEED;
         }
-        if keyboard_state.key_down(eadk::input::Key::Imaginary) {
+        if input_manager.is_keydown(eadk::input::Key::Imaginary) {
             // Left
             let translation = sincosf(self.rotation.y + PI / 2.0);
             self.pos.x -= translation.0 * delta * MOVEMENT_SPEED;
             self.pos.z -= translation.1 * delta * MOVEMENT_SPEED;
         }
-        if keyboard_state.key_down(eadk::input::Key::Power) {
+        if input_manager.is_keydown(eadk::input::Key::Power) {
             // Right
             let translation = sincosf(self.rotation.y + PI / 2.0);
             self.pos.x += translation.0 * delta * MOVEMENT_SPEED;
             self.pos.z += translation.1 * delta * MOVEMENT_SPEED;
         }
-        if keyboard_state.key_down(eadk::input::Key::Shift) {
+        if input_manager.is_keydown(eadk::input::Key::Shift) {
             // Up
             self.pos.y -= delta * MOVEMENT_SPEED;
         }
-        if keyboard_state.key_down(eadk::input::Key::Exp) {
+        if input_manager.is_keydown(eadk::input::Key::Exp) {
             // Down
             self.pos.y += delta * MOVEMENT_SPEED;
         }
 
-        if just_pressed_keyboard_state.key_down(eadk::input::Key::Back) {
+        if input_manager.is_just_pressed(eadk::input::Key::Back) {
             // Break Block
             if let Some(result) = &self.ray_cast_result {
                 world.set_block_in_world(result.block_pos, BlockType::Air);
             }
         }
 
-        if just_pressed_keyboard_state.key_down(eadk::input::Key::Ok) {
+        if input_manager.is_just_pressed(eadk::input::Key::Ok) {
             // Place Block
             if let Some(result) = &self.ray_cast_result {
                 let block_pos = result.block_pos + result.face_dir.get_normal_vector();
