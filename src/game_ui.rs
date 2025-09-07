@@ -82,6 +82,7 @@ pub struct GameUI {
     pub selected_id: Option<usize>,
     pub selected_amount: Option<usize>,
     pub need_complete_redraw: bool,
+    pub need_redraw: bool,
     pub blur_background: bool,
 
     pub is_selecting_amount: bool,
@@ -95,6 +96,7 @@ impl GameUI {
             selected_id: None,
             selected_amount: None,
             need_complete_redraw: true,
+            need_redraw: true,
             blur_background,
             is_selecting_amount: false,
         };
@@ -150,7 +152,7 @@ impl GameUI {
 
             let elem2 = self.get_element_with_id_mut(id.1).expect("Invalid ID2.");
 
-             match id.2 {
+            match id.2 {
                 NeighborDirection::Top => elem2.neighbors.down_id = Some(id.0),
                 NeighborDirection::Bottom => elem2.neighbors.up_id = Some(id.0),
                 NeighborDirection::Left => elem2.neighbors.right_id = Some(id.0),
@@ -184,11 +186,11 @@ impl GameUI {
         self.elements.push(container);
     }
 
-    fn get_element_with_id(&self, id: usize) -> Option<&AnchorContainer> {
+    pub fn get_element_with_id(&self, id: usize) -> Option<&AnchorContainer> {
         self.elements.iter().find(|&elem| elem.id == id)
     }
 
-    fn get_element_with_id_mut(&mut self, id: usize) -> Option<&mut AnchorContainer> {
+    pub fn get_element_with_id_mut(&mut self, id: usize) -> Option<&mut AnchorContainer> {
         self.elements.iter_mut().find(|elem| elem.id == id)
     }
 
@@ -207,10 +209,16 @@ impl GameUI {
                 _ => None,
             };
 
+
             if let Some(neighbor_id) = neighbor {
                 self.cursor_id = neighbor_id;
+                self.ask_redraw();
             }
         }
+    }
+
+    pub fn ask_redraw(&mut self) {
+        self.need_redraw = true;
     }
 
     pub fn update(&mut self, input_manager: &InputManager, inventories: &mut [&mut Inventory]) {
@@ -219,16 +227,20 @@ impl GameUI {
         {
             if input_manager.is_just_pressed(input::Key::Right) {
                 *amount += 1;
+                self.ask_redraw();
             } else if input_manager.is_just_pressed(input::Key::Left) {
                 *amount -= 1;
+                self.ask_redraw();
             } else if input_manager.is_just_pressed(input::Key::Up) {
                 *amount += 4;
+                self.ask_redraw();
             } else if input_manager.is_just_pressed(input::Key::Down) {
                 if *amount > 4 {
                     *amount -= 4;
                 } else {
                     *amount = 1;
                 }
+                self.ask_redraw();
             }
         } else {
             self.move_cursor_if_possible(input_manager, input::Key::Right);
@@ -244,11 +256,13 @@ impl GameUI {
         {
             if self.selected_amount.is_some_and(|v| v < 1) {
                 self.selected_amount = Some(1);
+                self.ask_redraw();
             } else if self
                 .selected_amount
                 .is_some_and(|v| v > item_stack.get_amount() as usize)
             {
                 self.selected_amount = Some(item_stack.get_amount() as usize);
+                self.ask_redraw();
             }
         }
 
@@ -263,10 +277,12 @@ impl GameUI {
                 {
                     self.selected_amount = Some(item_stack.get_amount() as usize / 2);
                     self.is_selecting_amount = true;
+                    self.ask_redraw();
                 }
             } else {
                 if self.is_selecting_amount {
                     self.is_selecting_amount = false;
+                    self.ask_redraw();
                 } else if let Some(selected_id) = self.selected_id
                     && selected_id != self.cursor_id
                     && let Some(start_elem) = self.get_element_with_id(selected_id)
@@ -288,8 +304,10 @@ impl GameUI {
                             end_inventory_slot_index,
                             self.selected_amount,
                         );
+                        self.ask_redraw();
                     } else {
-                        todo!();
+                        todo!("Cross inventory item manipulation is not implemented yet.");
+                        self.ask_redraw();
                     }
 
                     self.selected_id = None;
@@ -302,6 +320,7 @@ impl GameUI {
                     && item_stack.get_item_type() != ItemType::Air
                 {
                     self.selected_id = Some(self.cursor_id);
+                    self.ask_redraw();
                 }
             }
         }
@@ -321,12 +340,14 @@ impl GameUI {
                 inventory_slot_index,
             } = &mut element.element
             {
-                *item_stack = inventories[*inventory_id]
+                let new_item_stack = inventories[*inventory_id]
                     .get_ref_to_slot(*inventory_slot_index)
                     .unwrap()
                     .clone();
+                *item_stack = new_item_stack;
             }
         }
+        self.ask_redraw();
     }
 
     pub fn with_slot_grid(

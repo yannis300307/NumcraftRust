@@ -8,7 +8,7 @@ use crate::{
     eadk::input::{Key, KeyboardState},
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ItemStack {
     item_type: ItemType,
     amount: u8,
