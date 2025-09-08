@@ -2,13 +2,14 @@ use core::{mem, usize};
 
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     constants::ItemType,
     eadk::input::{Key, KeyboardState},
 };
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ItemStack {
     item_type: ItemType,
     amount: u8,
@@ -32,8 +33,14 @@ impl ItemStack {
     pub fn get_amount(&self) -> u8 {
         self.amount
     }
+
+    pub fn clear(&mut self) {
+        self.amount = 0;
+        self.item_type = ItemType::Air;
+    }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Inventory {
     slots: Vec<ItemStack>,
     pub modified: bool,
@@ -52,8 +59,25 @@ impl Inventory {
         }
     }
 
-    pub fn move_item_in_other_inventory(&mut self, other_inventory: &mut Inventory, start_slot: usize, end_slot: usize, selected_amount_or_none: Option<usize>) {
+    pub fn move_item_in_other_inventory(
+        &mut self,
+        other_inventory: &mut Inventory,
+        start_slot: usize,
+        end_slot: usize,
+        selected_amount_or_none: Option<usize>,
+    ) {
         todo!()
+    }
+
+    pub fn take_one(&mut self, index: usize) -> Option<ItemType> {
+        let slot = self.slots.get_mut(index)?;
+        let item_type = slot.item_type;
+        if slot.amount == 1 {
+            slot.clear();
+        } else if slot.amount > 0 {
+            slot.amount -= 1;
+        }
+        Some(item_type)
     }
 
     pub fn move_item(

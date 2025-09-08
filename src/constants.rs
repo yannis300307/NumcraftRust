@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::{eadk::Color, mesh::QuadDir};
 
 pub mod rendering {
@@ -49,7 +51,7 @@ pub enum BlockType {
     Dirt = 3,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 #[repr(u8)]
 pub enum ItemType {
     Air = 0,
@@ -75,6 +77,15 @@ impl ItemType {
             ItemType::StoneBlock => 64,
             ItemType::GrassBlock => 64,
             ItemType::DirtBlock => 64,
+        }
+    }
+
+    pub fn get_matching_block_type(&self) -> Option<BlockType> {
+        match self {
+            ItemType::Air => None,
+            ItemType::StoneBlock => Some(BlockType::Stone),
+            ItemType::GrassBlock => Some(BlockType::Grass),
+            ItemType::DirtBlock => Some(BlockType::Dirt),
         }
     }
 }

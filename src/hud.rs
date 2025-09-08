@@ -7,7 +7,10 @@ pub struct Hud {
 
 impl Hud {
     pub fn new() -> Self {
-        Hud { slots: [const {ItemStack::void()}; 6], selected_slot: 0 }
+        Hud {
+            slots: [const { ItemStack::void() }; 6],
+            selected_slot: 0,
+        }
     }
     pub fn update(&mut self, input_manager: &InputManager) {
         if input_manager.is_just_pressed(crate::eadk::input::Key::LeftParenthesis) {

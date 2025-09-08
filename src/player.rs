@@ -4,7 +4,14 @@ use libm::sincosf;
 use nalgebra::{ComplexField, Vector3};
 
 use crate::{
-    camera::Camera, constants::{player::MOVEMENT_SPEED, BlockType}, eadk, input_manager::InputManager, inventory::Inventory, mesh::{Mesh, Quad, QuadDir}, world::World
+    camera::Camera,
+    constants::{BlockType, player::MOVEMENT_SPEED},
+    eadk,
+    hud::Hud,
+    input_manager::InputManager,
+    inventory::Inventory,
+    mesh::{Mesh, Quad, QuadDir},
+    world::World,
 };
 
 pub struct Player {
@@ -58,6 +65,7 @@ impl Player {
         input_manager: &InputManager,
         world: &mut World,
         camera: &mut Camera,
+        hud: &Hud,
     ) {
         self.sync_with_camera(camera);
         self.rotation = *camera.get_rotation();
@@ -114,7 +122,11 @@ impl Player {
                     .is_some_and(|b| b.is_air())
                 // Just in case
                 {
-                    world.set_block_in_world(block_pos, BlockType::Stone);
+                    if let Some(item_type) = self.inventory.take_one(18 + hud.selected_slot)
+                        && let Some(block_type) = item_type.get_matching_block_type()
+                    {
+                        world.set_block_in_world(block_pos, block_type);
+                    }
                 }
             }
         }

@@ -143,6 +143,7 @@ impl Game {
                 &self.input_manager,
                 &mut self.world,
                 &mut self.renderer.camera,
+                &mut self.hud,
             );
             self.hud.update(&self.input_manager);
             self.hud.sync(&self.player);
