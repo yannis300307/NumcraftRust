@@ -1,4 +1,4 @@
-use crate::{hud::Hud, renderer::*};
+use crate::{constants::ItemType, hud::Hud, renderer::*};
 
 impl Renderer {
     pub fn draw_hud(&mut self, hud: &Hud, fps_count: f32, tile_x: usize, tile_y: usize) {
@@ -150,6 +150,31 @@ impl Renderer {
 
         if texture_id != 0 {
             self.draw_scalled_tile_on_frame_buffer(texture_id, pos + Vector2::new(3, 3), 3);
+        }
+
+        let item_type = item_stack.get_item_type();
+        let max_item_count = item_type.get_max_stack_amount();
+
+        if item_type != ItemType::Air && item_type.get_max_stack_amount() > 1 {
+            let item_bar_lenght = 24 * item_stack.get_amount() as u16 / max_item_count as u16;
+            self.push_rect_uniform_on_frame_buffer(
+                Rect {
+                    x: pos.x + 3,
+                    y: pos.y + 24,
+                    width: item_bar_lenght,
+                    height: 3,
+                },
+                Color::from_888(100, 150, 255),
+            );
+            self.push_rect_uniform_on_frame_buffer(
+                Rect {
+                    x: pos.x + 3 + item_bar_lenght,
+                    y: pos.y + 24,
+                    width: 24 - item_bar_lenght,
+                    height: 3,
+                },
+                Color::from_888(200, 200, 200),
+            );
         }
     }
 }
