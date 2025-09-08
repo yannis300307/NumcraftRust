@@ -10,14 +10,11 @@ use postcard::{from_bytes, to_allocvec};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    chunk::Chunk,
-    constants::{BlockType, world::CHUNK_SIZE},
-    player::Player,
-    storage_lib::{
+    chunk::Chunk, constants::{world::CHUNK_SIZE, BlockType}, eadk, player::Player, storage_lib::{
         storage_extapp_file_erase, storage_extapp_file_exists,
         storage_extapp_file_list_with_extension, storage_extapp_file_read,
         storage_extapp_file_read_header, storage_file_write,
-    },
+    }
 };
 
 #[derive(Serialize, Deserialize)]
@@ -198,6 +195,7 @@ impl SaveManager {
     }
 
     pub fn load_from_file(&mut self, filename: &str) -> Result<(), SaveFileLoadError> {
+        self.file_name = Some(filename.to_owned());
         // Read file
         if let Some(raw_data) = storage_extapp_file_read(filename) {
             if let Ok(world_data_offset) = self.read_world_info(&raw_data) {
@@ -243,7 +241,6 @@ impl SaveManager {
                         return Err(SaveFileLoadError::CorruptedWorld);
                     }
 
-                    self.file_name = Some(filename.to_owned());
                     Ok(())
                 } else {
                     Err(SaveFileLoadError::CorruptedWorld)
@@ -310,7 +307,6 @@ impl SaveManager {
         }
 
         self.player_data = PlayerData::new();
-        self.file_name = None;
     }
 }
 
