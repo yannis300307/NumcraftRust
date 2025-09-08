@@ -13,6 +13,7 @@ use crate::{
     },
     eadk::{self, Color, Point, SCREEN_RECT, input::KeyboardState},
     game_ui::GameUI,
+    hud::Hud,
     input_manager::InputManager,
     inventory::ItemStack,
     menu::{Menu, MenuElement, TextAnchor},
@@ -30,10 +31,10 @@ pub struct Game {
     renderer: Renderer,
     world: World,
     player: Player,
-    last_keyboard_state: KeyboardState,
     save_manager: SaveManager,
     settings: Settings,
     input_manager: InputManager,
+    hud: Hud,
 }
 
 impl Game {
@@ -42,10 +43,10 @@ impl Game {
             renderer: Renderer::new(),
             world: World::new(),
             player: Player::new(),
-            last_keyboard_state: KeyboardState::new(),
             save_manager: SaveManager::new(),
             settings: Settings::new(),
             input_manager: InputManager::new(),
+            hud: Hud::new(),
         }
     }
 
@@ -91,6 +92,7 @@ impl Game {
                 Vector3::new(0., 0., 0.),
                 player_spawn_pos,
             );
+            self.hud.sync(&self.player);
         }
 
         self.save_manager.clean(); // Clear save manager to save memory
@@ -142,13 +144,15 @@ impl Game {
                 &mut self.world,
                 &mut self.renderer.camera,
             );
+            self.hud.update(&self.input_manager);
+            self.hud.sync(&self.player);
 
             self.renderer.camera.update(delta, &self.input_manager);
 
             self.world.check_mesh_regeneration();
 
             self.renderer
-                .draw_game(&mut self.world, &self.player, 1.0 / delta);
+                .draw_game(&mut self.world, &self.player, 1.0 / delta, &self.hud);
         }
     }
 

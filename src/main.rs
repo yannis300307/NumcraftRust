@@ -35,6 +35,7 @@ mod player;
 mod save_manager;
 mod storage_lib;
 mod settings;
+mod hud;
 
 #[used]
 #[cfg(target_os = "none")]

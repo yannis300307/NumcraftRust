@@ -1,4 +1,4 @@
-use crate::renderer::*;
+use crate::{hud::Hud, renderer::*};
 
 /// Fill a triangle in the frame buffer
 pub fn fill_triangle(
@@ -118,7 +118,11 @@ pub fn draw_2d_triangle(
     }
 }
 
-pub fn matrix_point_at(pos: &Vector3<f32>, target: &Vector3<f32>, up: &Vector3<f32>) -> Matrix4<f32> {
+pub fn matrix_point_at(
+    pos: &Vector3<f32>,
+    target: &Vector3<f32>,
+    up: &Vector3<f32>,
+) -> Matrix4<f32> {
     let new_forward = (target - pos).normalize();
 
     let new_up = (up - new_forward * up.dot(&new_forward)).normalize();
@@ -348,7 +352,6 @@ pub fn triangle_clip_against_plane(
 }
 
 impl Renderer {
-
     pub fn update_fov(&mut self, new_fov: f32) {
         self.camera.set_fov(new_fov);
         self.projection_matrix =
@@ -483,7 +486,7 @@ impl Renderer {
         self.add_3d_triangle_to_render(quad_triangles.1, mat_view);
     }
 
-    pub fn draw_game(&mut self, world: &mut World, player: &Player, fps_count: f32) {
+    pub fn draw_game(&mut self, world: &mut World, player: &Player, fps_count: f32, hud: &Hud) {
         self.triangles_to_render.clear();
 
         let mat_view = self.get_mat_view();
@@ -546,7 +549,7 @@ impl Renderer {
                 self.clear_screen(Color::from_components(0b01110, 0b110110, 0b11111));
                 self.draw_triangles(x, y);
 
-                self.draw_ui(fps_count, x, y);
+                self.draw_hud(hud, fps_count, x, y);
 
                 eadk::display::push_rect(
                     Rect {

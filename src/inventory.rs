@@ -15,7 +15,7 @@ pub struct ItemStack {
 }
 
 impl ItemStack {
-    pub fn void() -> Self {
+    pub const fn void() -> Self {
         ItemStack {
             item_type: ItemType::Air,
             amount: 0,
