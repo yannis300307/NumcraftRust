@@ -18,18 +18,18 @@ impl Game {
     fn player_inventory_normal_loop(&mut self) {
          self.player
             .inventory
-            .replace_slot_item_stack(0, ItemStack::new(crate::constants::ItemType::DirtBlock, 24));
+            .replace_slot_item_stack(0, ItemStack::new(crate::constants::ItemType::DirtBlock, 24, false));
         self.player
             .inventory
-            .replace_slot_item_stack(1, ItemStack::new(crate::constants::ItemType::DirtBlock, 1));
+            .replace_slot_item_stack(1, ItemStack::new(crate::constants::ItemType::DirtBlock, 1, false));
         self.player.inventory.replace_slot_item_stack(
             2,
-            ItemStack::new(crate::constants::ItemType::GrassBlock, 50),
+            ItemStack::new(crate::constants::ItemType::GrassBlock, 50, false),
         );
 
         self.player.inventory.replace_slot_item_stack(
             12,
-            ItemStack::new(crate::constants::ItemType::StoneBlock, 13),
+            ItemStack::new(crate::constants::ItemType::StoneBlock, 1, true),
         );
 
         let mut inventories = [&mut self.player.inventory];
@@ -55,7 +55,7 @@ impl Game {
                 break;
             }
 
-            self.renderer.draw_game_UI(&mut ui);
+            self.renderer.draw_game_ui(&mut ui);
 
             eadk::display::wait_for_vblank();
             eadk::timing::msleep(50);

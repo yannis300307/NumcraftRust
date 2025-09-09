@@ -203,25 +203,35 @@ impl Renderer {
             if texture_id != 0 {
                 self.draw_scalled_tile_on_screen(texture_id, Vector2::new(4 + x, 4 + y), 4);
 
-                let amount_text = if let Some(selected_id) = game_ui.selected_id
-                    && selected_id == element.id
-                    && let Some(amount) = game_ui.selected_amount
+                if !item_stack.creative_slot
+                    || (game_ui.selected_amount.is_some()
+                        && game_ui.selected_id.is_some_and(|id| id == element_id))
                 {
-                    format!("{}/{}", amount, item_stack.get_amount())
-                } else {
-                    format!("{}", item_stack.get_amount())
-                };
+                    // Item amount
+                    let amount_text = if let Some(selected_id) = game_ui.selected_id
+                        && selected_id == element.id
+                        && let Some(amount) = game_ui.selected_amount
+                    {
+                        if item_stack.creative_slot {
+                            format!("{}", amount)
+                        } else {
+                            format!("{}/{}", amount, item_stack.get_amount())
+                        }
+                    } else {
+                        format!("{}", item_stack.get_amount())
+                    };
 
-                eadk::display::draw_string(
-                    amount_text.as_str(),
-                    Point {
-                        x: (38 - 7 * amount_text.len() + x as usize) as u16,
-                        y: 2 + y,
-                    },
-                    false,
-                    Color::from_888(0, 0, 0),
-                    Color::from_888(200, 200, 200),
-                );
+                    eadk::display::draw_string(
+                        amount_text.as_str(),
+                        Point {
+                            x: (38 - 7 * amount_text.len() + x as usize) as u16,
+                            y: 2 + y,
+                        },
+                        false,
+                        Color::from_888(0, 0, 0),
+                        Color::from_888(200, 200, 200),
+                    );
+                }
             }
 
             // Amount selection bar
@@ -257,7 +267,7 @@ impl Renderer {
         }
     }
 
-    pub fn draw_game_UI(&mut self, game_ui: &mut GameUI) {
+    pub fn draw_game_ui(&mut self, game_ui: &mut GameUI) {
         if game_ui.blur_background && game_ui.need_complete_redraw {
             self.blur_screen();
         }
