@@ -1,4 +1,4 @@
-use crate::renderer::*;
+use crate::{constants::ItemType, renderer::*};
 
 impl Renderer {
     pub fn blur_screen(&self) {
@@ -95,113 +95,80 @@ impl Renderer {
 
         if let GameUIElements::ItemSlot { item_stack, .. } = &element.element {
             // Background
+            if item_stack.get_item_type() == ItemType::Air {
+                if game_ui.cursor_id == element.id {
+                    push_rect_uniform(
+                        Rect {
+                            x: x + 3,
+                            y: y + 3,
+                            width: 24,
+                            height: 24,
+                        },
+                        Color::from_888(50, 50, 50),
+                    );
+                } else {
+                    push_rect_uniform(
+                        Rect {
+                            x: x,
+                            y: y,
+                            width: 30,
+                            height: 30,
+                        },
+                        Color::from_888(50, 50, 50),
+                    );
+                }
+            }
+
+            let color = if game_ui.selected_id.is_some_and(|id| id == element.id) {
+                Color::from_888(255, 242, 0)
+            } else if game_ui.cursor_id == element.id {
+                Color::from_888(255, 0, 0)
+            } else {
+                Color::from_888(50, 50, 50)
+            };
+            // Outline
             push_rect_uniform(
                 Rect {
                     x: x,
                     y: y,
-                    width: 40,
-                    height: 40,
+                    width: 3,
+                    height: 30,
                 },
-                Color::from_888(200, 200, 200),
+                color,
             );
-            if game_ui.cursor_id == element.id {
-                // Red outline
-                push_rect_uniform(
-                    Rect {
-                        x: x - 1,
-                        y: y,
-                        width: 3,
-                        height: 40,
-                    },
-                    Color::from_888(255, 0, 0),
-                );
-                push_rect_uniform(
-                    Rect {
-                        x: x + 38,
-                        y: y - 1,
-                        width: 3,
-                        height: 40,
-                    },
-                    Color::from_888(255, 0, 0),
-                );
-                push_rect_uniform(
-                    Rect {
-                        x: x - 1,
-                        y: 38 + y,
-                        width: 42,
-                        height: 3,
-                    },
-                    Color::from_888(255, 0, 0),
-                );
-                push_rect_uniform(
-                    Rect {
-                        x: x - 1,
-                        y: y - 1,
-                        width: 42,
-                        height: 3,
-                    },
-                    Color::from_888(255, 0, 0),
-                );
-            } else {
-                // Normal outline
-                push_rect_uniform(
-                    Rect {
-                        x: x - 1,
-                        y: y,
-                        width: 1,
-                        height: 40,
-                    },
-                    Color::from_888(100, 100, 100),
-                );
-                push_rect_uniform(
-                    Rect {
-                        x: x + 40,
-                        y: y,
-                        width: 1,
-                        height: 40,
-                    },
-                    Color::from_888(100, 100, 100),
-                );
-                push_rect_uniform(
-                    Rect {
-                        x: x - 1,
-                        y: y - 1,
-                        width: 42,
-                        height: 1,
-                    },
-                    Color::from_888(100, 100, 100),
-                );
-                push_rect_uniform(
-                    Rect {
-                        x: x - 1,
-                        y: y + 40,
-                        width: 42,
-                        height: 1,
-                    },
-                    Color::from_888(100, 100, 100),
-                );
-            }
-
-            // Sub background (yellow if selected)
             push_rect_uniform(
                 Rect {
-                    x: 2 + x,
-                    y: 2 + y,
-                    width: 36,
-                    height: 36,
+                    x: x,
+                    y: y,
+                    width: 30,
+                    height: 3,
                 },
-                if game_ui.selected_id.is_some_and(|id| id == element.id) {
-                    Color::from_888(255, 242, 0)
-                } else {
-                    Color::from_888(150, 150, 150)
+                color,
+            );
+            push_rect_uniform(
+                Rect {
+                    x: x,
+                    y: y + 27,
+                    width: 30,
+                    height: 3,
                 },
+                color,
+            );
+            push_rect_uniform(
+                Rect {
+                    x: x + 27,
+                    y: y,
+                    width: 3,
+                    height: 30,
+                },
+                color,
             );
 
             // Item texture
             let texture_id = item_stack.get_item_type().get_texture_id();
 
             if texture_id != 0 {
-                self.draw_scalled_tile_on_screen(texture_id, Vector2::new(4 + x, 4 + y), 4);
+                self.draw_scalled_tile_on_screen(texture_id, Vector2::new(3 + x, 3 + y), 3);
 
                 if !item_stack.creative_slot
                     || (game_ui.selected_amount.is_some()
@@ -212,11 +179,7 @@ impl Renderer {
                         && selected_id == element.id
                         && let Some(amount) = game_ui.selected_amount
                     {
-                        if item_stack.creative_slot {
-                            format!("{}", amount)
-                        } else {
-                            format!("{}/{}", amount, item_stack.get_amount())
-                        }
+                        format!("{}", amount)
                     } else {
                         format!("{}", item_stack.get_amount())
                     };
@@ -224,12 +187,12 @@ impl Renderer {
                     eadk::display::draw_string(
                         amount_text.as_str(),
                         Point {
-                            x: (38 - 7 * amount_text.len() + x as usize) as u16,
-                            y: 2 + y,
+                            x: (30 - 7 * amount_text.len() + x as usize) as u16,
+                            y: y,
                         },
                         false,
-                        Color::from_888(0, 0, 0),
-                        Color::from_888(200, 200, 200),
+                        Color::from_888(255, 255, 255),
+                        Color::from_888(50, 50, 50),
                     );
                 }
             }
@@ -239,14 +202,14 @@ impl Renderer {
                 && game_ui.selected_id.is_some_and(|id| id == element.id)
                 && item_stack.get_amount() != 0
             {
-                let amount_bar_lenght = 34 * amount / item_stack.get_amount() as usize;
+                let amount_bar_lenght = 30 * amount / item_stack.get_amount() as usize;
 
                 eadk::display::push_rect_uniform(
                     Rect {
-                        x: x + 3,
-                        y: y + 32,
+                        x: x,
+                        y: y + 27,
                         width: amount_bar_lenght as u16,
-                        height: 5,
+                        height: 3,
                     },
                     if game_ui.is_selecting_amount {
                         Color::from_888(100, 150, 255)
@@ -256,10 +219,10 @@ impl Renderer {
                 );
                 eadk::display::push_rect_uniform(
                     Rect {
-                        x: x + 3 + amount_bar_lenght as u16,
-                        y: y + 32,
-                        width: (34 - amount_bar_lenght) as u16,
-                        height: 5,
+                        x: x + amount_bar_lenght as u16,
+                        y: y + 27,
+                        width: (30 - amount_bar_lenght) as u16,
+                        height: 3,
                     },
                     Color::from_888(100, 100, 100),
                 );

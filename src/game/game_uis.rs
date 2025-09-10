@@ -16,6 +16,10 @@ impl Game {
     }
 
     fn player_inventory_normal_loop(&mut self) {
+        // Clear the hud
+        self.renderer.draw_game(&mut self.world, &self.player, 0., &self.hud, false);
+
+
          self.player
             .inventory
             .replace_slot_item_stack(0, ItemStack::new(crate::constants::ItemType::DirtBlock, 24, false));
@@ -35,8 +39,8 @@ impl Game {
         let mut inventories = [&mut self.player.inventory];
 
         let mut ui = GameUI::new(true)
-            .with_slot_grid(Vector2::new(22, 30), 6, 3, 0, 0, 0)
-            .with_slot_grid(Vector2::new(22, 184), 6, 1, 0, 18, 18)
+            .with_slot_grid(Vector2::new(65, 56), 6, 3, 0, 0, 0)
+            .with_slot_grid(Vector2::new(65, 154), 6, 1, 0, 18, 18)
             .with_links(&[
                 (12, 18, NeighborDirection::Bottom),
                 (13, 19, NeighborDirection::Bottom),
@@ -48,6 +52,7 @@ impl Game {
             .sync(&inventories);
 
         ui.selected_amount = None;
+        
         loop {
             self.input_manager.update();
 

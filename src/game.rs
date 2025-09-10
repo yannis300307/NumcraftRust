@@ -25,7 +25,7 @@ use crate::{
 };
 
 mod game_menus;
-mod game_uis;
+pub mod game_uis;
 
 pub struct Game {
     renderer: Renderer,
@@ -114,7 +114,7 @@ impl Game {
         show_msg("To exit, press [EXE]", 90);
         show_msg("DON'T press [Home]", 110);
 
-        eadk::timing::msleep(3000);
+        //eadk::timing::msleep(3000);
         GameState::InGame
     }
 
@@ -153,7 +153,7 @@ impl Game {
             self.world.check_mesh_regeneration();
 
             self.renderer
-                .draw_game(&mut self.world, &self.player, 1.0 / delta, &self.hud);
+                .draw_game(&mut self.world, &self.player, 1.0 / delta, &self.hud, true);
         }
     }
 

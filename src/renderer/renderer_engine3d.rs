@@ -486,7 +486,14 @@ impl Renderer {
         self.add_3d_triangle_to_render(quad_triangles.1, mat_view);
     }
 
-    pub fn draw_game(&mut self, world: &mut World, player: &Player, fps_count: f32, hud: &Hud) {
+    pub fn draw_game(
+        &mut self,
+        world: &mut World,
+        player: &Player,
+        fps_count: f32,
+        hud: &Hud,
+        draw_hud: bool,
+    ) {
         self.triangles_to_render.clear();
 
         let mat_view = self.get_mat_view();
@@ -549,7 +556,9 @@ impl Renderer {
                 self.clear_screen(Color::from_components(0b01110, 0b110110, 0b11111));
                 self.draw_triangles(x, y);
 
-                self.draw_hud(hud, fps_count, x, y);
+                if draw_hud {
+                    self.draw_hud(hud, fps_count, x, y);
+                }
 
                 eadk::display::push_rect(
                     Rect {

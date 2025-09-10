@@ -415,7 +415,7 @@ impl GameUI {
                     },
                 };
 
-                let slot_pos = Vector2::new(48 * x, 48 * y) + pos;
+                let slot_pos = Vector2::new(32 * x, 32 * y) + pos;
                 self.add_element(slot, slot_pos, last_element_id, neighbors);
 
                 last_inventory_index += 1;
