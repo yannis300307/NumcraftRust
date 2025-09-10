@@ -69,6 +69,12 @@ impl Inventory {
         }
     }
 
+    pub fn fill(&mut self, item_stack: ItemStack) {
+        for i in 0..self.slots.len() {
+            self.slots[i] = item_stack;
+        }
+    }
+
     pub fn move_item_in_other_inventory(
         &mut self,
         other_inventory: &mut Inventory,

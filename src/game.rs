@@ -135,7 +135,7 @@ impl Game {
                 return GameState::GoMainMenu;
             }
             if self.input_manager.is_just_pressed(eadk::input::Key::Var) {
-                return GameState::OpenPlayerInventory(game_uis::PlayerInventoryPage::Normal);
+                return GameState::OpenPlayerInventory(game_uis::PlayerInventoryPage::Creative);
             };
 
             self.player.update(
