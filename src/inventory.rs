@@ -76,7 +76,141 @@ impl Inventory {
         end_slot: usize,
         selected_amount_or_none: Option<usize>,
     ) {
-        todo!()
+        let start_slot_itemstack = self.get_ref_to_slot(start_slot).unwrap().clone();
+        let end_slot_itemstack = other_inventory.get_ref_to_slot(end_slot).unwrap().clone();
+
+        let start_max_stack_amount =
+            start_slot_itemstack.get_item_type().get_max_stack_amount() as usize;
+        let end_max_stack_amount =
+            end_slot_itemstack.get_item_type().get_max_stack_amount() as usize;
+
+        let selected_amount = if let Some(amount) = selected_amount_or_none {
+            amount
+        } else {
+            start_slot_itemstack.get_amount() as usize
+        };
+
+        if start_slot_itemstack.creative_slot && !end_slot_itemstack.creative_slot {
+            if end_slot_itemstack.item_type == start_slot_itemstack.item_type {
+                other_inventory.replace_slot_item_stack(
+                    end_slot,
+                    ItemStack::new(
+                        start_slot_itemstack.item_type,
+                        (start_slot_itemstack.amount as usize + selected_amount)
+                            .min(start_max_stack_amount) as u8,
+                        false,
+                    ),
+                );
+            } else {
+                other_inventory.replace_slot_item_stack(
+                    end_slot,
+                    ItemStack::new(start_slot_itemstack.item_type, selected_amount as u8, false),
+                );
+            }
+        } else if !start_slot_itemstack.creative_slot && end_slot_itemstack.creative_slot {
+            if selected_amount == start_slot_itemstack.get_amount() as usize {
+                self.replace_slot_item_stack(start_slot, ItemStack::void());
+            } else {
+                self.replace_slot_item_stack(
+                    start_slot,
+                    ItemStack::new(
+                        start_slot_itemstack.item_type,
+                        start_slot_itemstack.amount - selected_amount as u8,
+                        false,
+                    ),
+                );
+            }
+        } else if !start_slot_itemstack.creative_slot && !end_slot_itemstack.creative_slot {
+            if start_slot_itemstack.get_item_type() == end_slot_itemstack.get_item_type()
+                && start_slot_itemstack.amount as usize != start_max_stack_amount
+                && end_slot_itemstack.amount as usize != end_max_stack_amount
+            {
+                let total_amount = end_slot_itemstack.amount as usize + selected_amount;
+
+                if total_amount < start_max_stack_amount {
+                    if selected_amount == start_slot_itemstack.amount as usize {
+                        self.replace_slot_item_stack(start_slot, ItemStack::void());
+                        other_inventory.replace_slot_item_stack(
+                            end_slot,
+                            ItemStack::new(
+                                end_slot_itemstack.item_type,
+                                end_slot_itemstack.amount + selected_amount as u8,
+                                false,
+                            ),
+                        );
+                    } else {
+                        self.replace_slot_item_stack(
+                            start_slot,
+                            ItemStack::new(
+                                start_slot_itemstack.item_type,
+                                start_slot_itemstack.amount - selected_amount as u8,
+                                false,
+                            ),
+                        );
+                        other_inventory.replace_slot_item_stack(
+                            end_slot,
+                            ItemStack::new(
+                                end_slot_itemstack.item_type,
+                                end_slot_itemstack.amount + selected_amount as u8,
+                                false,
+                            ),
+                        );
+                    }
+                } else if total_amount == start_max_stack_amount {
+                    self.replace_slot_item_stack(start_slot, ItemStack::void());
+                    other_inventory.replace_slot_item_stack(
+                        end_slot,
+                        ItemStack::new(
+                            end_slot_itemstack.item_type,
+                            start_max_stack_amount as u8,
+                            false,
+                        ),
+                    );
+                } else {
+                    self.replace_slot_item_stack(
+                        start_slot,
+                        ItemStack::new(
+                            start_slot_itemstack.item_type,
+                            (total_amount - start_max_stack_amount) as u8,
+                            false,
+                        ),
+                    );
+                    other_inventory.replace_slot_item_stack(
+                        end_slot,
+                        ItemStack::new(
+                            end_slot_itemstack.item_type,
+                            end_max_stack_amount as u8,
+                            false,
+                        ),
+                    );
+                }
+            } else {
+                if start_slot_itemstack.item_type != ItemType::Air
+                    && end_slot_itemstack.item_type == ItemType::Air
+                    && selected_amount != start_slot_itemstack.get_amount() as usize
+                {
+                    other_inventory.replace_slot_item_stack(
+                        end_slot,
+                        ItemStack::new(
+                            start_slot_itemstack.item_type,
+                            selected_amount as u8,
+                            false,
+                        ),
+                    );
+                    self.replace_slot_item_stack(
+                        start_slot,
+                        ItemStack::new(
+                            start_slot_itemstack.item_type,
+                            start_slot_itemstack.get_amount() - selected_amount as u8,
+                            false,
+                        ),
+                    );
+                } else {
+                    other_inventory.replace_slot_item_stack(end_slot, start_slot_itemstack);
+                    self.replace_slot_item_stack(start_slot, end_slot_itemstack);
+                }
+            }
+        }
     }
 
     pub fn take_one(&mut self, index: usize) -> Option<ItemType> {

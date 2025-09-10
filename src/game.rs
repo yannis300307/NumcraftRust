@@ -11,7 +11,7 @@ use crate::{
         menu::MENU_BACKGROUND_COLOR,
         rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
-    eadk::{self, Color, Point, SCREEN_RECT, input::KeyboardState},
+    eadk::{self, Color, Point, SCREEN_RECT},
     game_ui::GameUI,
     hud::Hud,
     input_manager::InputManager,

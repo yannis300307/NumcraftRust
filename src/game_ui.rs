@@ -309,7 +309,21 @@ impl GameUI {
                         );
                         self.ask_redraw();
                     } else {
-                        todo!("Cross inventory item manipulation is not implemented yet.");
+                        // Trick to have 2 mutable references to elements in the slice
+                        let (first, second) = if start_inventory_id < end_inventory_id {
+                            let (first, second) = inventories.split_at_mut(end_inventory_id);
+                            (&mut first[start_inventory_id], &mut second[0])
+                        } else {
+                            let (first, second) = inventories.split_at_mut(start_inventory_id);
+                            (&mut second[0], &mut first[end_inventory_id])
+                        };
+
+                        first.move_item_in_other_inventory(
+                            second,
+                            start_inventory_slot_index,
+                            end_inventory_slot_index,
+                            self.selected_amount,
+                        );
                         self.ask_redraw();
                     }
 
@@ -350,6 +364,7 @@ impl GameUI {
                 item_stack,
                 inventory_id,
                 inventory_slot_index,
+                ..
             } = &mut element.element
             {
                 let new_item_stack = inventories[*inventory_id]
