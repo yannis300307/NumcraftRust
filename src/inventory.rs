@@ -96,7 +96,7 @@ impl Inventory {
                     end_slot,
                     ItemStack::new(
                         start_slot_itemstack.item_type,
-                        (start_slot_itemstack.amount as usize + selected_amount)
+                        (end_slot_itemstack.amount as usize + selected_amount)
                             .min(start_max_stack_amount) as u8,
                         false,
                     ),
