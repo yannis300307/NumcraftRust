@@ -1,4 +1,4 @@
-use crate::{constants::ItemType, renderer::*};
+use crate::{constants::{ColorPalette::GAMEUI_SLOT_COLOR, ItemType}, renderer::*};
 
 impl Renderer {
     pub fn blur_screen(&self) {
@@ -103,7 +103,7 @@ impl Renderer {
                             width: 24,
                             height: 24,
                         },
-                        Color::from_888(50, 50, 50),
+                        GAMEUI_SLOT_COLOR,
                     );
                 } else {
                     push_rect_uniform(
@@ -113,7 +113,7 @@ impl Renderer {
                             width: 30,
                             height: 30,
                         },
-                        Color::from_888(50, 50, 50),
+                        GAMEUI_SLOT_COLOR,
                     );
                 }
             }
@@ -123,7 +123,7 @@ impl Renderer {
             } else if game_ui.cursor_id == element.id {
                 Color::from_888(255, 0, 0)
             } else {
-                Color::from_888(50, 50, 50)
+                GAMEUI_SLOT_COLOR
             };
             // Outline
             push_rect_uniform(
@@ -191,7 +191,7 @@ impl Renderer {
                         },
                         false,
                         Color::from_888(255, 255, 255),
-                        Color::from_888(50, 50, 50),
+                        GAMEUI_SLOT_COLOR,
                     );
                 }
             }

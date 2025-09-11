@@ -12,7 +12,7 @@ use crate::{
     camera::Camera,
     constants::{
         get_quad_color_from_texture_id,
-        menu::{
+        ColorPalette::{
             MENU_BACKGROUND_COLOR, MENU_ELEMENT_BACKGROUND_COLOR,
             MENU_ELEMENT_BACKGROUND_COLOR_HOVER, MENU_OUTLINE_COLOR, MENU_TEXT_COLOR,
         },

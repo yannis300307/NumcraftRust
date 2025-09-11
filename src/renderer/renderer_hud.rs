@@ -1,4 +1,4 @@
-use crate::{constants::ItemType, hud::Hud, renderer::*};
+use crate::{constants::{ColorPalette::GAMEUI_SLOT_COLOR, ItemType}, hud::Hud, renderer::*};
 
 impl Renderer {
     pub fn draw_hud(&mut self, hud: &Hud, fps_count: f32, tile_x: usize, tile_y: usize) {
@@ -142,7 +142,7 @@ impl Renderer {
             if hud.selected_slot == slot_index {
                 Color::from_888(200, 50, 50)
             } else {
-                Color::from_888(50, 50, 50)
+                GAMEUI_SLOT_COLOR
             },
         );
         let item_stack = hud.get_slots()[slot_index];

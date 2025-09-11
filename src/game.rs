@@ -10,7 +10,7 @@ use nalgebra::{Vector2, Vector3};
 
 use crate::{
     constants::{
-        menu::MENU_BACKGROUND_COLOR,
+        ColorPalette::MENU_BACKGROUND_COLOR,
         rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
     eadk::{self, Color, Point, SCREEN_RECT},
@@ -59,7 +59,7 @@ impl Game {
         // Load the world or create it if it doesn't exists yet
         if is_new {
             self.save_manager.set_file_name(file_name);
-            
+
             self.world.load_area(0, 4, 0, 4, 0, 4);
 
             let player_spawn_pos = Vector3::new(

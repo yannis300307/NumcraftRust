@@ -21,7 +21,7 @@ pub mod rendering {
     pub const BLURING_RADIUS: isize = 2;
 }
 
-pub mod menu {
+pub mod ColorPalette {
     use crate::eadk::Color;
 
     pub const MENU_OUTLINE_COLOR: Color = Color::from_888(150, 150, 150);
@@ -30,6 +30,10 @@ pub mod menu {
     pub const MENU_TEXT_COLOR: Color = Color::from_888(0, 0, 0);
     pub const MENU_BACKGROUND_COLOR: Color = Color::from_888(255, 255, 255);
 
+    pub const GAMEUI_SLOT_COLOR: Color = Color::from_888(80, 80, 80);
+}
+
+pub mod menu {
     pub const SETTINGS_FILENAME: &str = "settings.ncd"; // NCD = NumCraftData
 }
 
