@@ -36,6 +36,7 @@ mod save_manager;
 mod storage_lib;
 mod settings;
 mod hud;
+mod timing;
 
 #[used]
 #[cfg(target_os = "none")]

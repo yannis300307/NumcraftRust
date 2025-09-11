@@ -1,3 +1,5 @@
+use core::time;
+
 #[cfg(target_os = "none")]
 use alloc::{
     borrow::ToOwned,
@@ -21,6 +23,7 @@ use crate::{
     renderer::Renderer,
     save_manager::SaveManager,
     settings::Settings,
+    timing::TimingManager,
     world::World,
 };
 
@@ -35,6 +38,7 @@ pub struct Game {
     settings: Settings,
     input_manager: InputManager,
     hud: Hud,
+    timing_manager: TimingManager,
 }
 
 impl Game {
@@ -47,6 +51,7 @@ impl Game {
             settings: Settings::new(),
             input_manager: InputManager::new(),
             hud: Hud::new(),
+            timing_manager: TimingManager::new(),
         }
     }
 
@@ -120,14 +125,9 @@ impl Game {
 
     /// The game loop. Handle physic, rendering etc ...
     pub fn game_loop(&mut self) -> GameState {
-        // Delta time calculation stuff and loop
-        let mut last = eadk::timing::millis();
         loop {
-            let current = eadk::timing::millis();
-            let delta = (current - last) as f32 / 1000.0;
-            last = current;
-
             self.input_manager.update();
+            self.timing_manager.update();
 
             if self.input_manager.is_just_pressed(eadk::input::Key::Exe) {
                 self.exit_world();
@@ -139,7 +139,7 @@ impl Game {
             };
 
             self.player.update(
-                delta,
+                self.timing_manager.get_delta_time(),
                 &self.input_manager,
                 &mut self.world,
                 &mut self.renderer.camera,
@@ -148,12 +148,12 @@ impl Game {
             self.hud.update(&self.input_manager);
             self.hud.sync(&self.player);
 
-            self.renderer.camera.update(delta, &self.input_manager);
+            self.renderer.camera.update(self.timing_manager.get_delta_time(), &self.input_manager);
 
             self.world.check_mesh_regeneration();
 
             self.renderer
-                .draw_game(&mut self.world, &self.player, 1.0 / delta, &self.hud, true);
+                .draw_game(&mut self.world, &self.player, self.timing_manager.get_fps(), &self.hud, true);
         }
     }
 
