@@ -21,7 +21,7 @@ pub mod rendering {
     pub const BLURING_RADIUS: isize = 2;
 }
 
-pub mod ColorPalette {
+pub mod color_palette {
     use crate::eadk::Color;
 
     pub const MENU_OUTLINE_COLOR: Color = Color::from_888(150, 150, 150);
@@ -31,6 +31,7 @@ pub mod ColorPalette {
     pub const MENU_BACKGROUND_COLOR: Color = Color::from_888(255, 255, 255);
 
     pub const GAMEUI_SLOT_COLOR: Color = Color::from_888(80, 80, 80);
+    pub const GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR: Color = Color::from_888(120, 120, 120);
 }
 
 pub mod menu {

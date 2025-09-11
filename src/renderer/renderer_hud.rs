@@ -1,4 +1,8 @@
-use crate::{constants::{ColorPalette::GAMEUI_SLOT_COLOR, ItemType}, hud::Hud, renderer::*};
+use crate::{
+    constants::{ItemType, color_palette::GAMEUI_SLOT_COLOR},
+    hud::Hud,
+    renderer::*,
+};
 
 impl Renderer {
     pub fn draw_hud(&mut self, hud: &Hud, fps_count: f32, tile_x: usize, tile_y: usize) {

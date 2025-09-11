@@ -10,7 +10,7 @@ use nalgebra::{Vector2, Vector3};
 
 use crate::{
     constants::{
-        ColorPalette::MENU_BACKGROUND_COLOR,
+        color_palette::MENU_BACKGROUND_COLOR,
         rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
     eadk::{self, Color, Point, SCREEN_RECT},

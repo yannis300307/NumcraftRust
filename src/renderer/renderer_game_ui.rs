@@ -1,4 +1,10 @@
-use crate::{constants::{ColorPalette::GAMEUI_SLOT_COLOR, ItemType}, renderer::*};
+use crate::{
+    constants::{
+        ItemType,
+        color_palette::{GAMEUI_SLOT_COLOR, GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR},
+    },
+    renderer::*,
+};
 
 impl Renderer {
     pub fn blur_screen(&self) {
@@ -95,27 +101,15 @@ impl Renderer {
         if let GameUIElements::ItemSlot { item_stack, .. } = &element.element {
             // Background
             if item_stack.get_item_type() == ItemType::Air {
-                if game_ui.cursor_id == element.id {
-                    push_rect_uniform(
-                        Rect {
-                            x: x + 3,
-                            y: y + 3,
-                            width: 24,
-                            height: 24,
-                        },
-                        GAMEUI_SLOT_COLOR,
-                    );
-                } else {
-                    push_rect_uniform(
-                        Rect {
-                            x: x,
-                            y: y,
-                            width: 30,
-                            height: 30,
-                        },
-                        GAMEUI_SLOT_COLOR,
-                    );
-                }
+                push_rect_uniform(
+                    Rect {
+                        x: x + 3,
+                        y: y + 3,
+                        width: 24,
+                        height: 24,
+                    },
+                    GAMEUI_SLOT_COLOR,
+                );
             }
 
             let color = if game_ui.selected_id.is_some_and(|id| id == element.id) {
@@ -123,7 +117,7 @@ impl Renderer {
             } else if game_ui.cursor_id == element.id {
                 Color::from_888(255, 0, 0)
             } else {
-                GAMEUI_SLOT_COLOR
+                GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR
             };
             // Outline
             push_rect_uniform(

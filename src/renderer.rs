@@ -11,11 +11,11 @@ use core::{cmp::Ordering, f32, mem::swap};
 use crate::{
     camera::Camera,
     constants::{
-        get_quad_color_from_texture_id,
-        ColorPalette::{
+        color_palette::{
             MENU_BACKGROUND_COLOR, MENU_ELEMENT_BACKGROUND_COLOR,
             MENU_ELEMENT_BACKGROUND_COLOR_HOVER, MENU_OUTLINE_COLOR, MENU_TEXT_COLOR,
         },
+        get_quad_color_from_texture_id,
         rendering::*,
         world::CHUNK_SIZE,
     },
@@ -32,9 +32,9 @@ use crate::{
 };
 
 mod renderer_engine3d;
-mod renderer_menus;
 mod renderer_game_ui;
 mod renderer_hud;
+mod renderer_menus;
 mod renderer_misc;
 
 // Screen size related constants
@@ -70,7 +70,6 @@ const FONT_CHAR_WIDTH: usize = 11;
 static FONT_ORDER: &str = "!\" $%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^+`abcdefghijklmnopqrstuvwxyz{|}~€";
 
 static TILESET_DATA: &[u8] = include_bytes!("../target/tileset.bin");
-
 
 pub struct Renderer {
     pub camera: Camera,
