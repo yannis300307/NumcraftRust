@@ -41,8 +41,12 @@ impl Game {
         // Clear the screen
         eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
+        self.timing_manager.reset();
+
         loop {
             self.input_manager.update();
+            self.timing_manager.update();
+            self.input_manager.update_timing(&self.timing_manager);
 
             // Exit the menu when [Back] is pressed
             if self.input_manager.is_keydown(eadk::input::Key::Back) {
@@ -123,8 +127,12 @@ impl Game {
         // Clear the screen
         eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
+        self.timing_manager.reset();
+
         loop {
             self.input_manager.update();
+            self.timing_manager.update();
+            self.input_manager.update_timing(&self.timing_manager);
 
             // Exit the menu when [Back] is pressed
             if self.input_manager.is_keydown(eadk::input::Key::Back) {
@@ -207,8 +215,12 @@ impl Game {
         // Clear the screen
         eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
+        self.timing_manager.reset();
+
         loop {
             self.input_manager.update();
+            self.timing_manager.update();
+            self.input_manager.update_timing(&self.timing_manager);
 
             // Handle the navigation in the menu
             menu.check_inputs(&self.input_manager);
@@ -321,8 +333,12 @@ impl Game {
         // Clear the screen
         eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
+        self.timing_manager.reset();
+
         loop {
             self.input_manager.update();
+            self.timing_manager.update();
+            self.input_manager.update_timing(&self.timing_manager);
 
             if self.input_manager.is_keydown(eadk::input::Key::Back) {
                 return GameState::GoMainMenu;
@@ -413,8 +429,12 @@ impl Game {
 
         eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
+        self.timing_manager.reset();
+
         loop {
             self.input_manager.update();
+            self.timing_manager.update();
+            self.input_manager.update_timing(&self.timing_manager);
 
             menu.check_inputs(&self.input_manager);
 

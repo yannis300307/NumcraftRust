@@ -104,7 +104,7 @@ impl Menu {
             ..
         } = &mut self.elements[self.selected_index]
         {
-            if input_manager.is_just_pressed(Key::Backspace) && value.len() > 0 {
+            if input_manager.is_impulsed_key(Key::Backspace) && value.len() > 0 {
                 value.truncate(value.len() - 1);
                 self.need_redraw = true;
             }
@@ -143,7 +143,7 @@ impl Menu {
                 Key::Zero,
                 Key::Dot,
             ] {
-                if input_manager.is_just_pressed(key) && value.len() < *max_len as usize {
+                if input_manager.is_impulsed_key(key) && value.len() < *max_len as usize {
                     if self.alpha_active && !*digits_only {
                         let mut letter = match key {
                             Key::Exp => "a",
