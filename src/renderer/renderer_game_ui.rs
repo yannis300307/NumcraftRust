@@ -4,7 +4,6 @@ impl Renderer {
     pub fn blur_screen(&self) {
         const BLURING_TILE_WIDTH: usize = SCREEN_WIDTH / BLURING_SCREEN_SUBDIVISION;
         const BLURING_TILE_HEIGHT: usize = SCREEN_HEIGHT / BLURING_SCREEN_SUBDIVISION;
-        const BLURING_RADIUS: isize = 2;
 
         for x in 0..BLURING_SCREEN_SUBDIVISION {
             for y in 0..BLURING_SCREEN_SUBDIVISION {

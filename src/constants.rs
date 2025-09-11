@@ -18,6 +18,7 @@ pub mod rendering {
     pub const MAX_RENDER_DISTANCE: usize = 2; // You shouldn't go higher
 
     pub const BLURING_SCREEN_SUBDIVISION: usize = 5;
+    pub const BLURING_RADIUS: isize = 2;
 }
 
 pub mod menu {
