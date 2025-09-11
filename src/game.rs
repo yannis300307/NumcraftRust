@@ -114,7 +114,7 @@ impl Game {
         show_msg("To exit, press [EXE]", 90);
         show_msg("DON'T press [Home]", 110);
 
-        //eadk::timing::msleep(3000);
+        self.input_manager.wait_delay_or_ok(3000);
         GameState::InGame
     }
 

@@ -195,10 +195,12 @@ unsafe extern "C" {
 }
 
 pub mod input {
+    use enum_iterator::Sequence;
+
     type EadkKeyboardState = u64;
 
     #[allow(dead_code)]
-    #[derive(Clone, Copy, PartialEq, Eq)]
+    #[derive(Clone, Copy, PartialEq, Eq, Sequence, Debug)]
     #[repr(u8)]
     pub enum Key {
         Left = 0,
