@@ -10,7 +10,7 @@ use postcard::{from_bytes, to_allocvec};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    chunk::Chunk, constants::{world::CHUNK_SIZE, BlockType}, eadk, player::Player, storage_lib::{
+    chunk::Chunk, constants::{world::CHUNK_SIZE, BlockType}, eadk::{self, Color}, inventory::Inventory, player::Player, renderer::Renderer, storage_lib::{
         storage_extapp_file_erase, storage_extapp_file_exists,
         storage_extapp_file_list_with_extension, storage_extapp_file_read,
         storage_extapp_file_read_header, storage_file_write,
@@ -21,6 +21,7 @@ use crate::{
 pub struct PlayerData {
     pub pos: (f32, f32, f32),
     pub rotation: (f32, f32), // Only Pitch and Yaw
+    pub inventory: Inventory
                               // More in the futur
 }
 
@@ -44,6 +45,7 @@ impl PlayerData {
         PlayerData {
             pos: (0., 0., 0.),
             rotation: (0., 0.),
+            inventory: Inventory::new(0),
         }
     }
 }
@@ -93,6 +95,10 @@ impl SaveManager {
         true
     }
 
+    pub fn set_file_name(&mut self, file_name: &String) {
+        self.file_name = Some(file_name.clone());
+    }
+
     pub fn update_player_data(&mut self, player: &Player) {
         self.player_data.pos.0 = player.pos.x;
         self.player_data.pos.1 = player.pos.y;
@@ -100,6 +106,8 @@ impl SaveManager {
 
         self.player_data.rotation.0 = player.rotation.x;
         self.player_data.rotation.1 = player.rotation.y;
+
+        self.player_data.inventory = player.inventory.clone();
     }
 
     pub fn get_existing_worlds(&self) -> Vec<String> {
@@ -120,6 +128,9 @@ impl SaveManager {
                 storage_extapp_file_erase(&file_name);
             }
             storage_file_write(&file_name, &data);
+        } else {
+            Renderer::show_msg(&["Unable to save."], eadk::Color::from_888(255, 100, 100));
+            eadk::timing::msleep(3000);
         }
     }
 
@@ -295,6 +306,10 @@ impl SaveManager {
             self.player_data.pos.1,
             self.player_data.pos.2,
         )
+    }
+
+    pub fn get_player_inventory(&self) -> Inventory {
+        self.player_data.inventory.clone()
     }
 
     pub fn get_player_rot(&self) -> Vector3<f32> {

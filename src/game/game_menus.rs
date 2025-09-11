@@ -87,7 +87,7 @@ impl Game {
                         self.save_manager.set_world_seed(world_seed);
                         self.save_manager.set_world_name(&world_name);
 
-                        return GameState::LoadWorld(file_name.clone());
+                        return GameState::LoadWorld(file_name.clone(), true);
                     }
                     _ => (),
                 }
@@ -242,8 +242,8 @@ impl Game {
                         let filename = format!("world{world_slot}.ncw");
 
                         if worlds.contains(&filename) {
-                            // Load the world (and create a new world if it doesn't exists yet)
-                            return GameState::LoadWorld(filename.to_owned());
+                            // Load the world
+                            return GameState::LoadWorld(filename.to_owned(), false);
                         } else {
                             return GameState::CreateWorld(filename.to_owned());
                         }

@@ -55,36 +55,11 @@ impl Game {
         }
     }
 
-    pub fn load_world(&mut self, file_name: &String) -> GameState {
+    pub fn load_world(&mut self, file_name: &String, is_new: bool) -> GameState {
         // Load the world or create it if it doesn't exists yet
-        if self.save_manager.load_from_file(file_name.as_str()).is_ok()
-        // TODO: Show an error message instead
-        {
-            // Add chunks. Maybe move this code into world (TODO)
-            for x in 0..4 {
-                for y in 0..4 {
-                    for z in 0..4 {
-                        let chunk = self
-                            .save_manager
-                            .get_chunk_at_pos(Vector3::new(x, y, z))
-                            .unwrap();
-
-                        self.world.push_chunk(chunk);
-                    }
-                }
-            }
-
-            // Load player data
-            self.player.set_pos_rotation(
-                &mut self.renderer.camera,
-                self.save_manager.get_player_rot(),
-                self.save_manager.get_player_pos(),
-            );
-
-            // Load world info
-            let world_info = self.save_manager.get_current_loaded_world_info();
-            self.world.set_seed(world_info.world_seed);
-        } else {
+        if is_new {
+            self.save_manager.set_file_name(file_name);
+            
             self.world.load_area(0, 4, 0, 4, 0, 4);
 
             let player_spawn_pos = Vector3::new(
@@ -92,32 +67,65 @@ impl Game {
                 (self.world.get_terrain_height(Vector2::new(16, 16)) - 2) as f32,
                 16.,
             );
+
+            self.player.inventory.fill(ItemStack::void());
             self.player.set_pos_rotation(
                 &mut self.renderer.camera,
                 Vector3::new(0., 0., 0.),
                 player_spawn_pos,
             );
             self.hud.sync(&self.player);
+        } else {
+            if let Err(error) = self.save_manager.load_from_file(file_name.as_str()) {
+                Renderer::show_msg(
+                    &[
+                        "The world seems to be corrupted.",
+                        "If you've created your world",
+                        "in an old version, it",
+                        "is no longer compatible.",
+                        format!("{:?}", error).as_str(),
+                    ],
+                    Color::from_888(255, 100, 100),
+                );
+                self.input_manager.wait_delay_or_ok(15000);
+                return GameState::GoMainMenu;
+            } else {
+                // Add chunks. Maybe move this code into world (TODO)
+                for x in 0..4 {
+                    for y in 0..4 {
+                        for z in 0..4 {
+                            let chunk = self
+                                .save_manager
+                                .get_chunk_at_pos(Vector3::new(x, y, z))
+                                .unwrap();
+
+                            self.world.push_chunk(chunk);
+                        }
+                    }
+                }
+
+                // Load player data
+                self.player.set_pos_rotation(
+                    &mut self.renderer.camera,
+                    self.save_manager.get_player_rot(),
+                    self.save_manager.get_player_pos(),
+                );
+                self.player
+                    .set_inventory(self.save_manager.get_player_inventory());
+
+                // Load world info
+                let world_info = self.save_manager.get_current_loaded_world_info();
+                self.world.set_seed(world_info.world_seed);
+            }
         }
 
         self.save_manager.clean(); // Clear save manager to save memory
 
         // Show a warning message
-        eadk::display::push_rect_uniform(SCREEN_RECT, Color::from_888(255, 255, 255));
-        let show_msg = |message, y| {
-            eadk::display::draw_string(
-                message,
-                Point {
-                    x: ((320 - message.len() * 10) / 2) as u16,
-                    y,
-                },
-                true,
-                Color::from_888(0, 0, 0),
-                Color::from_888(255, 255, 255),
-            );
-        };
-        show_msg("To exit, press [EXE]", 90);
-        show_msg("DON'T press [Home]", 110);
+        Renderer::show_msg(
+            &["To exit, press [EXE]", "DON'T press [Home]"],
+            Color::from_888(255, 255, 255),
+        );
 
         self.input_manager.wait_delay_or_ok(3000);
         GameState::InGame
@@ -148,12 +156,19 @@ impl Game {
             self.hud.update(&self.input_manager);
             self.hud.sync(&self.player);
 
-            self.renderer.camera.update(self.timing_manager.get_delta_time(), &self.input_manager);
+            self.renderer
+                .camera
+                .update(self.timing_manager.get_delta_time(), &self.input_manager);
 
             self.world.check_mesh_regeneration();
 
-            self.renderer
-                .draw_game(&mut self.world, &self.player, self.timing_manager.get_fps(), &self.hud, true);
+            self.renderer.draw_game(
+                &mut self.world,
+                &self.player,
+                self.timing_manager.get_fps(),
+                &self.hud,
+                true,
+            );
         }
     }
 
@@ -186,7 +201,7 @@ impl Game {
                 GameState::GoMainMenu => self.main_menu_loop(),
                 GameState::GoSetting => self.settings_menu_loop(),
                 GameState::GoSelectWorld => self.worlds_select_menu_loop(),
-                GameState::LoadWorld(filename) => self.load_world(&filename),
+                GameState::LoadWorld(filename, is_new) => self.load_world(&filename, is_new),
                 GameState::InGame => self.game_loop(),
                 GameState::DeleteWorld(filename) => self.delete_world_menu_loop(&filename),
                 GameState::CreateWorld(file_name) => self.create_world_menu_loop(&file_name),
@@ -203,8 +218,8 @@ pub enum GameState {
     GoSelectWorld,
     InGame,
     OpenPlayerInventory(game_uis::PlayerInventoryPage),
-    LoadWorld(String),   // String: filename, String: world name
-    CreateWorld(String), // String: file_name
+    LoadWorld(String, bool), // String: filename, String: world name
+    CreateWorld(String),     // String: file_name
     DeleteWorld(String),
     Quit,
 }

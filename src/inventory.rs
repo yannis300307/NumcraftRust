@@ -50,7 +50,7 @@ impl ItemStack {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Inventory {
     slots: Vec<ItemStack>,
     pub modified: bool,

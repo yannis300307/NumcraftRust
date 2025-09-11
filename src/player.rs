@@ -59,6 +59,10 @@ impl Player {
         self.sync_with_camera(camera);
     }
 
+    pub fn set_inventory(&mut self, inventory: Inventory) {
+        self.inventory = inventory
+    }
+
     pub fn update(
         &mut self,
         delta: f32,
