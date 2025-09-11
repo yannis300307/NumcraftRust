@@ -195,7 +195,7 @@ impl GameUI {
     }
 
     fn move_cursor_if_possible(&mut self, input_manager: &InputManager, key: input::Key) {
-        if !input_manager.is_just_pressed(key) {
+        if !input_manager.is_impulsed_key(key) {
             return;
         }
 
@@ -228,16 +228,16 @@ impl GameUI {
         if self.is_selecting_amount
             && let Some(amount) = &mut self.selected_amount
         {
-            if input_manager.is_just_pressed(input::Key::Right) {
+            if input_manager.is_impulsed_key(input::Key::Right) {
                 *amount += 1;
                 self.ask_redraw();
-            } else if input_manager.is_just_pressed(input::Key::Left) {
+            } else if input_manager.is_impulsed_key(input::Key::Left) {
                 *amount -= 1;
                 self.ask_redraw();
-            } else if input_manager.is_just_pressed(input::Key::Up) {
+            } else if input_manager.is_impulsed_key(input::Key::Up) {
                 *amount += 4;
                 self.ask_redraw();
-            } else if input_manager.is_just_pressed(input::Key::Down) {
+            } else if input_manager.is_impulsed_key(input::Key::Down) {
                 if *amount > 4 {
                     *amount -= 4;
                 } else {

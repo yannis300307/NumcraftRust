@@ -1,9 +1,9 @@
 use enum_iterator::all;
 
-use crate::eadk::{
+use crate::{eadk::{
     self,
     input::{Key, KeyboardState},
-};
+}, timing::TimingManager};
 
 pub struct InputManager {
     keyboard_state: KeyboardState,
@@ -11,6 +11,7 @@ pub struct InputManager {
     just_pressed: KeyboardState,
     last_pressed: Option<Key>,
     last_pressed_timer: f32,
+    impulsed_key_buffer: Option<Key>,
 }
 
 impl InputManager {
@@ -22,6 +23,8 @@ impl InputManager {
 
             last_pressed: None,
             last_pressed_timer: 0.,
+
+            impulsed_key_buffer: None
         }
     }
 
@@ -33,12 +36,14 @@ impl InputManager {
             .get_just_pressed(self.last_keyboard_state);
     }
 
-    pub fn get_inpulsed_key(&mut self, delta: f32) -> Option<Key> {
+    pub fn update_timing(&mut self, timing_manager: &TimingManager) {
+        self.impulsed_key_buffer = None;
+
         let last_pressed = self.get_last_pressed();
         if last_pressed.is_some() {
             self.last_pressed = last_pressed;
             self.last_pressed_timer = 0.5;
-            return self.last_pressed;
+            self.impulsed_key_buffer = self.last_pressed;
         }
 
         if let Some(key) = self.last_pressed
@@ -48,14 +53,13 @@ impl InputManager {
         }
 
         if self.last_pressed.is_some() {
-            self.last_pressed_timer -= delta;
+            self.last_pressed_timer -= timing_manager.get_delta_time();
 
             if self.last_pressed_timer < 0. {
-                self.last_pressed_timer = 0.1;
-                return self.last_pressed;
+                self.last_pressed_timer = 0.06;
+                self.impulsed_key_buffer = self.last_pressed;
             }
         }
-        None
     }
 
     pub fn get_last_pressed(&self) -> Option<Key> {
@@ -65,6 +69,10 @@ impl InputManager {
             }
         }
         None
+    }
+
+    pub fn is_impulsed_key(&self, key: Key) -> bool {
+        return self.impulsed_key_buffer.is_some_and(|v| v == key)
     }
 
     pub fn is_just_pressed(&self, key: Key) -> bool {

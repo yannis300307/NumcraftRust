@@ -26,4 +26,8 @@ impl TimingManager {
     pub fn get_fps(&self) -> f32 {
         return 1. / self.delta_time;
     }
+    pub fn reset(&mut self) {
+        self.last_timer = eadk::timing::millis();
+        self.delta_time = 0.1;
+    }
 }

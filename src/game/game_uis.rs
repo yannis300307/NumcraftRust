@@ -17,7 +17,8 @@ impl Game {
 
     fn player_inventory_normal_loop(&mut self) {
         // Clear the hud
-        self.renderer.draw_game(&mut self.world, &self.player, 0., &self.hud, false);
+        self.renderer
+            .draw_game(&mut self.world, &self.player, 0., &self.hud, false);
 
         let mut inventories = [&mut self.player.inventory];
 
@@ -35,9 +36,13 @@ impl Game {
             .sync(&inventories);
 
         ui.selected_amount = None;
-        
+
+        self.timing_manager.reset();
+
         loop {
             self.input_manager.update();
+            self.timing_manager.update();
+            self.input_manager.update_timing(&self.timing_manager);
 
             if !ui.update(&self.input_manager, &mut inventories) {
                 break;
@@ -52,15 +57,25 @@ impl Game {
 
     fn player_inventory_creative_loop(&mut self) {
         // Clear the hud
-        self.renderer.draw_game(&mut self.world, &self.player, 0., &self.hud, false);
+        self.renderer
+            .draw_game(&mut self.world, &self.player, 0., &self.hud, false);
 
         let mut creative_inventory = Inventory::new(21);
 
         creative_inventory.fill(ItemStack::new(crate::constants::ItemType::Air, 0, true));
 
-        creative_inventory.replace_slot_item_stack(0, ItemStack::new(crate::constants::ItemType::StoneBlock, 1, true));
-        creative_inventory.replace_slot_item_stack(1, ItemStack::new(crate::constants::ItemType::DirtBlock, 1, true));
-        creative_inventory.replace_slot_item_stack(2, ItemStack::new(crate::constants::ItemType::GrassBlock, 1, true));
+        creative_inventory.replace_slot_item_stack(
+            0,
+            ItemStack::new(crate::constants::ItemType::StoneBlock, 1, true),
+        );
+        creative_inventory.replace_slot_item_stack(
+            1,
+            ItemStack::new(crate::constants::ItemType::DirtBlock, 1, true),
+        );
+        creative_inventory.replace_slot_item_stack(
+            2,
+            ItemStack::new(crate::constants::ItemType::GrassBlock, 1, true),
+        );
 
         let mut inventories = [&mut self.player.inventory, &mut creative_inventory];
 
@@ -77,17 +92,21 @@ impl Game {
             ])
             .with_slot_grid(Vector2::new(218, 9), 3, 7, 1, 24, 0)
             .with_links(&[
-                (5,  27, NeighborDirection::Right),
+                (5, 27, NeighborDirection::Right),
                 (11, 30, NeighborDirection::Right),
                 (17, 33, NeighborDirection::Right),
-                (23, 36, NeighborDirection::Right)
+                (23, 36, NeighborDirection::Right),
             ])
             .sync(&inventories);
 
         ui.selected_amount = None;
-        
+
+        self.timing_manager.reset();
+
         loop {
             self.input_manager.update();
+            self.timing_manager.update();
+            self.input_manager.update_timing(&self.timing_manager);
 
             if !ui.update(&self.input_manager, &mut inventories) {
                 break;
