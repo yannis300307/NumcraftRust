@@ -6,9 +6,13 @@ build:
 send:
     cargo run --release --bin Numcraft --target=thumbv7em-none-eabihf
 
+check:
+    cargo build --release --bin Numcraft --target=thumbv7em-none-eabihf
+    cargo build --release --target={{current_target}} --lib
+
 [macos]
 run_nwb:
-    ./epsilon_simulator/output/release/simulator/macos/epsilon.app/Contents/MacOS/Epsilon --nwb ./target/{{current_target}}/release/Numcraft
+    ./epsilon_simulator/output/release/simulator/macos/epsilon.app/Contents/MacOS/Epsilon --nwb ./target/{{current_target}}/release/libNumcraftSim.dylib
 
 [linux]
 run_nwb:
@@ -17,7 +21,11 @@ run_nwb:
 sim jobs="1":
     -git clone https://github.com/numworks/epsilon.git epsilon_simulator -b version-20 # Broken with version 21. Nice!
     cargo build --release --target={{current_target}} --lib
-    cd epsilon_simulator && make PLATFORM=simulator -j {{jobs}}
+    if [ ! -f "target/simulator_patched" ]; then \
+        cd epsilon_simulator && make PLATFORM=simulator -j {{jobs}}; \
+        cd ..; \
+        echo "yes it is" >> target/simulator_patched; \
+    fi
     just run_nwb
 
 [confirm("This will clean the built app AND the simulator. Do you want to continue ?")]

@@ -27,10 +27,16 @@ mod world;
 use game::Game;
 
 mod frustum;
+mod game_ui;
+mod input_manager;
+mod inventory;
 mod menu;
 mod player;
-mod storage_lib;
 mod save_manager;
+mod storage_lib;
+mod settings;
+mod hud;
+mod timing;
 
 #[used]
 #[cfg(target_os = "none")]

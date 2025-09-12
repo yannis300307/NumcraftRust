@@ -1,26 +1,27 @@
 #[cfg(target_os = "none")]
 use alloc::{string::String, vec::Vec};
 
+#[cfg(target_os = "none")]
+use crate::alloc::borrow::ToOwned;
+
 use lz4_flex::{compress, compress_prepend_size, decompress, decompress_size_prepended};
 use nalgebra::Vector3;
 use postcard::{from_bytes, to_allocvec};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    chunk::Chunk,
-    constants::{BlockType, world::CHUNK_SIZE},
-    player::Player,
-    storage_lib::{
+    chunk::Chunk, constants::{world::CHUNK_SIZE, BlockType}, eadk::{self, Color}, inventory::Inventory, player::Player, renderer::Renderer, storage_lib::{
         storage_extapp_file_erase, storage_extapp_file_exists,
         storage_extapp_file_list_with_extension, storage_extapp_file_read,
         storage_extapp_file_read_header, storage_file_write,
-    },
+    }
 };
 
 #[derive(Serialize, Deserialize)]
 pub struct PlayerData {
     pub pos: (f32, f32, f32),
     pub rotation: (f32, f32), // Only Pitch and Yaw
+    pub inventory: Inventory
                               // More in the futur
 }
 
@@ -44,6 +45,7 @@ impl PlayerData {
         PlayerData {
             pos: (0., 0., 0.),
             rotation: (0., 0.),
+            inventory: Inventory::new(0),
         }
     }
 }
@@ -52,6 +54,7 @@ pub struct SaveManager {
     chunks_data: [Vec<u8>; 64],
     player_data: PlayerData,
     world_info: WorldInfo,
+    pub file_name: Option<String>,
 }
 
 impl SaveManager {
@@ -60,6 +63,7 @@ impl SaveManager {
             chunks_data: [const { Vec::new() }; 64],
             player_data: PlayerData::new(),
             world_info: WorldInfo::new(),
+            file_name: None,
         }
     }
 
@@ -91,6 +95,10 @@ impl SaveManager {
         true
     }
 
+    pub fn set_file_name(&mut self, file_name: &String) {
+        self.file_name = Some(file_name.clone());
+    }
+
     pub fn update_player_data(&mut self, player: &Player) {
         self.player_data.pos.0 = player.pos.x;
         self.player_data.pos.1 = player.pos.y;
@@ -98,6 +106,8 @@ impl SaveManager {
 
         self.player_data.rotation.0 = player.rotation.x;
         self.player_data.rotation.1 = player.rotation.y;
+
+        self.player_data.inventory = player.inventory.clone();
     }
 
     pub fn get_existing_worlds(&self) -> Vec<String> {
@@ -110,13 +120,18 @@ impl SaveManager {
         }
     }
 
-    pub fn save_world_to_file(&self, filename: &str) {
+    pub fn save_world_to_file(&self) {
         let data = self.get_raw();
 
-        if storage_extapp_file_exists(filename) {
-            storage_extapp_file_erase(filename);
+        if let Some(file_name) = &self.file_name {
+            if storage_extapp_file_exists(&file_name) {
+                storage_extapp_file_erase(&file_name);
+            }
+            storage_file_write(&file_name, &data);
+        } else {
+            Renderer::show_msg(&["Unable to save."], eadk::Color::from_888(255, 100, 100));
+            eadk::timing::msleep(3000);
         }
-        storage_file_write(filename, &data);
     }
 
     fn get_raw(&self) -> Vec<u8> {
@@ -191,6 +206,7 @@ impl SaveManager {
     }
 
     pub fn load_from_file(&mut self, filename: &str) -> Result<(), SaveFileLoadError> {
+        self.file_name = Some(filename.to_owned());
         // Read file
         if let Some(raw_data) = storage_extapp_file_read(filename) {
             if let Ok(world_data_offset) = self.read_world_info(&raw_data) {
@@ -290,6 +306,10 @@ impl SaveManager {
             self.player_data.pos.1,
             self.player_data.pos.2,
         )
+    }
+
+    pub fn get_player_inventory(&self) -> Inventory {
+        self.player_data.inventory.clone()
     }
 
     pub fn get_player_rot(&self) -> Vector3<f32> {

@@ -7,6 +7,9 @@ use crate::{
     camera::Camera,
     constants::{BlockType, player::MOVEMENT_SPEED},
     eadk,
+    hud::Hud,
+    input_manager::InputManager,
+    inventory::Inventory,
     mesh::{Mesh, Quad, QuadDir},
     world::World,
 };
@@ -15,6 +18,7 @@ pub struct Player {
     pub pos: Vector3<f32>,
     pub rotation: Vector3<f32>,
     ray_cast_result: Option<RaycastResult>,
+    pub inventory: Inventory,
 }
 
 impl Player {
@@ -23,6 +27,7 @@ impl Player {
             pos: Vector3::new(0., 0., 0.),
             rotation: Vector3::new(0., 0., 0.),
             ray_cast_result: None,
+            inventory: Inventory::new(24),
         }
     }
 
@@ -43,19 +48,28 @@ impl Player {
         self.rotation = *camera.get_rotation();
     }
 
-    pub fn set_pos_rotation(&mut self, camera: &mut Camera, rotation: Vector3<f32>, pos: Vector3<f32>) {
+    pub fn set_pos_rotation(
+        &mut self,
+        camera: &mut Camera,
+        rotation: Vector3<f32>,
+        pos: Vector3<f32>,
+    ) {
         self.pos = pos;
         camera.set_rotation(rotation);
         self.sync_with_camera(camera);
     }
 
+    pub fn set_inventory(&mut self, inventory: Inventory) {
+        self.inventory = inventory
+    }
+
     pub fn update(
         &mut self,
         delta: f32,
-        keyboard_state: eadk::input::KeyboardState,
-        just_pressed_keyboard_state: eadk::input::KeyboardState,
+        input_manager: &InputManager,
         world: &mut World,
         camera: &mut Camera,
+        hud: &Hud,
     ) {
         self.sync_with_camera(camera);
         self.rotation = *camera.get_rotation();
@@ -63,47 +77,47 @@ impl Player {
         self.ray_cast_result = self.ray_cast(camera, world, 10);
 
         // Movements
-        if keyboard_state.key_down(eadk::input::Key::Toolbox) {
+        if input_manager.is_keydown(eadk::input::Key::Toolbox) {
             // Forward
             let translation = sincosf(self.rotation.y);
             self.pos.x += translation.0 * delta * MOVEMENT_SPEED;
             self.pos.z += translation.1 * delta * MOVEMENT_SPEED;
         }
-        if keyboard_state.key_down(eadk::input::Key::Comma) {
+        if input_manager.is_keydown(eadk::input::Key::Comma) {
             // Backward
             let translation = sincosf(self.rotation.y);
             self.pos.x -= translation.0 * delta * MOVEMENT_SPEED;
             self.pos.z -= translation.1 * delta * MOVEMENT_SPEED;
         }
-        if keyboard_state.key_down(eadk::input::Key::Imaginary) {
+        if input_manager.is_keydown(eadk::input::Key::Imaginary) {
             // Left
             let translation = sincosf(self.rotation.y + PI / 2.0);
             self.pos.x -= translation.0 * delta * MOVEMENT_SPEED;
             self.pos.z -= translation.1 * delta * MOVEMENT_SPEED;
         }
-        if keyboard_state.key_down(eadk::input::Key::Power) {
+        if input_manager.is_keydown(eadk::input::Key::Power) {
             // Right
             let translation = sincosf(self.rotation.y + PI / 2.0);
             self.pos.x += translation.0 * delta * MOVEMENT_SPEED;
             self.pos.z += translation.1 * delta * MOVEMENT_SPEED;
         }
-        if keyboard_state.key_down(eadk::input::Key::Shift) {
+        if input_manager.is_keydown(eadk::input::Key::Shift) {
             // Up
             self.pos.y -= delta * MOVEMENT_SPEED;
         }
-        if keyboard_state.key_down(eadk::input::Key::Exp) {
+        if input_manager.is_keydown(eadk::input::Key::Exp) {
             // Down
             self.pos.y += delta * MOVEMENT_SPEED;
         }
 
-        if just_pressed_keyboard_state.key_down(eadk::input::Key::Back) {
+        if input_manager.is_just_pressed(eadk::input::Key::Back) {
             // Break Block
             if let Some(result) = &self.ray_cast_result {
                 world.set_block_in_world(result.block_pos, BlockType::Air);
             }
         }
 
-        if just_pressed_keyboard_state.key_down(eadk::input::Key::Ok) {
+        if input_manager.is_just_pressed(eadk::input::Key::Ok) {
             // Place Block
             if let Some(result) = &self.ray_cast_result {
                 let block_pos = result.block_pos + result.face_dir.get_normal_vector();
@@ -112,7 +126,11 @@ impl Player {
                     .is_some_and(|b| b.is_air())
                 // Just in case
                 {
-                    world.set_block_in_world(block_pos, BlockType::Stone);
+                    if let Some(item_type) = self.inventory.take_one(18 + hud.selected_slot)
+                        && let Some(block_type) = item_type.get_matching_block_type()
+                    {
+                        world.set_block_in_world(block_pos, block_type);
+                    }
                 }
             }
         }

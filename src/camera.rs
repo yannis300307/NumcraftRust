@@ -5,7 +5,7 @@ use nalgebra::{Matrix4, UnitQuaternion, Vector3};
 
 use crate::{
     constants::{player::ROTATION_SPEED, rendering::FOV},
-    eadk,
+    eadk, input_manager::InputManager,
 };
 
 pub struct Camera {
@@ -33,25 +33,21 @@ impl Camera {
         self.fov = degrees * PI / 180.0;
     }
 
-    pub fn update(
-        &mut self,
-        delta: f32,
-        keyboard_state: eadk::input::KeyboardState,
-    ) {
+    pub fn update(&mut self, delta: f32, input_manager: &InputManager) {
         // Rotation
-        if keyboard_state.key_down(eadk::input::Key::Right) {
+        if input_manager.is_keydown(eadk::input::Key::Right) {
             self.rotation.y += delta * ROTATION_SPEED;
         }
-        if keyboard_state.key_down(eadk::input::Key::Left) {
+        if input_manager.is_keydown(eadk::input::Key::Left) {
             self.rotation.y -= delta * ROTATION_SPEED;
         }
-        if keyboard_state.key_down(eadk::input::Key::Up) {
+        if input_manager.is_keydown(eadk::input::Key::Up) {
             self.rotation.x += delta * ROTATION_SPEED;
             if self.rotation.x >= PI / 2.0 - 0.0001 {
                 self.rotation.x = PI / 2.0 - 0.0001
             }
         }
-        if keyboard_state.key_down(eadk::input::Key::Down) {
+        if input_manager.is_keydown(eadk::input::Key::Down) {
             self.rotation.x -= delta * ROTATION_SPEED;
 
             if self.rotation.x <= -PI / 2.0 + 0.0001 {

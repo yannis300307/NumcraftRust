@@ -6,7 +6,10 @@ use alloc::{
 
 use nalgebra::Vector2;
 
-use crate::eadk::input::{Key, KeyboardState};
+use crate::{
+    eadk::input::{Key, KeyboardState},
+    input_manager::InputManager,
+};
 
 pub enum MenuElement {
     /// A simple button
@@ -68,29 +71,29 @@ pub struct Menu {
 }
 
 impl Menu {
-    pub fn check_inputs(&mut self, just_pressed_keyboard_state: KeyboardState) {
-        if just_pressed_keyboard_state.key_down(Key::Down) {
+    pub fn check_inputs(&mut self, input_manager: &InputManager) {
+        if input_manager.is_just_pressed(Key::Down) {
             self.cursor_down();
         }
-        if just_pressed_keyboard_state.key_down(Key::Up) {
+        if input_manager.is_just_pressed(Key::Up) {
             self.cursor_up();
         }
-        if just_pressed_keyboard_state.key_down(Key::Right) {
+        if input_manager.is_just_pressed(Key::Right) {
             self.cursor_right();
         }
-        if just_pressed_keyboard_state.key_down(Key::Left) {
+        if input_manager.is_just_pressed(Key::Left) {
             self.cursor_left();
         }
 
-        if just_pressed_keyboard_state.key_down(Key::Ok) {
+        if input_manager.is_just_pressed(Key::Ok) {
             self.set_pressed(true);
         }
 
-        if just_pressed_keyboard_state.key_down(Key::Alpha) {
+        if input_manager.is_just_pressed(Key::Alpha) {
             self.alpha_active = !self.alpha_active;
         }
 
-        if just_pressed_keyboard_state.key_down(Key::Shift) {
+        if input_manager.is_just_pressed(Key::Shift) {
             self.shift_active = !self.shift_active;
         }
 
@@ -101,7 +104,7 @@ impl Menu {
             ..
         } = &mut self.elements[self.selected_index]
         {
-            if just_pressed_keyboard_state.key_down(Key::Backspace) && value.len() > 0 {
+            if input_manager.is_impulsed_key(Key::Backspace) && value.len() > 0 {
                 value.truncate(value.len() - 1);
                 self.need_redraw = true;
             }
@@ -140,7 +143,7 @@ impl Menu {
                 Key::Zero,
                 Key::Dot,
             ] {
-                if just_pressed_keyboard_state.key_down(key) && value.len() < *max_len as usize {
+                if input_manager.is_impulsed_key(key) && value.len() < *max_len as usize {
                     if self.alpha_active && !*digits_only {
                         let mut letter = match key {
                             Key::Exp => "a",

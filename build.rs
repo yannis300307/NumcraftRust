@@ -30,16 +30,9 @@ fn main() {
         {
             out
         } else {
-            Command::new("cmd")
-                .args([
-                    "/c",
-                    "nwlink",
-                    "png-nwi",
-                    "assets/icon.png",
-                    "target/icon.nwi",
-                ])
-                .output()
-                .expect("Unable to convert icon.")
+            panic!(
+                "Your OS is not supported! If you're using Windows, please compile Numcraft in WSL."
+            );
         }
     };
     assert!(
@@ -56,14 +49,33 @@ fn main() {
     println!("cargo:rerun-if-changed=assets/cross.png");
     convert_image("cross");
 
+    // Convert tileset
+    println!("cargo:rerun-if-changed=assets/tileset.png");
+    println!("Converting tileset");
+
+    let img = ImageReader::open(format!("assets/tileset.png").as_str())
+        .unwrap()
+        .decode()
+        .unwrap();
+
+    let mut data: Vec<u8> = Vec::new();
+
+    for pix in img.pixels() {
+        data.extend(
+            (((pix.2.0[0] as u16 & 0b11111000) << 8)
+                | ((pix.2.0[1] as u16 & 0b11111100) << 3)
+                | (pix.2.0[2] as u16 >> 3))
+                .to_be_bytes(),
+        );
+    }
+
+    fs::write(format!("target/tileset.bin").as_str(), data).unwrap();
+
+    // Compile storage.c
     if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "none" {
         unsafe { std::env::set_var("CC", "arm-none-eabi-gcc") };
 
-        let program = if cfg!(windows) {
-            "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx.cmd"
-        } else {
-            "npx"
-        };
+        let program = "npx";
 
         let nwlink_flags = String::from_utf8(
             Command::new(program)
@@ -75,7 +87,7 @@ fn main() {
         .expect("Invalid UTF-8 in nwlink flags");
 
         let mut build = cc::Build::new();
-        build.file("src/storage.c");
+        build.file("src/libs/storage.c");
         build.flag("-std=c99");
         build.flag("-Os");
         build.flag("-Wall");
@@ -94,6 +106,8 @@ fn main() {
   KeySDLKeyPair(Key::Back,      SDL_SCANCODE_BACKSPACE),\
   KeySDLKeyPair(Key::EXE,       SDL_SCANCODE_ESCAPE),\
 \
+  KeySDLKeyPair(Key::Var,       SDL_SCANCODE_I),\
+\
   KeySDLKeyPair(Key::Toolbox,   SDL_SCANCODE_W),\
   KeySDLKeyPair(Key::Imaginary, SDL_SCANCODE_A),\
   KeySDLKeyPair(Key::Power,     SDL_SCANCODE_D),\
@@ -110,14 +124,16 @@ fn main() {
         let file_content = fs::read_to_string("epsilon_simulator/ion/src/simulator/shared/keyboard.cpp")
         .expect("Cannot open keyboard.cpp file from emulator. Please check if the simulator is clonned properly.");
 
-        let re =
-            Regex::new(r"constexpr static KeySDLKeyPair sKeyPairs\[] ?= ?\{[\S\s]*?};").unwrap();
-        let result = re.replace(&file_content, remapped);
+        if !file_content.contains(remapped) {
+            let re = Regex::new(r"constexpr static KeySDLKeyPair sKeyPairs\[] ?= ?\{[\S\s]*?};")
+                .unwrap();
+            let result = re.replace(&file_content, remapped);
 
-        fs::write(
-            "epsilon_simulator/ion/src/simulator/shared/keyboard.cpp",
-            result.as_bytes(),
-        )
-        .unwrap();
+            fs::write(
+                "epsilon_simulator/ion/src/simulator/shared/keyboard.cpp",
+                result.as_bytes(),
+            )
+            .unwrap();
+        }
     }
 }
