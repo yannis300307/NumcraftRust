@@ -10,19 +10,24 @@ use postcard::{from_bytes, to_allocvec};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    chunk::Chunk, constants::{world::CHUNK_SIZE, BlockType}, eadk::{self, Color}, inventory::Inventory, player::Player, renderer::Renderer, storage_lib::{
+    chunk::Chunk,
+    constants::{BlockType, world::CHUNK_SIZE},
+    eadk::{self, Color},
+    inventory::Inventory,
+    player::Player,
+    renderer::Renderer,
+    storage_lib::{
         storage_extapp_file_erase, storage_extapp_file_exists,
         storage_extapp_file_list_with_extension, storage_extapp_file_read,
         storage_extapp_file_read_header, storage_file_write,
-    }
+    },
 };
 
 #[derive(Serialize, Deserialize)]
 pub struct PlayerData {
     pub pos: (f32, f32, f32),
     pub rotation: (f32, f32), // Only Pitch and Yaw
-    pub inventory: Inventory
-                              // More in the futur
+    pub inventory: Inventory, // More in the futur
 }
 
 #[derive(Serialize, Deserialize)]
@@ -125,9 +130,18 @@ impl SaveManager {
 
         if let Some(file_name) = &self.file_name {
             if storage_extapp_file_exists(&file_name) {
-                storage_extapp_file_erase(&file_name);
+                if !storage_extapp_file_erase(&file_name) {
+                    Renderer::show_msg(&["Unable to save.", "Cannot delete old save!"], eadk::Color::from_888(255, 100, 100));
+                    eadk::timing::msleep(3000);
+                }
             }
-            storage_file_write(&file_name, &data);
+            if !storage_file_write(&file_name, &data) {
+                Renderer::show_msg(
+                    &["Unable to save.", "Writing error!"],
+                    eadk::Color::from_888(255, 100, 100),
+                );
+                eadk::timing::msleep(3000);
+            }
         } else {
             Renderer::show_msg(&["Unable to save."], eadk::Color::from_888(255, 100, 100));
             eadk::timing::msleep(3000);
