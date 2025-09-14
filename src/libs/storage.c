@@ -1,7 +1,7 @@
 // Code from https://framagit.org/Yaya.Cout/numworks-extapp-storage
 #include <stdbool.h>
-#include <stdint.h>
 #include "storage.h"
+#include <stdint.h>
 #include <string.h>
 
 // Taken from https://codereview.stackexchange.com/questions/151049/endianness-conversion-in-c/151070#151070
@@ -111,7 +111,7 @@ bool extapp_fileExists(const char *filename)
 {
   uint32_t storageAddress = extapp_address();
   char *offset = (char *)storageAddress;
-  const char *endAddress = (char *)extapp_size() + storageAddress;
+  const char *endAddress = (char *)(extapp_size() + storageAddress);
 
   if (!extapp_isValid((const uint32_t *)offset))
   {
@@ -189,6 +189,12 @@ bool extapp_fileWrite(const char *filename, const char *content, size_t len)
 {
   // Check if we have enough free space
   const uint32_t *recordStartPointer = extapp_nextFree();
+  if (recordStartPointer == 0x0)
+  {
+    // If recordStartPointer returns an error, the storage is invalid
+    return false;
+  }
+
   //                                                          Start Address  + size +     filename     + \0 + content
   const uint32_t *recordEndPointer = (uint32_t *)((char *)recordStartPointer + strlen(filename) + 1 + len);
   const uint32_t *storageEndPointer = (uint32_t *)(size_t)((void *)extapp_address() + extapp_size());
@@ -212,6 +218,9 @@ bool extapp_fileWrite(const char *filename, const char *content, size_t len)
 
   // Write content:
   memcpy(writableRecordStartPointer + 2 + strlen(filename) + 1, content, len);
+
+  // Overwrite the rest of the storage with zeroes
+  memset(writableRecordStartPointer + 2 + strlen(filename) + 1 + len, 0, ((char *)extapp_address() + extapp_size()) - (writableRecordStartPointer + 2 + strlen(filename) + 1 + len));
 
   // The record is now written, so we can return
   return true;
@@ -272,12 +281,12 @@ bool extapp_fileErase(const char *filename)
 
 uint32_t extapp_address()
 {
-  return *(uint32_t *)((*extapp_userlandAddress()) + 0xC);
+  return *(uint32_t *)((extapp_userlandAddress()) + 0xC);
 }
 
 const uint32_t extapp_size()
 {
-  return *(uint32_t *)((*extapp_userlandAddress()) + 0x10);
+  return *(uint32_t *)((extapp_userlandAddress()) + 0x10);
 }
 
 const uint32_t *extapp_nextFree()
@@ -370,22 +379,24 @@ const uint8_t extapp_calculatorModel()
   return 0;
 }
 
-const uint32_t *extapp_userlandAddress()
+const uint32_t extapp_userlandAddress()
 {
   // Get the model
   const uint8_t model = extapp_calculatorModel();
 
   if (model == 1)
   {
-    return (uint32_t *)0x20000008;
+    return (*(uint32_t *)0x20000004) + 0x10000 - 0x8;
+    // return *(uint32_t *)0x20000008;
   }
   if (model == 2)
   {
-    return (uint32_t *)0x24000008;
+    return (*(uint32_t *)0x24000004) + 0x20000 - 0x8;
+    // return *(uint32_t *)0x24000008;
   }
 
-  // We don't know for other cases, so we suppose (arbitrary) that it's an
-  // N0110/N0115 because N0120 is not the latest model and is much less used
-  // than N0110/N0115
-  return (uint32_t *)0x24000008;
+  // In case we couldn't determine the model, assume N0120 as it seems to be the
+  // only model still produced
+  return (*(uint32_t *)0x24000004) + 0x20000 - 0x8;
+  // return *(uint32_t *)0x24000008;
 }

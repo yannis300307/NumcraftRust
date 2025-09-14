@@ -27,7 +27,7 @@ extern "C"
     bool extapp_isValid(const uint32_t *address);
     // Return the calculator model : 0 is unknown, 1 is N0110/N0115, 2 is N0120
     const uint8_t extapp_calculatorModel();
-    const uint32_t *extapp_userlandAddress();
+    const uint32_t extapp_userlandAddress();
 
 #ifdef __cplusplus
 }

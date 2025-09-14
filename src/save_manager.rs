@@ -120,8 +120,8 @@ impl SaveManager {
     }
 
     pub fn delete_world(&self, world_name: &String) {
-        if storage_extapp_file_exists(&world_name) {
-            storage_extapp_file_erase(&world_name);
+        if storage_extapp_file_exists(world_name) {
+            storage_extapp_file_erase(world_name);
         }
     }
 
@@ -129,13 +129,12 @@ impl SaveManager {
         let data = self.get_raw();
 
         if let Some(file_name) = &self.file_name {
-            if storage_extapp_file_exists(&file_name) {
-                if !storage_extapp_file_erase(&file_name) {
+            if storage_extapp_file_exists(file_name)
+                && !storage_extapp_file_erase(file_name) {
                     Renderer::show_msg(&["Unable to save.", "Cannot delete old save!"], eadk::Color::from_888(255, 100, 100));
                     eadk::timing::msleep(3000);
                 }
-            }
-            if !storage_file_write(&file_name, &data) {
+            if !storage_file_write(file_name, &data) {
                 Renderer::show_msg(
                     &["Unable to save.", "Writing error!"],
                     eadk::Color::from_888(255, 100, 100),
