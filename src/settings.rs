@@ -18,7 +18,7 @@ impl Settings {
         Settings {
             render_distance: MAX_RENDER_DISTANCE,
             fov: FOV,
-            vsync: true,
+            vsync: false,
         }
     }
 
