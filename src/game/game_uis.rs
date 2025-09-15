@@ -1,21 +1,21 @@
 use crate::{game::*, game_ui::NeighborDirection, input_manager, inventory::Inventory};
 
 pub enum PlayerInventoryPage {
-    Normal,
+    Survival,
     Creative,
 }
 
 impl Game {
     pub fn player_inventory_loop(&mut self, page: PlayerInventoryPage) -> GameState {
         match page {
-            PlayerInventoryPage::Normal => self.player_inventory_normal_loop(),
+            PlayerInventoryPage::Survival => self.player_inventory_survival_loop(),
             PlayerInventoryPage::Creative => self.player_inventory_creative_loop(),
         }
 
         GameState::InGame
     }
 
-    fn player_inventory_normal_loop(&mut self) {
+    fn player_inventory_survival_loop(&mut self) {
         // Clear the hud
         self.renderer
             .draw_game(&mut self.world, &self.player, 0., &self.hud, false);
