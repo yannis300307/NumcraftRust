@@ -1,4 +1,18 @@
-use crate::{hud::Hud, renderer::*};
+use crate::{
+    constants::get_quad_color_from_texture_id,
+    eadk::{
+        Rect,
+        display::{push_rect, wait_for_vblank},
+    },
+    hud::Hud,
+    player::Player,
+    renderer::{
+        frustum::Frustum,
+        mesh::{Quad, Triangle, Triangle2D},
+        *,
+    },
+    world::World,
+};
 
 /// Fill a triangle in the frame buffer
 pub fn fill_triangle(
@@ -362,7 +376,7 @@ impl Renderer {
         self.projection_matrix.project_vector(&point).xy() * -1.0
     }
 
-    pub fn clear_screen(&mut self, color: eadk::Color) {
+    pub fn clear_screen(&mut self, color: Color) {
         self.tile_frame_buffer.fill(color);
     }
 
@@ -560,7 +574,7 @@ impl Renderer {
                     self.draw_hud(hud, fps_count, x, y);
                 }
 
-                eadk::display::push_rect(
+                push_rect(
                     Rect {
                         x: (SCREEN_TILE_WIDTH * x) as u16,
                         y: (SCREEN_TILE_HEIGHT * y) as u16,
@@ -572,7 +586,7 @@ impl Renderer {
             }
         }
         if self.enable_vsync {
-            eadk::display::wait_for_vblank();
+            wait_for_vblank();
         }
     }
 }

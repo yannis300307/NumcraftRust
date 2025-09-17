@@ -1,4 +1,4 @@
-use crate::{eadk::SCREEN_RECT, renderer::*};
+use crate::{eadk::{display::{draw_string, pull_rect, push_rect, push_rect_uniform}, Point, Rect, SCREEN_RECT}, renderer::*};
 
 impl Renderer {
     pub fn draw_string(&mut self, text: &str, pos: &Vector2<usize>) {
@@ -76,12 +76,12 @@ impl Renderer {
     }
 
     pub fn show_msg(message: &[&str], background_color: Color) {
-        eadk::display::push_rect_uniform(SCREEN_RECT, background_color);
+        push_rect_uniform(SCREEN_RECT, background_color);
         
         let mut y = (SCREEN_HEIGHT - message.len() * 20) / 2;
 
         for line in message {
-            eadk::display::draw_string(
+            draw_string(
                 line,
                 Point {
                     x: ((320 - line.len() * 10) / 2) as u16,

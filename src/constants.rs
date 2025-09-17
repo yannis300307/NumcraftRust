@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{eadk::Color, mesh::QuadDir};
+use crate::{eadk::Color, renderer::mesh::QuadDir};
 
 pub mod rendering {
     pub const SCREEN_WIDTH: usize = 320;

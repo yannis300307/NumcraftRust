@@ -3,6 +3,11 @@ use crate::{
         ItemType,
         color_palette::{GAMEUI_SLOT_COLOR, GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR},
     },
+    eadk::{
+        COLOR_BLACK, Point, Rect,
+        display::{draw_string, pull_rect, push_rect, push_rect_uniform},
+    },
+    game_ui::{GameUI, GameUIElements},
     renderer::*,
 };
 
@@ -21,7 +26,7 @@ impl Renderer {
                     width: BLURING_TILE_WIDTH as u16,
                     height: BLURING_TILE_HEIGHT as u16,
                 };
-                let pixels = eadk::display::pull_rect(rect);
+                let pixels = pull_rect(rect);
 
                 let mut new_pixels = [COLOR_BLACK; BLURING_TILE_WIDTH * BLURING_TILE_HEIGHT];
                 for p_x in 0..BLURING_TILE_WIDTH {
@@ -177,7 +182,7 @@ impl Renderer {
                         format!("{}", item_stack.get_amount())
                     };
 
-                    eadk::display::draw_string(
+                    draw_string(
                         amount_text.as_str(),
                         Point {
                             x: (30 - 7 * amount_text.len() + x as usize) as u16,
@@ -197,7 +202,7 @@ impl Renderer {
             {
                 let amount_bar_lenght = 30 * amount / item_stack.get_amount() as usize;
 
-                eadk::display::push_rect_uniform(
+                push_rect_uniform(
                     Rect {
                         x: x,
                         y: y + 27,
@@ -210,7 +215,7 @@ impl Renderer {
                         Color::from_888(50, 100, 255)
                     },
                 );
-                eadk::display::push_rect_uniform(
+                push_rect_uniform(
                     Rect {
                         x: x + amount_bar_lenght as u16,
                         y: y + 27,

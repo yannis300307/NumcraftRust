@@ -1,6 +1,6 @@
 use crate::{
     constants::{BlockType, world::*},
-    mesh::Mesh,
+    renderer::mesh::Mesh,
 };
 
 use fastnoise_lite::FastNoiseLite;

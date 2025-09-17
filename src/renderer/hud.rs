@@ -1,5 +1,6 @@
 use crate::{
     constants::{ItemType, color_palette::GAMEUI_SLOT_COLOR},
+    eadk::Rect,
     hud::Hud,
     renderer::*,
 };

@@ -21,12 +21,10 @@ mod chunk;
 pub mod constants;
 pub mod eadk;
 mod game;
-pub mod mesh;
 mod renderer;
 mod world;
 use game::Game;
 
-mod frustum;
 mod game_ui;
 mod input_manager;
 mod inventory;

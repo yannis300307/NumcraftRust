@@ -11,7 +11,7 @@ use crate::{
     hud::Hud,
     input_manager::InputManager,
     inventory::Inventory,
-    mesh::{Mesh, Quad, QuadDir},
+    renderer::mesh::{Mesh, Quad, QuadDir},
     world::World,
 };
 

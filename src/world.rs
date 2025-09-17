@@ -5,7 +5,7 @@ use crate::constants::BlockType;
 use crate::constants::world::CHUNK_SIZE;
 use crate::entity::{BoundingBox, Entity};
 use crate::inventory::Inventory;
-use crate::mesh::{Mesh, Quad};
+use crate::renderer::mesh::{Mesh, Quad};
 use crate::timing::TimingManager;
 #[cfg(target_os = "none")]
 use alloc::vec;
