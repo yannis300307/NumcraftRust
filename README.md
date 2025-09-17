@@ -36,7 +36,7 @@ NumcraftRust should run on both N120, N115 and N110 models. You will get better 
 - [ ] Collisions
 - [ ] Better world generation
 - [X] Main menu
-- [ ] Creative menu to select multiple blocks
+- [X] Creative menu to select multiple blocks
 - [X] Menu to select between multiple worlds
 - [ ] Lightning engine
 - [ ] Mobs
