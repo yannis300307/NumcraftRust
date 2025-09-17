@@ -3,8 +3,12 @@ use libm::roundf;
 use crate::chunk::{self, Chunk};
 use crate::constants::BlockType;
 use crate::constants::world::CHUNK_SIZE;
+use crate::entity::{BoundingBox, Entity};
 use crate::inventory::Inventory;
 use crate::mesh::{Mesh, Quad};
+use crate::timing::TimingManager;
+#[cfg(target_os = "none")]
+use alloc::vec;
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
 
@@ -16,7 +20,9 @@ const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 pub struct World {
     pub chunks: Vec<chunk::Chunk>,
     gen_noise: FastNoiseLite,
-    registered_inventories: Vec<Inventory>
+    registered_inventories: Vec<Inventory>,
+    loaded_entities: Vec<Entity>,
+    next_available_entity_id: usize,
 }
 
 pub struct RegisteredInventory {
@@ -54,7 +60,9 @@ impl World {
         let mut world = World {
             chunks: Vec::new(),
             gen_noise: FastNoiseLite::new(),
-            registered_inventories: Vec::new()
+            registered_inventories: Vec::new(),
+            loaded_entities: vec![Entity::new(0)], // The player entity is always loaded and id 0
+            next_available_entity_id: 1,
         };
 
         world
@@ -62,6 +70,40 @@ impl World {
             .set_noise_type(Some(fastnoise_lite::NoiseType::OpenSimplex2));
 
         world
+    }
+
+    pub fn update(&mut self, delta_time: f32) {
+        for i in 0..self.loaded_entities.len() {
+            self.loaded_entities[i].update(delta_time);
+            self.handle_collisions(i);
+        }
+    }
+
+    fn handle_collisions(&mut self, index: usize) {
+        if let Some(bbox) = &self.loaded_entities[index].bbox
+            && self
+                .get_block_in_world(Vector3::new(
+                    self.loaded_entities[index].pos.x as isize,
+                    (self.loaded_entities[index].pos.y + bbox.offset.y + bbox.size.y) as isize,
+                    self.loaded_entities[index].pos.z as isize,
+                ))
+                .is_some_and(|b| !b.is_air())
+        {
+            self.loaded_entities[index].velocity.y = 0.;
+            
+        }
+
+        let ent = &self.loaded_entities[index];
+        let bbox = ent.bbox.clone().unwrap();
+        //println!("{}, {}, {}", self.loaded_entities[index].pos.x as isize, (self.loaded_entities[index].pos.y + bbox.offset.y + bbox.size.y) as isize, self.loaded_entities[index].pos.z as isize);
+    }
+
+    pub fn get_player_entity_mut(&mut self) -> &mut Entity {
+        &mut self.loaded_entities[0]
+    }
+
+    pub fn get_player_entity(&self) -> &Entity {
+        &self.loaded_entities[0]
     }
 
     pub fn load_area(

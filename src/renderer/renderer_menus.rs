@@ -33,22 +33,20 @@ impl Renderer {
                         height: 30,
                     }
                 }
+            } else if let MenuElement::ButtonOption { text, .. } = &elements[i] {
+                let option_button_width = 20 + text.len() * 10;
+                Rect {
+                    x: (menu.pos.x + menu.width - option_button_width) as u16,
+                    y: element_y as u16,
+                    width: option_button_width as u16,
+                    height: 30,
+                }
             } else {
-                if let MenuElement::ButtonOption { text, .. } = &elements[i] {
-                    let option_button_width = 20 + text.len() * 10;
-                    Rect {
-                        x: (menu.pos.x + menu.width - option_button_width) as u16,
-                        y: element_y as u16,
-                        width: option_button_width as u16,
-                        height: 30,
-                    }
-                } else {
-                    Rect {
-                        x: menu.pos.x as u16,
-                        y: element_y as u16,
-                        width: menu.width as u16,
-                        height: 30,
-                    }
+                Rect {
+                    x: menu.pos.x as u16,
+                    y: element_y as u16,
+                    width: menu.width as u16,
+                    height: 30,
                 }
             };
 

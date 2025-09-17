@@ -49,6 +49,13 @@ pub mod player {
     pub const MOVEMENT_SPEED: f32 = 4.0;
 }
 
+pub mod physic {
+    use nalgebra::Vector3;
+
+    pub const GRAVITY_FACTOR: f32 = 5.0;
+    pub const MAX_VELOCITY: Vector3<f32> = Vector3::new(4., 5., 4.);
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum BlockType {
     Air = 0,

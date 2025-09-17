@@ -13,6 +13,7 @@ use crate::{
     chunk::Chunk,
     constants::{BlockType, world::CHUNK_SIZE},
     eadk::{self, Color},
+    game::{self, GameMode},
     inventory::Inventory,
     player::Player,
     renderer::Renderer,
@@ -21,6 +22,7 @@ use crate::{
         storage_extapp_file_list_with_extension, storage_extapp_file_read,
         storage_extapp_file_read_header, storage_file_write,
     },
+    world::World,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -34,6 +36,7 @@ pub struct PlayerData {
 pub struct WorldInfo {
     pub world_name: String,
     pub world_seed: i32,
+    pub gamemode: GameMode,
 }
 
 impl WorldInfo {
@@ -41,6 +44,7 @@ impl WorldInfo {
         WorldInfo {
             world_name: String::new(),
             world_seed: 1,
+            gamemode: GameMode::Survival,
         }
     }
 }
@@ -84,6 +88,10 @@ impl SaveManager {
         self.world_info.world_name = world_name.clone();
     }
 
+    pub fn set_gamemode(&mut self, gamemode: GameMode) {
+        self.world_info.gamemode = gamemode;
+    }
+
     pub fn set_chunk(&mut self, chunk: &Chunk) -> bool {
         let pos = chunk.get_pos();
 
@@ -104,13 +112,15 @@ impl SaveManager {
         self.file_name = Some(file_name.clone());
     }
 
-    pub fn update_player_data(&mut self, player: &Player) {
-        self.player_data.pos.0 = player.pos.x;
-        self.player_data.pos.1 = player.pos.y;
-        self.player_data.pos.2 = player.pos.z;
+    pub fn update_player_data(&mut self, world: &World, player: &Player) {
+        let player_entity = world.get_player_entity();
 
-        self.player_data.rotation.0 = player.rotation.x;
-        self.player_data.rotation.1 = player.rotation.y;
+        self.player_data.pos.0 = player_entity.pos.x;
+        self.player_data.pos.1 = player_entity.pos.y;
+        self.player_data.pos.2 = player_entity.pos.z;
+
+        self.player_data.rotation.0 = player_entity.rotation.x;
+        self.player_data.rotation.1 = player_entity.rotation.y;
 
         self.player_data.inventory = player.inventory.clone();
     }
@@ -129,11 +139,13 @@ impl SaveManager {
         let data = self.get_raw();
 
         if let Some(file_name) = &self.file_name {
-            if storage_extapp_file_exists(file_name)
-                && !storage_extapp_file_erase(file_name) {
-                    Renderer::show_msg(&["Unable to save.", "Cannot delete old save!"], eadk::Color::from_888(255, 100, 100));
-                    eadk::timing::msleep(3000);
-                }
+            if storage_extapp_file_exists(file_name) && !storage_extapp_file_erase(file_name) {
+                Renderer::show_msg(
+                    &["Unable to save.", "Cannot delete old save!"],
+                    eadk::Color::from_888(255, 100, 100),
+                );
+                eadk::timing::msleep(3000);
+            }
             if !storage_file_write(file_name, &data) {
                 Renderer::show_msg(
                     &["Unable to save.", "Writing error!"],

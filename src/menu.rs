@@ -237,6 +237,7 @@ impl Menu {
     }
 
     pub fn finish_buttons_handling(&mut self) {
+        let mut changed = false;
         for element in self.get_elements_mut() {
             if let MenuElement::Button {
                 // Disable all buttons
@@ -244,8 +245,15 @@ impl Menu {
                 ..
             } = element
             {
+                if *is_pressed {
+                    changed = true;
+                }
+
                 *is_pressed = false;
             }
+        }
+        if changed {
+            self.need_redraw = true;
         }
     }
 

@@ -7,6 +7,7 @@ use crate::{
     camera::Camera,
     constants::{BlockType, player::MOVEMENT_SPEED},
     eadk,
+    entity::{BoundingBox, Entity},
     hud::Hud,
     input_manager::InputManager,
     inventory::Inventory,
@@ -15,17 +16,18 @@ use crate::{
 };
 
 pub struct Player {
-    pub pos: Vector3<f32>,
-    pub rotation: Vector3<f32>,
     ray_cast_result: Option<RaycastResult>,
     pub inventory: Inventory,
 }
 
 impl Player {
-    pub fn new() -> Self {
+    pub fn new(player_entity: &mut Entity) -> Self {
+        player_entity.bbox = Some(BoundingBox {
+            offset: Vector3::new(-0.3, 0., -0.3),
+            size: Vector3::new(0.6, 1.8, 0.6),
+        });
+        
         Player {
-            pos: Vector3::new(0., 0., 0.),
-            rotation: Vector3::new(0., 0., 0.),
             ray_cast_result: None,
             inventory: Inventory::new(24),
         }
@@ -43,20 +45,9 @@ impl Player {
         }
     }
 
-    pub fn sync_with_camera(&mut self, camera: &mut Camera) {
-        camera.update_pos(self.pos - Vector3::new(0., 1.70, 0.));
-        self.rotation = *camera.get_rotation();
-    }
-
-    pub fn set_pos_rotation(
-        &mut self,
-        camera: &mut Camera,
-        rotation: Vector3<f32>,
-        pos: Vector3<f32>,
-    ) {
-        self.pos = pos;
-        camera.set_rotation(rotation);
-        self.sync_with_camera(camera);
+    pub fn sync_with_camera(&self, camera: &mut Camera, player_entity: &mut Entity) {
+        camera.update_pos(player_entity.pos - Vector3::new(0., 1.70, 0.));
+        player_entity.rotation = *camera.get_rotation();
     }
 
     pub fn set_inventory(&mut self, inventory: Inventory) {
@@ -71,43 +62,45 @@ impl Player {
         camera: &mut Camera,
         hud: &Hud,
     ) {
-        self.sync_with_camera(camera);
-        self.rotation = *camera.get_rotation();
-
         self.ray_cast_result = self.ray_cast(camera, world, 10);
+
+        let player_entity = world.get_player_entity_mut();
+
+        self.sync_with_camera(camera, player_entity);
+        player_entity.rotation = *camera.get_rotation();
 
         // Movements
         if input_manager.is_keydown(eadk::input::Key::Toolbox) {
             // Forward
-            let translation = sincosf(self.rotation.y);
-            self.pos.x += translation.0 * delta * MOVEMENT_SPEED;
-            self.pos.z += translation.1 * delta * MOVEMENT_SPEED;
+            let translation = sincosf(player_entity.rotation.y);
+            player_entity.pos.x += translation.0 * delta * MOVEMENT_SPEED;
+            player_entity.pos.z += translation.1 * delta * MOVEMENT_SPEED;
         }
         if input_manager.is_keydown(eadk::input::Key::Comma) {
             // Backward
-            let translation = sincosf(self.rotation.y);
-            self.pos.x -= translation.0 * delta * MOVEMENT_SPEED;
-            self.pos.z -= translation.1 * delta * MOVEMENT_SPEED;
+            let translation = sincosf(player_entity.rotation.y);
+            player_entity.pos.x -= translation.0 * delta * MOVEMENT_SPEED;
+            player_entity.pos.z -= translation.1 * delta * MOVEMENT_SPEED;
         }
         if input_manager.is_keydown(eadk::input::Key::Imaginary) {
             // Left
-            let translation = sincosf(self.rotation.y + PI / 2.0);
-            self.pos.x -= translation.0 * delta * MOVEMENT_SPEED;
-            self.pos.z -= translation.1 * delta * MOVEMENT_SPEED;
+            let translation = sincosf(player_entity.rotation.y + PI / 2.0);
+            player_entity.pos.x -= translation.0 * delta * MOVEMENT_SPEED;
+            player_entity.pos.z -= translation.1 * delta * MOVEMENT_SPEED;
         }
         if input_manager.is_keydown(eadk::input::Key::Power) {
             // Right
-            let translation = sincosf(self.rotation.y + PI / 2.0);
-            self.pos.x += translation.0 * delta * MOVEMENT_SPEED;
-            self.pos.z += translation.1 * delta * MOVEMENT_SPEED;
+            let translation = sincosf(player_entity.rotation.y + PI / 2.0);
+            player_entity.pos.x += translation.0 * delta * MOVEMENT_SPEED;
+            player_entity.pos.z += translation.1 * delta * MOVEMENT_SPEED;
         }
         if input_manager.is_keydown(eadk::input::Key::Shift) {
             // Up
-            self.pos.y -= delta * MOVEMENT_SPEED;
+            player_entity.pos.y -= delta * MOVEMENT_SPEED;
         }
         if input_manager.is_keydown(eadk::input::Key::Exp) {
             // Down
-            self.pos.y += delta * MOVEMENT_SPEED;
+            player_entity.pos.y += delta * MOVEMENT_SPEED;
         }
 
         if input_manager.is_just_pressed(eadk::input::Key::Back) {
@@ -125,12 +118,10 @@ impl Player {
                     .get_block_in_world(block_pos)
                     .is_some_and(|b| b.is_air())
                 // Just in case
-                {
-                    if let Some(item_type) = self.inventory.take_one(18 + hud.selected_slot)
+                    && let Some(item_type) = self.inventory.take_one(18 + hud.selected_slot)
                         && let Some(block_type) = item_type.get_matching_block_type()
-                    {
-                        world.set_block_in_world(block_pos, block_type);
-                    }
+                {
+                    world.set_block_in_world(block_pos, block_type);
                 }
             }
         }

@@ -37,6 +37,7 @@ mod storage_lib;
 mod settings;
 mod hud;
 mod timing;
+mod entity;
 
 #[used]
 #[cfg(target_os = "none")]
