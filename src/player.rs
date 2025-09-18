@@ -4,15 +4,7 @@ use libm::sincosf;
 use nalgebra::{ComplexField, Vector3};
 
 use crate::{
-    camera::Camera,
-    constants::{BlockType, player::MOVEMENT_SPEED},
-    eadk,
-    entity::{BoundingBox, Entity},
-    hud::Hud,
-    input_manager::InputManager,
-    inventory::Inventory,
-    renderer::mesh::{Mesh, Quad, QuadDir},
-    world::World,
+    camera::Camera, constants::{player::MOVEMENT_SPEED, BlockType}, eadk, entity::Entity, hud::Hud, input_manager::InputManager, inventory::Inventory, physic::BoundingBox, renderer::mesh::{Mesh, Quad, QuadDir}, world::World
 };
 
 pub struct Player {

@@ -3,7 +3,7 @@ use libm::roundf;
 use crate::chunk::{self, Chunk};
 use crate::constants::BlockType;
 use crate::constants::world::CHUNK_SIZE;
-use crate::entity::{BoundingBox, Entity};
+use crate::entity::Entity;
 use crate::inventory::Inventory;
 use crate::renderer::mesh::{Mesh, Quad};
 use crate::timing::TimingManager;

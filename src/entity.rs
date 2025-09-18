@@ -1,12 +1,6 @@
 use nalgebra::Vector3;
 
-use crate::{constants::physic::{GRAVITY_FACTOR, MAX_VELOCITY}, world::World};
-
-#[derive(Clone)]
-pub struct BoundingBox {
-    pub offset: Vector3<f32>,
-    pub size: Vector3<f32>,
-}
+use crate::{constants::physic::{GRAVITY_FACTOR, MAX_VELOCITY}, physic::BoundingBox, world::World};
 
 #[derive(Clone)]
 pub struct Entity {

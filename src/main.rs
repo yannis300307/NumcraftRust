@@ -36,6 +36,7 @@ mod settings;
 mod hud;
 mod timing;
 mod entity;
+mod physic;
 
 #[used]
 #[cfg(target_os = "none")]
