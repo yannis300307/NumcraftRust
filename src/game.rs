@@ -21,6 +21,7 @@ use crate::{
     input_manager::InputManager,
     inventory::ItemStack,
     menu::{Menu, MenuElement, TextAnchor},
+    physic::PhysicEngine,
     player::Player,
     renderer::Renderer,
     save_manager::SaveManager,
@@ -47,6 +48,8 @@ pub struct Game {
     input_manager: InputManager,
     hud: Hud,
     timing_manager: TimingManager,
+    physic_engine: PhysicEngine,
+    game_mode: GameMode,
 }
 
 impl Game {
@@ -63,6 +66,8 @@ impl Game {
             input_manager: InputManager::new(),
             hud: Hud::new(),
             timing_manager: TimingManager::new(),
+            physic_engine: PhysicEngine::new(),
+            game_mode: GameMode::Survival,
         }
     }
 
@@ -158,6 +163,7 @@ impl Game {
                 &mut self.world,
                 &mut self.renderer.camera,
                 &self.hud,
+                self.save_manager.get_game_mode(),
             );
             self.hud.update(&self.input_manager);
             self.hud.sync(&self.player);
@@ -167,7 +173,8 @@ impl Game {
                 .update(self.timing_manager.get_delta_time(), &self.input_manager);
 
             self.world.check_mesh_regeneration();
-            self.world.update(self.timing_manager.get_delta_time());
+            self.physic_engine
+                .process(&mut self.world, self.timing_manager.get_delta_time());
 
             self.renderer.draw_game(
                 &mut self.world,
@@ -190,7 +197,8 @@ impl Game {
         }
         self.world.clear();
 
-        self.save_manager.update_player_data(&self.world, &self.player);
+        self.save_manager
+            .update_player_data(&self.world, &self.player);
 
         self.save_manager.save_world_to_file();
 

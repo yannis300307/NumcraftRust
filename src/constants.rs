@@ -1,6 +1,7 @@
+use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 
-use crate::{eadk::Color, renderer::mesh::QuadDir};
+use crate::{eadk::Color, entity::Entity, physic::BoundingBox, renderer::mesh::QuadDir};
 
 pub mod rendering {
     pub const SCREEN_WIDTH: usize = 320;
@@ -46,14 +47,34 @@ pub mod player {
     use core::f32::consts::PI;
 
     pub const ROTATION_SPEED: f32 = PI / 3.0; // rad / sec
-    pub const MOVEMENT_SPEED: f32 = 4.0;
+    pub const FLY_SPEED: f32 = 4.0;
+    pub const WALK_FORCE: f32 = 2.0;
 }
 
 pub mod physic {
     use nalgebra::Vector3;
 
-    pub const GRAVITY_FACTOR: f32 = 5.0;
+    pub const GRAVITY_FACTOR: f32 = 3.0;
     pub const MAX_VELOCITY: Vector3<f32> = Vector3::new(4., 5., 4.);
+
+    pub const BLOCK_COLLISION_SCANNING_RADIUS: isize = 1;
+}
+
+impl EntityType {
+    pub fn get_bbox(&self) -> Option<BoundingBox> {
+        match self {
+            EntityType::Player => Some(BoundingBox {
+                offset: Vector3::new(-0.3, 0., -0.3),
+                size: Vector3::new(0.6, 1.8, 0.6),
+            }),
+            _ => None, // I could add more in the future
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum EntityType {
+    Player = 0,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

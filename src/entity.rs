@@ -1,27 +1,39 @@
 use nalgebra::Vector3;
 
-use crate::{constants::physic::{GRAVITY_FACTOR, MAX_VELOCITY}, physic::BoundingBox, world::World};
+use crate::{
+    constants::{
+        EntityType,
+        physic::{GRAVITY_FACTOR, MAX_VELOCITY},
+    },
+    physic::BoundingBox,
+};
 
 #[derive(Clone)]
 pub struct Entity {
     id: usize,
-    pub bbox: Option<BoundingBox>,
-    gravity: bool,
+    entity_type: EntityType,
+    pub gravity: bool,
     pub pos: Vector3<f32>,
     pub rotation: Vector3<f32>,
     pub velocity: Vector3<f32>,
+    pub is_on_floor: bool,
 }
 
 impl Entity {
-    pub fn new(id: usize) -> Self {
+    pub fn new(id: usize, entity_type: EntityType) -> Self {
         Entity {
             id,
-            bbox: None,
+            entity_type,
             gravity: true,
             velocity: Vector3::zeros(),
             pos: Vector3::zeros(),
             rotation: Vector3::zeros(),
+            is_on_floor: false,
         }
+    }
+
+    pub fn get_id(&self) -> usize {
+        self.id
     }
 
     pub fn update(&mut self, delta_time: f32) {
@@ -42,7 +54,11 @@ impl Entity {
         self.pos += self.velocity * delta_time;
     }
 
-    pub fn set_boundingbox(&mut self, bbox: BoundingBox) {
-        self.bbox = Some(bbox);
+    pub fn get_type(&self) -> EntityType {
+        self.entity_type
+    }
+
+    pub fn get_bbox(&self) -> Option<BoundingBox> {
+        Some(self.entity_type.get_bbox()?.transform(self.pos))
     }
 }

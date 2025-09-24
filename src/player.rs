@@ -4,7 +4,20 @@ use libm::sincosf;
 use nalgebra::{ComplexField, Vector3};
 
 use crate::{
-    camera::Camera, constants::{player::MOVEMENT_SPEED, BlockType}, eadk, entity::Entity, hud::Hud, input_manager::InputManager, inventory::Inventory, physic::BoundingBox, renderer::mesh::{Mesh, Quad, QuadDir}, world::World
+    camera::Camera,
+    constants::{
+        BlockType,
+        player::{FLY_SPEED, WALK_FORCE},
+    },
+    eadk,
+    entity::Entity,
+    game::GameMode,
+    hud::Hud,
+    input_manager::InputManager,
+    inventory::Inventory,
+    physic::BoundingBox,
+    renderer::mesh::{Mesh, Quad, QuadDir},
+    world::World,
 };
 
 pub struct Player {
@@ -14,11 +27,6 @@ pub struct Player {
 
 impl Player {
     pub fn new(player_entity: &mut Entity) -> Self {
-        player_entity.bbox = Some(BoundingBox {
-            offset: Vector3::new(-0.3, 0., -0.3),
-            size: Vector3::new(0.6, 1.8, 0.6),
-        });
-        
         Player {
             ray_cast_result: None,
             inventory: Inventory::new(24),
@@ -53,6 +61,7 @@ impl Player {
         world: &mut World,
         camera: &mut Camera,
         hud: &Hud,
+        game_mode: GameMode,
     ) {
         self.ray_cast_result = self.ray_cast(camera, world, 10);
 
@@ -65,34 +74,60 @@ impl Player {
         if input_manager.is_keydown(eadk::input::Key::Toolbox) {
             // Forward
             let translation = sincosf(player_entity.rotation.y);
-            player_entity.pos.x += translation.0 * delta * MOVEMENT_SPEED;
-            player_entity.pos.z += translation.1 * delta * MOVEMENT_SPEED;
+            if game_mode == GameMode::Creative {
+                player_entity.pos.x += translation.0 * delta * FLY_SPEED;
+                player_entity.pos.z += translation.1 * delta * FLY_SPEED;
+            } else {
+                player_entity.velocity.x += translation.0 * delta * WALK_FORCE;
+                player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
+            }
         }
         if input_manager.is_keydown(eadk::input::Key::Comma) {
             // Backward
             let translation = sincosf(player_entity.rotation.y);
-            player_entity.pos.x -= translation.0 * delta * MOVEMENT_SPEED;
-            player_entity.pos.z -= translation.1 * delta * MOVEMENT_SPEED;
+            if game_mode == GameMode::Creative {
+                player_entity.pos.x -= translation.0 * delta * FLY_SPEED;
+                player_entity.pos.z -= translation.1 * delta * FLY_SPEED;
+            } else {
+                player_entity.velocity.x += translation.0 * delta * WALK_FORCE;
+                player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
+            }
         }
         if input_manager.is_keydown(eadk::input::Key::Imaginary) {
             // Left
             let translation = sincosf(player_entity.rotation.y + PI / 2.0);
-            player_entity.pos.x -= translation.0 * delta * MOVEMENT_SPEED;
-            player_entity.pos.z -= translation.1 * delta * MOVEMENT_SPEED;
+            if game_mode == GameMode::Creative {
+                player_entity.pos.x -= translation.0 * delta * FLY_SPEED;
+                player_entity.pos.z -= translation.1 * delta * FLY_SPEED;
+            } else {
+                player_entity.velocity.x += translation.0 * delta * WALK_FORCE;
+                player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
+            }
         }
         if input_manager.is_keydown(eadk::input::Key::Power) {
             // Right
             let translation = sincosf(player_entity.rotation.y + PI / 2.0);
-            player_entity.pos.x += translation.0 * delta * MOVEMENT_SPEED;
-            player_entity.pos.z += translation.1 * delta * MOVEMENT_SPEED;
+            if game_mode == GameMode::Creative {
+                player_entity.pos.x += translation.0 * delta * FLY_SPEED;
+                player_entity.pos.z += translation.1 * delta * FLY_SPEED;
+            } else {
+                player_entity.velocity.x += translation.0 * delta * WALK_FORCE;
+                player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
+            }
         }
         if input_manager.is_keydown(eadk::input::Key::Shift) {
             // Up
-            player_entity.pos.y -= delta * MOVEMENT_SPEED;
+            if game_mode == GameMode::Creative {
+                player_entity.pos.y -= delta * FLY_SPEED;
+            } else if player_entity.is_on_floor {
+                player_entity.velocity.y -= 5.;
+            }
         }
         if input_manager.is_keydown(eadk::input::Key::Exp) {
             // Down
-            player_entity.pos.y += delta * MOVEMENT_SPEED;
+            if game_mode == GameMode::Creative {
+                player_entity.pos.y += delta * FLY_SPEED;
+            }
         }
 
         if input_manager.is_just_pressed(eadk::input::Key::Back) {

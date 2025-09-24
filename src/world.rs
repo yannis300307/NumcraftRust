@@ -1,9 +1,9 @@
 use libm::roundf;
 
 use crate::chunk::{self, Chunk};
-use crate::constants::BlockType;
 use crate::constants::world::CHUNK_SIZE;
-use crate::entity::Entity;
+use crate::constants::{BlockType, EntityType};
+use crate::entity::{self, Entity};
 use crate::inventory::Inventory;
 use crate::renderer::mesh::{Mesh, Quad};
 use crate::timing::TimingManager;
@@ -61,7 +61,7 @@ impl World {
             chunks: Vec::new(),
             gen_noise: FastNoiseLite::new(),
             registered_inventories: Vec::new(),
-            loaded_entities: vec![Entity::new(0)], // The player entity is always loaded and id 0
+            loaded_entities: vec![Entity::new(0, EntityType::Player)], // The player entity is always loaded and id 0
             next_available_entity_id: 1,
         };
 
@@ -70,32 +70,6 @@ impl World {
             .set_noise_type(Some(fastnoise_lite::NoiseType::OpenSimplex2));
 
         world
-    }
-
-    pub fn update(&mut self, delta_time: f32) {
-        for i in 0..self.loaded_entities.len() {
-            self.loaded_entities[i].update(delta_time);
-            self.handle_collisions(i);
-        }
-    }
-
-    fn handle_collisions(&mut self, index: usize) {
-        if let Some(bbox) = &self.loaded_entities[index].bbox
-            && self
-                .get_block_in_world(Vector3::new(
-                    self.loaded_entities[index].pos.x as isize,
-                    (self.loaded_entities[index].pos.y + bbox.offset.y + bbox.size.y) as isize,
-                    self.loaded_entities[index].pos.z as isize,
-                ))
-                .is_some_and(|b| !b.is_air())
-        {
-            self.loaded_entities[index].velocity.y = 0.;
-            
-        }
-
-        let ent = &self.loaded_entities[index];
-        let bbox = ent.bbox.clone().unwrap();
-        //println!("{}, {}, {}", self.loaded_entities[index].pos.x as isize, (self.loaded_entities[index].pos.y + bbox.offset.y + bbox.size.y) as isize, self.loaded_entities[index].pos.z as isize);
     }
 
     pub fn get_player_entity_mut(&mut self) -> &mut Entity {
@@ -318,5 +292,24 @@ impl World {
 
     fn register_inventory(&mut self, inventory: Inventory) {
         self.registered_inventories.push(inventory);
+    }
+
+    pub fn get_all_entities_mut(&mut self) -> &mut Vec<Entity> {
+        &mut self.loaded_entities
+    }
+    pub fn get_all_entities(&self) -> &Vec<Entity> {
+        &self.loaded_entities
+    }
+
+    pub fn get_entity_by_id_mut(&mut self, id: usize) -> Option<&mut Entity> {
+        self.loaded_entities
+            .iter_mut()
+            .find(|entity| entity.get_id() == id)
+    }
+
+    pub fn get_entity_by_id(&self, id: usize) -> Option<&Entity> {
+        self.loaded_entities
+            .iter()
+            .find(|entity| entity.get_id() == id)
     }
 }

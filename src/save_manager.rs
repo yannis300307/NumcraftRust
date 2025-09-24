@@ -92,6 +92,10 @@ impl SaveManager {
         self.world_info.gamemode = gamemode;
     }
 
+    pub fn get_game_mode(&self) -> GameMode {
+        self.world_info.gamemode
+    }
+
     pub fn set_chunk(&mut self, chunk: &Chunk) -> bool {
         let pos = chunk.get_pos();
 
