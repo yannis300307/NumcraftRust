@@ -54,11 +54,13 @@ pub mod player {
 }
 
 pub mod physic {
+    use nalgebra::Vector3;
+
     pub const GRAVITY_FACTOR: f32 = 10.0;
     pub const MAX_FALLING_VELOCITY: f32 = 5.;
     pub const ON_FLOOR_FRICTION: f32 = 10.;
 
-    pub const BLOCK_COLLISION_SCANNING_RADIUS: isize = 2;
+    pub const BLOCK_COLLISION_SCANNING_SIZE: Vector3<isize> = Vector3::new(2, 3, 2);
 }
 
 impl EntityType {

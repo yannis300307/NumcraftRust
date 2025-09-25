@@ -1,9 +1,7 @@
-use libm::sincosf;
 use nalgebra::Vector3;
 
 use crate::{
-    constants::physic::{BLOCK_COLLISION_SCANNING_RADIUS, GRAVITY_FACTOR, ON_FLOOR_FRICTION},
-    entity::{self, Entity},
+    constants::physic::{BLOCK_COLLISION_SCANNING_SIZE, GRAVITY_FACTOR, ON_FLOOR_FRICTION},
     world::World,
 };
 
@@ -32,9 +30,15 @@ impl PhysicEngine {
             let id = entity.get_id();
 
             let movement = entity.velocity * delta_time;
-            self.move_entity(world, id, Vector3::new(0., movement.y, 0.));
-            self.move_entity(world, id, Vector3::new(movement.x, 0., 0.));
-            self.move_entity(world, id, Vector3::new(0., 0., movement.z));
+            if movement.y.abs() > 0. {
+                self.move_entity(world, id, Vector3::new(0., movement.y, 0.));
+            }
+            if movement.x.abs() > 0. {
+                self.move_entity(world, id, Vector3::new(movement.x, 0., 0.));
+            }
+            if movement.z.abs() > 0. {
+                self.move_entity(world, id, Vector3::new(0., 0., movement.z));
+            }
         }
 
         // Friction
@@ -95,18 +99,20 @@ impl PhysicEngine {
 
         let entity_block_pos = (entity.pos + movement).map(|v| v as isize);
 
+        println!("{:?}", movement);
+
         if let Some(entity_bbox) = entity.get_bbox() {
-            for bx in (entity_block_pos.x - BLOCK_COLLISION_SCANNING_RADIUS)
-                ..(entity_block_pos.x + BLOCK_COLLISION_SCANNING_RADIUS)
+            for bx in (entity_block_pos.x - BLOCK_COLLISION_SCANNING_SIZE.x)
+                ..=(entity_block_pos.x + BLOCK_COLLISION_SCANNING_SIZE.x)
             {
-                for by in (entity_block_pos.y - BLOCK_COLLISION_SCANNING_RADIUS)
-                    ..(entity_block_pos.y + BLOCK_COLLISION_SCANNING_RADIUS)
+                for by in (entity_block_pos.y - BLOCK_COLLISION_SCANNING_SIZE.y)
+                    ..=(entity_block_pos.y + BLOCK_COLLISION_SCANNING_SIZE.y)
                 {
-                    for bz in (entity_block_pos.z - BLOCK_COLLISION_SCANNING_RADIUS)
-                        ..(entity_block_pos.z + BLOCK_COLLISION_SCANNING_RADIUS)
+                    for bz in (entity_block_pos.z - BLOCK_COLLISION_SCANNING_SIZE.z)
+                        ..=(entity_block_pos.z + BLOCK_COLLISION_SCANNING_SIZE.z)
                     {
-                        if let Some(block) = world.get_block_in_world(Vector3::new(bx, by, bz))
-                            && !block.is_air()
+                        let block_or_none = world.get_block_in_world(Vector3::new(bx, by, bz));
+                        if block_or_none.is_none() || block_or_none.is_some_and(|b| !b.is_air())
                         {
                             let block_bbox = BoundingBox {
                                 offset: Vector3::new(bx as f32, by as f32, bz as f32),
@@ -130,7 +136,9 @@ impl PhysicEngine {
             size: Vector3::repeat(1.0),
         };
         for entity in world.get_all_entities() {
-            if let Some(bbox) = &entity.get_bbox() && block_bbox.is_coliding(bbox) {
+            if let Some(bbox) = &entity.get_bbox()
+                && block_bbox.is_coliding(bbox)
+            {
                 return false;
             }
         }

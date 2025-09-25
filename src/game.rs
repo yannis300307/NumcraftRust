@@ -79,9 +79,9 @@ impl Game {
             self.world.load_area(0, 4, 0, 4, 0, 4);
 
             let player_spawn_pos = Vector3::new(
-                16.,
-                (self.world.get_terrain_height(Vector2::new(16, 16)) - 2) as f32,
-                16.,
+                16.5,
+                (self.world.get_terrain_height(Vector2::new(16, 16)) - 3) as f32,
+                16.5,
             );
 
             self.player.inventory.fill(ItemStack::void());

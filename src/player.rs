@@ -45,7 +45,7 @@ impl Player {
     }
 
     pub fn sync_with_camera(&self, camera: &mut Camera, player_entity: &mut Entity) {
-        camera.update_pos(player_entity.pos - Vector3::new(0., 0.7, 0.));
+        camera.update_pos(player_entity.pos - Vector3::new(0., -0.1, 0.));
         player_entity.rotation = *camera.get_rotation();
     }
 
