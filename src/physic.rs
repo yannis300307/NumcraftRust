@@ -123,6 +123,19 @@ impl PhysicEngine {
         }
         Some(false)
     }
+
+    pub fn can_place_block(&self, world: &World, pos: Vector3<isize>) -> bool {
+        let block_bbox = BoundingBox {
+            offset: pos.map(|v| v as f32),
+            size: Vector3::repeat(1.0),
+        };
+        for entity in world.get_all_entities() {
+            if let Some(bbox) = &entity.get_bbox() && block_bbox.is_coliding(bbox) {
+                return false;
+            }
+        }
+        true
+    }
 }
 
 impl BoundingBox {

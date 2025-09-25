@@ -15,7 +15,7 @@ use crate::{
     hud::Hud,
     input_manager::InputManager,
     inventory::Inventory,
-    physic::BoundingBox,
+    physic::{BoundingBox, PhysicEngine},
     renderer::mesh::{Mesh, Quad, QuadDir},
     world::World,
 };
@@ -46,7 +46,7 @@ impl Player {
     }
 
     pub fn sync_with_camera(&self, camera: &mut Camera, player_entity: &mut Entity) {
-        camera.update_pos(player_entity.pos - Vector3::new(0., 1.70, 0.));
+        camera.update_pos(player_entity.pos - Vector3::new(0., 0.7, 0.));
         player_entity.rotation = *camera.get_rotation();
     }
 
@@ -62,6 +62,7 @@ impl Player {
         camera: &mut Camera,
         hud: &Hud,
         game_mode: GameMode,
+        physic_engine: &PhysicEngine,
     ) {
         self.ray_cast_result = self.ray_cast(camera, world, 10);
 
@@ -151,9 +152,9 @@ impl Player {
                 if world
                     .get_block_in_world(block_pos)
                     .is_some_and(|b| b.is_air())
-                // Just in case
+                    && physic_engine.can_place_block(world, block_pos)
                     && let Some(item_type) = self.inventory.take_one(18 + hud.selected_slot)
-                        && let Some(block_type) = item_type.get_matching_block_type()
+                    && let Some(block_type) = item_type.get_matching_block_type()
                 {
                     world.set_block_in_world(block_pos, block_type);
                 }

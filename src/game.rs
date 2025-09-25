@@ -164,6 +164,7 @@ impl Game {
                 &mut self.renderer.camera,
                 &self.hud,
                 self.save_manager.get_game_mode(),
+                &self.physic_engine
             );
             self.hud.update(&self.input_manager);
             self.hud.sync(&self.player);
