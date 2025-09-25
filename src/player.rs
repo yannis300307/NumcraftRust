@@ -7,7 +7,7 @@ use crate::{
     camera::Camera,
     constants::{
         BlockType,
-        player::{FLY_SPEED, WALK_FORCE},
+        player::{FLY_SPEED, MAX_WALKING_VELOCITY, WALK_FORCE},
     },
     eadk,
     entity::Entity,
@@ -89,8 +89,8 @@ impl Player {
                 player_entity.pos.x -= translation.0 * delta * FLY_SPEED;
                 player_entity.pos.z -= translation.1 * delta * FLY_SPEED;
             } else {
-                player_entity.velocity.x += translation.0 * delta * WALK_FORCE;
-                player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
+                player_entity.velocity.x -= translation.0 * delta * WALK_FORCE;
+                player_entity.velocity.z -= translation.1 * delta * WALK_FORCE;
             }
         }
         if input_manager.is_keydown(eadk::input::Key::Imaginary) {
@@ -100,8 +100,8 @@ impl Player {
                 player_entity.pos.x -= translation.0 * delta * FLY_SPEED;
                 player_entity.pos.z -= translation.1 * delta * FLY_SPEED;
             } else {
-                player_entity.velocity.x += translation.0 * delta * WALK_FORCE;
-                player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
+                player_entity.velocity.x -= translation.0 * delta * WALK_FORCE;
+                player_entity.velocity.z -= translation.1 * delta * WALK_FORCE;
             }
         }
         if input_manager.is_keydown(eadk::input::Key::Power) {
@@ -121,6 +121,7 @@ impl Player {
                 player_entity.pos.y -= delta * FLY_SPEED;
             } else if player_entity.is_on_floor {
                 player_entity.velocity.y -= 5.;
+                println!("aaaaaaaa");
             }
         }
         if input_manager.is_keydown(eadk::input::Key::Exp) {
@@ -128,6 +129,11 @@ impl Player {
             if game_mode == GameMode::Creative {
                 player_entity.pos.y += delta * FLY_SPEED;
             }
+        }
+
+        // Limit speed
+        if player_entity.velocity.xz().norm() > MAX_WALKING_VELOCITY {
+            player_entity.velocity = player_entity.velocity.normalize() * MAX_WALKING_VELOCITY;
         }
 
         if input_manager.is_just_pressed(eadk::input::Key::Back) {

@@ -48,24 +48,27 @@ pub mod player {
 
     pub const ROTATION_SPEED: f32 = PI / 3.0; // rad / sec
     pub const FLY_SPEED: f32 = 4.0;
-    pub const WALK_FORCE: f32 = 2.0;
+    pub const WALK_FORCE: f32 = 20.0;
+    pub const MAX_WALKING_VELOCITY: f32 = 4.;
+
 }
 
 pub mod physic {
     use nalgebra::Vector3;
 
-    pub const GRAVITY_FACTOR: f32 = 3.0;
-    pub const MAX_VELOCITY: Vector3<f32> = Vector3::new(4., 5., 4.);
+    pub const GRAVITY_FACTOR: f32 = 10.0;
+    pub const MAX_FALLING_VELOCITY: f32 = 5.;
+    pub const ON_FLOOR_FRICTION: f32 = 10.;
 
-    pub const BLOCK_COLLISION_SCANNING_RADIUS: isize = 1;
+    pub const BLOCK_COLLISION_SCANNING_RADIUS: isize = 2;
 }
 
 impl EntityType {
     pub fn get_bbox(&self) -> Option<BoundingBox> {
         match self {
             EntityType::Player => Some(BoundingBox {
-                offset: Vector3::new(-0.3, 0., -0.3),
-                size: Vector3::new(0.6, 1.8, 0.6),
+                offset: Vector3::new(-0.4, 0., -0.4),
+                size: Vector3::new(0.8, 1.8, 0.8),
             }),
             _ => None, // I could add more in the future
         }

@@ -3,7 +3,7 @@ use nalgebra::Vector3;
 use crate::{
     constants::{
         EntityType,
-        physic::{GRAVITY_FACTOR, MAX_VELOCITY},
+        physic::{GRAVITY_FACTOR, MAX_FALLING_VELOCITY},
     },
     physic::BoundingBox,
 };
@@ -41,16 +41,9 @@ impl Entity {
             self.velocity.y += GRAVITY_FACTOR * delta_time;
         }
 
-        if self.velocity.x > MAX_VELOCITY.x {
-            self.velocity.x = MAX_VELOCITY.x;
+        if self.velocity.y > MAX_FALLING_VELOCITY {
+            self.velocity.y = MAX_FALLING_VELOCITY;
         }
-        if self.velocity.y > MAX_VELOCITY.y {
-            self.velocity.y = MAX_VELOCITY.y;
-        }
-        if self.velocity.z > MAX_VELOCITY.z {
-            self.velocity.z = MAX_VELOCITY.z;
-        }
-
         self.pos += self.velocity * delta_time;
     }
 
