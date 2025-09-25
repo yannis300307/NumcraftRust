@@ -26,6 +26,7 @@ pub struct Player {
 
 impl Player {
     pub fn new(player_entity: &mut Entity) -> Self {
+        player_entity.gravity = false;
         Player {
             ray_cast_result: None,
             inventory: Inventory::new(24),
