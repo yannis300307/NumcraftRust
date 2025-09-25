@@ -99,8 +99,6 @@ impl PhysicEngine {
 
         let entity_block_pos = (entity.pos + movement).map(|v| v as isize);
 
-        println!("{:?}", movement);
-
         if let Some(entity_bbox) = entity.get_bbox() {
             for bx in (entity_block_pos.x - BLOCK_COLLISION_SCANNING_SIZE.x)
                 ..=(entity_block_pos.x + BLOCK_COLLISION_SCANNING_SIZE.x)
