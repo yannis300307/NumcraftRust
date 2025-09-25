@@ -50,7 +50,7 @@ pub mod player {
     pub const FLY_SPEED: f32 = 4.0;
     pub const WALK_FORCE: f32 = 20.0;
     pub const MAX_WALKING_VELOCITY: f32 = 4.;
-
+    pub const JUMP_FORCE: f32 = 5.;
 }
 
 pub mod physic {

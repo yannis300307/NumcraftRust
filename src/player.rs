@@ -6,8 +6,7 @@ use nalgebra::{ComplexField, Vector3};
 use crate::{
     camera::Camera,
     constants::{
-        BlockType,
-        player::{FLY_SPEED, MAX_WALKING_VELOCITY, WALK_FORCE},
+        player::{FLY_SPEED, JUMP_FORCE, MAX_WALKING_VELOCITY, WALK_FORCE}, BlockType
     },
     eadk,
     entity::Entity,
@@ -121,7 +120,7 @@ impl Player {
             if game_mode == GameMode::Creative {
                 player_entity.pos.y -= delta * FLY_SPEED;
             } else if player_entity.is_on_floor {
-                player_entity.velocity.y -= 5.;
+                player_entity.velocity.y -= JUMP_FORCE;
             }
         }
         if input_manager.is_keydown(eadk::input::Key::Exp) {
