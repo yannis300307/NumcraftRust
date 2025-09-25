@@ -49,7 +49,6 @@ pub struct Game {
     hud: Hud,
     timing_manager: TimingManager,
     physic_engine: PhysicEngine,
-    game_mode: GameMode,
 }
 
 impl Game {
@@ -67,7 +66,6 @@ impl Game {
             hud: Hud::new(),
             timing_manager: TimingManager::new(),
             physic_engine: PhysicEngine::new(),
-            game_mode: GameMode::Survival,
         }
     }
 
@@ -154,7 +152,11 @@ impl Game {
                 return GameState::GoMainMenu;
             }
             if self.input_manager.is_just_pressed(eadk::input::Key::Var) {
-                return GameState::OpenPlayerInventory(game_uis::PlayerInventoryPage::Creative);
+                if self.save_manager.get_game_mode() == GameMode::Creative {
+                    return GameState::OpenPlayerInventory(game_uis::PlayerInventoryPage::Creative);
+                } else {
+                    return GameState::OpenPlayerInventory(game_uis::PlayerInventoryPage::Survival);
+                }
             };
 
             self.player.update(
