@@ -39,15 +39,20 @@ impl PhysicEngine {
 
         // Friction
         for entity in world.get_all_entities_mut().iter_mut() {
-            if entity.velocity.x < 0. {
-                entity.velocity.x += (ON_FLOOR_FRICTION * delta_time).min(-entity.velocity.x);
-            } else if entity.velocity.x > 0. {
-                entity.velocity.x -= (ON_FLOOR_FRICTION * delta_time).min(entity.velocity.x);
-            }
-            if entity.velocity.z < 0. {
-                entity.velocity.z += (ON_FLOOR_FRICTION * delta_time).min(-entity.velocity.z);
-            } else if entity.velocity.z > 0. {
-                entity.velocity.z -= (ON_FLOOR_FRICTION * delta_time).min(entity.velocity.z);
+            if entity.velocity.norm() > 0. {
+                let friction_vector = entity.velocity.normalize() * ON_FLOOR_FRICTION * delta_time;
+
+                if entity.velocity.x > 0. {
+                    entity.velocity.x -= friction_vector.x.min(entity.velocity.x);
+                } else if entity.velocity.x < 0. {
+                    entity.velocity.x -= friction_vector.x.max(entity.velocity.x);
+                }
+
+                if entity.velocity.z > 0. {
+                    entity.velocity.z -= friction_vector.z.min(entity.velocity.z);
+                } else if entity.velocity.z < 0. {
+                    entity.velocity.z -= friction_vector.z.max(entity.velocity.z);
+                }
             }
         }
     }
@@ -122,7 +127,6 @@ impl PhysicEngine {
 
 impl BoundingBox {
     pub fn is_coliding(&self, other: &BoundingBox) -> bool {
-        println!("{:?}, {:?}", self, other);
         self.offset.x < other.offset.x + other.size.x
             && self.offset.x + self.size.x > other.offset.x
             && self.offset.y < other.offset.y + other.size.y

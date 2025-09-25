@@ -121,7 +121,6 @@ impl Player {
                 player_entity.pos.y -= delta * FLY_SPEED;
             } else if player_entity.is_on_floor {
                 player_entity.velocity.y -= 5.;
-                println!("aaaaaaaa");
             }
         }
         if input_manager.is_keydown(eadk::input::Key::Exp) {
@@ -133,7 +132,9 @@ impl Player {
 
         // Limit speed
         if player_entity.velocity.xz().norm() > MAX_WALKING_VELOCITY {
-            player_entity.velocity = player_entity.velocity.normalize() * MAX_WALKING_VELOCITY;
+            let max_velocity = player_entity.velocity.xz().normalize() * MAX_WALKING_VELOCITY;
+            player_entity.velocity.x = max_velocity.x;
+            player_entity.velocity.z = max_velocity.y;
         }
 
         if input_manager.is_just_pressed(eadk::input::Key::Back) {
