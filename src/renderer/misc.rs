@@ -1,5 +1,6 @@
 use crate::{eadk::{display::{draw_string, pull_rect, push_rect, push_rect_uniform}, Point, Rect, SCREEN_RECT}, renderer::*};
 
+#[allow(dead_code)]
 impl Renderer {
     pub fn draw_string(&mut self, text: &str, pos: &Vector2<usize>) {
         let mut text_cursor: usize = 0;

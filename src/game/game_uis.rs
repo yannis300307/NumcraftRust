@@ -1,4 +1,4 @@
-use crate::{game::*, game_ui::NeighborDirection, input_manager, inventory::Inventory};
+use crate::{game::*, game_ui::NeighborDirection, inventory::Inventory};
 
 pub enum PlayerInventoryPage {
     Survival,

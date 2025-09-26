@@ -1,7 +1,7 @@
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 
-use crate::{eadk::Color, entity::Entity, physic::BoundingBox, renderer::mesh::QuadDir};
+use crate::{eadk::Color, physic::BoundingBox, renderer::mesh::QuadDir};
 
 pub mod rendering {
     pub const SCREEN_WIDTH: usize = 320;
@@ -63,6 +63,7 @@ pub mod physic {
     pub const BLOCK_COLLISION_SCANNING_SIZE: Vector3<isize> = Vector3::new(2, 3, 2);
 }
 
+#[allow(unreachable_patterns)]
 impl EntityType {
     pub fn get_bbox(&self) -> Option<BoundingBox> {
         match self {

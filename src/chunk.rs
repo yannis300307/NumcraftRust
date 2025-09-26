@@ -19,6 +19,7 @@ pub struct Chunk {
     pub need_sorting: bool,
 }
 
+#[allow(dead_code)]
 impl Chunk {
     pub fn new(pos: Vector3<isize>) -> Self {
         Chunk {

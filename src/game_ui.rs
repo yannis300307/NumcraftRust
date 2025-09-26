@@ -10,6 +10,7 @@ use crate::{
 #[cfg(target_os = "none")]
 use alloc::{string::String, vec::Vec};
 
+#[allow(unused)]
 pub enum GameUIElements {
     /// A simple button
     Button {
@@ -69,6 +70,7 @@ impl ContainerNeighbors {
     }
 }
 
+#[allow(unused)]
 pub enum NeighborDirection {
     Top,
     Bottom,
