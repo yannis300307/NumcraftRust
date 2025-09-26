@@ -130,6 +130,10 @@ impl Game {
 
         self.save_manager.clean(); // Clear save manager to save memory
 
+        if self.save_manager.get_game_mode() == GameMode::Creative {
+            self.world.get_player_entity_mut().gravity = false;
+        }
+
         // Show a warning message
         Renderer::show_msg(
             &["To exit, press [EXE]", "DON'T press [Home]"],
