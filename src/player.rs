@@ -20,6 +20,9 @@ use crate::{
     world::World,
 };
 
+#[cfg(target_os="none")]
+use alloc::boxed::Box;
+
 pub struct Player {
     ray_cast_result: Option<RaycastResult>,
     pub inventory: Inventory,

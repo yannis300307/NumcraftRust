@@ -459,14 +459,12 @@ impl Inventory {
                         i,
                         ItemStack::new(item_stack.get_item_type(), total as u8, false),
                     );
-                    println!("a");
                     return 0;
                 } else {
                     self.replace_slot_item_stack(
                         i,
                         ItemStack::new(item_stack.get_item_type(), max_stack, false),
                     );
-                    println!("b {} - {}", total, max_stack);
                     amount = total - max_stack as usize;
                 }
             }
@@ -483,14 +481,12 @@ impl Inventory {
                         i,
                         ItemStack::new(item_stack.get_item_type(), amount as u8, false),
                     );
-                    println!("c");
                     return 0;
                 } else {
                     self.replace_slot_item_stack(
                         i,
                         ItemStack::new(item_stack.get_item_type(), max_stack, false),
                     );
-                    println!("d");
                     amount -= max_stack as usize;
                 }
             }
