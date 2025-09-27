@@ -22,6 +22,7 @@ mod ui;
 mod frustum;
 pub mod mesh;
 mod misc;
+mod entity;
 
 // Screen size related constants
 

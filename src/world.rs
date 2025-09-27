@@ -6,7 +6,7 @@ use crate::constants::{BlockType, EntityType};
 use crate::entity::{self, Entity};
 use crate::inventory::Inventory;
 use crate::renderer::mesh::{Mesh, Quad};
-use crate::timing::TimingManager;
+
 #[cfg(target_os = "none")]
 use alloc::vec;
 #[cfg(target_os = "none")]
@@ -61,7 +61,7 @@ impl World {
             chunks: Vec::new(),
             gen_noise: FastNoiseLite::new(),
             registered_inventories: Vec::new(),
-            loaded_entities: vec![Entity::new(0, EntityType::Player)], // The player entity is always loaded and id 0
+            loaded_entities: vec![Entity::new(0, EntityType::Player, None)], // The player entity is always loaded and id 0
             next_available_entity_id: 1,
         };
 
@@ -158,6 +158,7 @@ impl World {
     /// Delete all loaded chunks
     pub fn clear(&mut self) {
         self.chunks.clear();
+        self.clear_entities();
     }
 
     /// Set the world generation seed
@@ -311,5 +312,24 @@ impl World {
         self.loaded_entities
             .iter()
             .find(|entity| entity.get_id() == id)
+    }
+
+    pub fn spawn_entity(&mut self, mut entity: Entity, pos: Vector3<f32>) {
+        entity.pos = pos;
+        self.loaded_entities.push(entity);
+    }
+
+    pub fn get_new_entity_id(&mut self) -> usize {
+        let id = self.next_available_entity_id;
+        self.next_available_entity_id += 1;
+        id
+    }
+
+    pub fn clear_entities(&mut self) {
+        if self.loaded_entities.len() > 1 {
+            for i in 1..self.loaded_entities.len() {
+                self.loaded_entities.pop();
+            }
+        }
     }
 }

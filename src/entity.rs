@@ -1,3 +1,5 @@
+use core::any::Any;
+
 use nalgebra::Vector3;
 
 use crate::{
@@ -8,7 +10,11 @@ use crate::{
     physic::BoundingBox,
 };
 
-#[derive(Clone)]
+#[cfg(target_os="none")]
+use alloc::boxed::Box;
+
+pub mod item;
+
 pub struct Entity {
     id: usize,
     entity_type: EntityType,
@@ -17,10 +23,11 @@ pub struct Entity {
     pub rotation: Vector3<f32>,
     pub velocity: Vector3<f32>,
     pub is_on_floor: bool,
+    pub custom_data: Option<Box<dyn Any>>,
 }
 
 impl Entity {
-    pub fn new(id: usize, entity_type: EntityType) -> Self {
+    pub fn new(id: usize, entity_type: EntityType, custom_data: Option<Box<dyn Any>>) -> Self {
         Entity {
             id,
             entity_type,
@@ -29,6 +36,7 @@ impl Entity {
             pos: Vector3::zeros(),
             rotation: Vector3::zeros(),
             is_on_floor: false,
+            custom_data,
         }
     }
 

@@ -1,7 +1,7 @@
 use libm::tanf;
 use nalgebra::Vector3;
 
-use crate::camera::Camera;
+use crate::{camera::Camera, physic::BoundingBox};
 
 struct Plane {
     normal: Vector3<f32>,
@@ -85,5 +85,11 @@ impl Frustum {
             }
         }
         true
+    }
+
+    pub fn is_bbox_in_frustum(&self, bbox: &BoundingBox) -> bool {
+        let min = bbox.offset;
+        let max = bbox.offset + bbox.size;
+        self.is_aabb_in_frustum(min, max)
     }
 }

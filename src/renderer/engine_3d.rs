@@ -372,7 +372,7 @@ impl Renderer {
             Perspective3::new(ASPECT_RATIO, self.camera.get_fov(), ZNEAR, ZFAR);
     }
 
-    fn project_point(&self, point: Vector3<f32>) -> Vector2<f32> {
+    pub fn project_point(&self, point: Vector3<f32>) -> Vector2<f32> {
         self.projection_matrix.project_vector(&point).xy() * -1.0
     }
 
@@ -569,6 +569,7 @@ impl Renderer {
             for y in 0..SCREEN_TILE_SUBDIVISION {
                 self.clear_screen(Color::from_components(0b01110, 0b110110, 0b11111));
                 self.draw_triangles(x, y);
+                self.draw_flat_model_entities(world, &mat_view, x, y, &frustum);
 
                 if draw_hud {
                     self.draw_hud(hud, fps_count, x, y);

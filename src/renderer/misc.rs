@@ -1,5 +1,12 @@
 use crate::{eadk::{display::{draw_string, pull_rect, push_rect, push_rect_uniform}, Point, Rect, SCREEN_RECT}, renderer::*};
 
+pub struct UnBoundedRect {
+    pub x: isize,
+    pub y: isize,
+    pub width: isize,
+    pub height: isize,
+}
+
 #[allow(dead_code)]
 impl Renderer {
     pub fn draw_string(&mut self, text: &str, pos: &Vector2<usize>) {
@@ -71,6 +78,17 @@ impl Renderer {
     pub fn push_rect_uniform_on_frame_buffer(&mut self, rect: Rect, color: Color) {
         for x in rect.x..(rect.x + rect.width) {
             for y in rect.y..(rect.y + rect.height) {
+                self.tile_frame_buffer[x as usize + y as usize * SCREEN_TILE_WIDTH] = color;
+            }
+        }
+    }
+
+    pub fn push_unbounded_rect_uniform_on_frame_buffer(&mut self, rect: UnBoundedRect, color: Color) {
+        if rect.x + rect.width <= 0 || rect.y + rect.height <= 0 {
+            return;
+        }
+        for x in rect.x.max(0)..(rect.x + rect.width).min(SCREEN_TILE_WIDTH as isize) {
+            for y in rect.y.max(0)..(rect.y + rect.height).min(SCREEN_TILE_HEIGHT as isize) {
                 self.tile_frame_buffer[x as usize + y as usize * SCREEN_TILE_WIDTH] = color;
             }
         }

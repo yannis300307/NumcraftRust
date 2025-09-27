@@ -3,6 +3,7 @@ use core::time;
 #[cfg(target_os = "none")]
 use alloc::{
     borrow::ToOwned,
+    boxed::Box,
     format,
     string::{String, ToString},
 };
@@ -13,9 +14,10 @@ use crate::{
     constants::{
         color_palette::MENU_BACKGROUND_COLOR,
         rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
+        world,
     },
     eadk::{self, Color, Point, SCREEN_RECT},
-    entity::Entity,
+    entity::{Entity, item::ItemEntityCustomData},
     game_ui::GameUI,
     hud::Hud,
     input_manager::InputManager,

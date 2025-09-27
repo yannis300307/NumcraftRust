@@ -20,6 +20,8 @@ pub mod rendering {
 
     pub const BLURING_SCREEN_SUBDIVISION: usize = 5;
     pub const BLURING_RADIUS: isize = 2;
+
+    pub const MAX_ENTITY_RENDER_DISTANCE: f32 = 10.;
 }
 
 pub mod color_palette {
@@ -71,7 +73,10 @@ impl EntityType {
                 offset: Vector3::new(-0.4, 0., -0.4),
                 size: Vector3::new(0.8, 1.8, 0.8),
             }),
-            _ => None, // I could add more in the future
+            EntityType::Item => Some(BoundingBox {
+                offset: Vector3::new(-0.2, -0.2, -0.2),
+                size: Vector3::new(0.4, 0.4, 0.4),
+            }),
         }
     }
 }
@@ -79,6 +84,7 @@ impl EntityType {
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum EntityType {
     Player = 0,
+    Item = 1,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
