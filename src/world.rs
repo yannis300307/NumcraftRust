@@ -364,9 +364,19 @@ impl World {
                 self.set_block_in_world(pos, block_type);
                 self.spawn_item_entity(
                     pos.map(|v| v as f32 + 0.5),
-                    ItemStack::new(drop_type, 1, false),
+                    ItemStack::new(drop_type, 11, false),
                 );
             }
         }
+    }
+
+    pub fn remove_entity(&mut self, id: usize) -> bool {
+        for i in 0..self.loaded_entities.len() {
+            if self.loaded_entities[i].get_id() == id {
+                self.loaded_entities.remove(i);
+                return true;
+            }
+        }
+        false
     }
 }

@@ -6,15 +6,15 @@ use nalgebra::{ComplexField, Vector3};
 use crate::{
     camera::Camera,
     constants::{
-        BlockType,
+        BlockType, EntityType,
         player::{FLY_SPEED, JUMP_FORCE, MAX_WALKING_VELOCITY, WALK_FORCE},
     },
     eadk,
-    entity::Entity,
+    entity::{self, Entity, item::ItemEntityCustomData},
     game::GameMode,
     hud::Hud,
     input_manager::InputManager,
-    inventory::Inventory,
+    inventory::{Inventory, ItemStack},
     physic::{BoundingBox, PhysicEngine},
     renderer::mesh::{Mesh, Quad, QuadDir},
     world::World,
@@ -185,12 +185,44 @@ impl Player {
                     .get_block_in_world(block_pos)
                     .is_some_and(|b| b.is_air())
                     && physic_engine.can_place_block(world, block_pos)
-                    && let Some(item_type) = self.inventory.take_one(18 + hud.selected_slot)
+                    && let Some(item_type) = self.inventory.take_one(0 + hud.selected_slot)
                     && let Some(block_type) = item_type.get_matching_block_type()
                 {
                     world.set_block_in_world(block_pos, block_type);
                 }
             }
+        }
+
+        let player_entity = world.get_player_entity();
+
+        if let Some(player_bbox) = player_entity.get_bbox() {
+            world.get_all_entities_mut().retain_mut(|entity| {
+                if let EntityType::Item { .. } = entity.get_type()
+                    && entity
+                        .get_bbox()
+                        .is_some_and(|entity_bbox| entity_bbox.is_coliding(&player_bbox))
+                {
+                    // Recover the item_stack data from the item entity
+                    let custom_data = &entity.custom_data;
+                    let custom_data_box = custom_data
+                        .as_ref()
+                        .expect("Item Entity must have custom_data.");
+                    let item_data = custom_data_box.downcast_ref::<ItemEntityCustomData>().expect("Item Entity custom data must be an instance of struct ItemEntityCustomData.");
+
+                    let item_stack =  item_data.item_stack;
+
+                    let remain = self.inventory.add_item_stack(item_stack.clone());
+
+                    if remain != 0 {
+                        entity.custom_data = Some(Box::new(ItemEntityCustomData {item_stack: ItemStack::new(item_stack.get_item_type(), remain, false)}));
+                        return true;
+                    }
+
+                    false
+                } else {
+                    true
+                }
+            });
         }
     }
 

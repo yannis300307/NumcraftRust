@@ -32,7 +32,7 @@ impl Hud {
     pub fn sync(&mut self, player: &Player) {
         let inventory_slots = player.inventory.get_all_slots();
         for i in 0..6 {
-            self.slots[i] = inventory_slots[18 + i];
+            self.slots[i] = inventory_slots[0 + i];
         }
     }
 
