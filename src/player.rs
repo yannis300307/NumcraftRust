@@ -6,7 +6,8 @@ use nalgebra::{ComplexField, Vector3};
 use crate::{
     camera::Camera,
     constants::{
-        player::{FLY_SPEED, JUMP_FORCE, MAX_WALKING_VELOCITY, WALK_FORCE}, BlockType
+        BlockType,
+        player::{FLY_SPEED, JUMP_FORCE, MAX_WALKING_VELOCITY, WALK_FORCE},
     },
     eadk,
     entity::Entity,
@@ -22,6 +23,8 @@ use crate::{
 pub struct Player {
     ray_cast_result: Option<RaycastResult>,
     pub inventory: Inventory,
+    breaking_state_timer: f32,
+    breaking_block_pos: Option<Vector3<isize>>,
 }
 
 impl Player {
@@ -29,6 +32,8 @@ impl Player {
         Player {
             ray_cast_result: None,
             inventory: Inventory::new(24),
+            breaking_state_timer: 0.,
+            breaking_block_pos: None,
         }
     }
 
@@ -62,6 +67,7 @@ impl Player {
         hud: &Hud,
         game_mode: GameMode,
         physic_engine: &PhysicEngine,
+        delta_time: f32,
     ) {
         self.ray_cast_result = self.ray_cast(camera, world, 10);
 
@@ -137,10 +143,37 @@ impl Player {
             player_entity.velocity.z = max_velocity.y;
         }
 
-        if input_manager.is_just_pressed(eadk::input::Key::Back) {
-            // Break Block
-            if let Some(result) = &self.ray_cast_result {
-                world.set_block_in_world(result.block_pos, BlockType::Air);
+        // Break Block
+        if game_mode == GameMode::Creative {
+            if input_manager.is_just_pressed(eadk::input::Key::Back) {
+                if let Some(result) = &self.ray_cast_result {
+                    world.set_block_in_world(result.block_pos, BlockType::Air);
+                }
+            }
+        } else {
+            if input_manager.is_keydown(eadk::input::Key::Back) {
+                if let Some(ray_cast) = &self.ray_cast_result {
+                    if self
+                        .breaking_block_pos
+                        .is_some_and(|pos| pos == ray_cast.block_pos)
+                    {
+                        self.breaking_state_timer -= delta_time;
+                        if self.breaking_state_timer <= 0. {
+                            world.set_block_in_world(ray_cast.block_pos, BlockType::Air);
+                            self.breaking_block_pos = None;
+                            self.breaking_state_timer = 0.;
+                        }
+                    } else {
+                        self.breaking_block_pos = Some(ray_cast.block_pos);
+                        self.breaking_state_timer = ray_cast.block_type.get_hardness();
+                    }
+                } else {
+                    self.breaking_block_pos = None;
+                    self.breaking_state_timer = 0.;
+                }
+            } else {
+                self.breaking_block_pos = None;
+                self.breaking_state_timer = 0.;
             }
         }
 
@@ -209,7 +242,9 @@ impl Player {
         while !(max_x > 1.0 && max_y > 1.0 && max_z > 1.0) {
             let current_voxel_pos_isize = current_voxel_pos.map(|x| x as isize);
             let result = world.get_block_in_world(current_voxel_pos_isize);
-            if !result.is_none_or(|b| b == BlockType::Air) {
+            if let Some(block_type) = result
+                && !block_type.is_air()
+            {
                 let voxel_normal = if step_dir == 0 {
                     if dx < 0. {
                         QuadDir::Right
@@ -230,6 +265,7 @@ impl Player {
                 return Some(RaycastResult {
                     block_pos: current_voxel_pos_isize,
                     face_dir: voxel_normal,
+                    block_type: block_type,
                 });
             }
 
@@ -260,4 +296,5 @@ impl Player {
 struct RaycastResult {
     pub block_pos: Vector3<isize>,
     pub face_dir: QuadDir,
+    pub block_type: BlockType,
 }

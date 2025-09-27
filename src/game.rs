@@ -170,7 +170,8 @@ impl Game {
                 &mut self.renderer.camera,
                 &self.hud,
                 self.save_manager.get_game_mode(),
-                &self.physic_engine
+                &self.physic_engine,
+                self.timing_manager.get_delta_time(),
             );
             self.hud.update(&self.input_manager);
             self.hud.sync(&self.player);

@@ -157,6 +157,15 @@ impl BlockType {
             _ => None,
         }
     }
+
+    pub const fn get_hardness(&self) -> f32 {
+        match self {
+            BlockType::Air => 0.,
+            BlockType::Stone => 2.,
+            BlockType::Grass => 1.2,
+            BlockType::Dirt => 1.,
+        }
+    }
 }
 
 pub fn get_quad_color_from_texture_id(id: u8) -> Color {
