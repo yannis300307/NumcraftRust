@@ -4,11 +4,7 @@ use core::{mem, usize};
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    constants::ItemType,
-    eadk::input::{Key, KeyboardState},
-    entity::item,
-};
+use crate::constants::ItemType;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ItemStack {
@@ -32,10 +28,6 @@ impl ItemStack {
             amount,
             creative_slot,
         }
-    }
-
-    pub fn set_amount(&mut self, amount: u8) {
-        self.amount = amount;
     }
 
     pub fn get_item_type(&self) -> ItemType {

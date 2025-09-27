@@ -2,15 +2,9 @@ use core::any::Any;
 
 use nalgebra::Vector3;
 
-use crate::{
-    constants::{
-        EntityType,
-        physic::{GRAVITY_FACTOR, MAX_FALLING_VELOCITY},
-    },
-    physic::BoundingBox,
-};
+use crate::{constants::EntityType, physic::BoundingBox};
 
-#[cfg(target_os="none")]
+#[cfg(target_os = "none")]
 use alloc::boxed::Box;
 
 pub mod item;
@@ -42,17 +36,6 @@ impl Entity {
 
     pub fn get_id(&self) -> usize {
         self.id
-    }
-
-    pub fn update(&mut self, delta_time: f32) {
-        if self.gravity {
-            self.velocity.y += GRAVITY_FACTOR * delta_time;
-        }
-
-        if self.velocity.y > MAX_FALLING_VELOCITY {
-            self.velocity.y = MAX_FALLING_VELOCITY;
-        }
-        self.pos += self.velocity * delta_time;
     }
 
     pub fn get_type(&self) -> EntityType {

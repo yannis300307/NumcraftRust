@@ -5,6 +5,7 @@
 #[cfg(target_os = "none")]
 use cortex_m;
 
+#[cfg(target_os = "none")]
 use eadk::heap_size;
 #[cfg(target_os = "none")]
 use embedded_alloc::LlffHeap as Heap;
@@ -25,18 +26,18 @@ mod renderer;
 mod world;
 use game::Game;
 
+mod entity;
 mod game_ui;
+mod hud;
 mod input_manager;
 mod inventory;
 mod menu;
+mod physic;
 mod player;
 mod save_manager;
-mod storage_lib;
 mod settings;
-mod hud;
+mod storage_lib;
 mod timing;
-mod entity;
-mod physic;
 
 #[used]
 #[cfg(target_os = "none")]

@@ -12,8 +12,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     chunk::Chunk,
     constants::{BlockType, world::CHUNK_SIZE},
-    eadk::{self, Color},
-    game::{self, GameMode},
+    eadk::{self},
+    game::GameMode,
     inventory::Inventory,
     player::Player,
     renderer::Renderer,

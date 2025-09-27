@@ -1,6 +1,7 @@
 use core::f32::consts::PI;
 
 use libm::sincosf;
+#[allow(unused_imports)]
 use nalgebra::{ComplexField, Vector3};
 
 use crate::{
@@ -10,17 +11,17 @@ use crate::{
         player::{FLY_SPEED, JUMP_FORCE, MAX_WALKING_VELOCITY, WALK_FORCE},
     },
     eadk,
-    entity::{self, Entity, item::ItemEntityCustomData},
+    entity::{Entity, item::ItemEntityCustomData},
     game::GameMode,
     hud::Hud,
     input_manager::InputManager,
     inventory::{Inventory, ItemStack},
-    physic::{BoundingBox, PhysicEngine},
+    physic::PhysicEngine,
     renderer::mesh::{Mesh, Quad, QuadDir},
     world::World,
 };
 
-#[cfg(target_os="none")]
+#[cfg(target_os = "none")]
 use alloc::boxed::Box;
 
 pub struct Player {

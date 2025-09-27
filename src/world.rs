@@ -5,8 +5,8 @@ use libm::roundf;
 use crate::chunk::{self, Chunk};
 use crate::constants::world::CHUNK_SIZE;
 use crate::constants::{BlockType, EntityType, ItemType};
+use crate::entity::Entity;
 use crate::entity::item::ItemEntityCustomData;
-use crate::entity::{self, Entity};
 use crate::inventory::{Inventory, ItemStack};
 use crate::renderer::mesh::{Mesh, Quad};
 
