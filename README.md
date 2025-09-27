@@ -68,6 +68,8 @@ The SDK for Epsilon apps is shipped as an npm module called [nwlink](https://www
 
 For more explanations on how to install the c sdk, follow [this guide](https://www.numworks.com/engineering/software/build/).
 
+You might need to create a Python venv in the `epsilon_simulator` folder to install the pip packages on certain Linux distros. 
+
 Then, you can setup the dependencies as follow :
 ```shell
 brew install rustup node # Or equivalent on your OS
