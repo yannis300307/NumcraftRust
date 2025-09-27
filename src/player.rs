@@ -159,7 +159,7 @@ impl Player {
                     {
                         self.breaking_state_timer -= delta_time;
                         if self.breaking_state_timer <= 0. {
-                            world.set_block_in_world(ray_cast.block_pos, BlockType::Air);
+                            world.replace_block_and_drop_item(ray_cast.block_pos, BlockType::Air);
                             self.breaking_block_pos = None;
                             self.breaking_state_timer = 0.;
                         }

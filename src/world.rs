@@ -1,10 +1,13 @@
+use core::any::Any;
+
 use libm::roundf;
 
 use crate::chunk::{self, Chunk};
 use crate::constants::world::CHUNK_SIZE;
-use crate::constants::{BlockType, EntityType};
+use crate::constants::{BlockType, EntityType, ItemType};
+use crate::entity::item::ItemEntityCustomData;
 use crate::entity::{self, Entity};
-use crate::inventory::Inventory;
+use crate::inventory::{Inventory, ItemStack};
 use crate::renderer::mesh::{Mesh, Quad};
 
 #[cfg(target_os = "none")]
@@ -14,6 +17,9 @@ use alloc::vec::Vec;
 
 use fastnoise_lite::FastNoiseLite;
 use nalgebra::{Vector2, Vector3};
+
+#[cfg(target_os = "none")]
+use alloc::boxed::Box;
 
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 
@@ -329,6 +335,37 @@ impl World {
         if self.loaded_entities.len() > 1 {
             for i in 1..self.loaded_entities.len() {
                 self.loaded_entities.pop();
+            }
+        }
+    }
+
+    pub fn spawn_entity_auto(
+        &mut self,
+        entity_type: EntityType,
+        pos: Vector3<f32>,
+        custom_data: Option<Box<dyn Any>>,
+    ) {
+        let id = self.get_new_entity_id();
+        self.spawn_entity(Entity::new(id, entity_type, custom_data), pos);
+    }
+
+    pub fn spawn_item_entity(&mut self, pos: Vector3<f32>, item_stack: ItemStack) {
+        self.spawn_entity_auto(
+            EntityType::Item,
+            pos,
+            Some(Box::new(ItemEntityCustomData { item_stack })),
+        );
+    }
+
+    pub fn replace_block_and_drop_item(&mut self, pos: Vector3<isize>, block_type: BlockType) {
+        if let Some(current_block) = self.get_block_in_world(pos) {
+            let drop_type = current_block.get_dropped_item_type();
+            if drop_type != ItemType::Air {
+                self.set_block_in_world(pos, block_type);
+                self.spawn_item_entity(
+                    pos.map(|v| v as f32 + 0.5),
+                    ItemStack::new(drop_type, 1, false),
+                );
             }
         }
     }

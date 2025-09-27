@@ -22,6 +22,8 @@ pub mod rendering {
     pub const BLURING_RADIUS: isize = 2;
 
     pub const MAX_ENTITY_RENDER_DISTANCE: f32 = 10.;
+
+    pub const ITEM_ENTITY_SPRITE_SIZE: f32 = 0.8;
 }
 
 pub mod color_palette {
@@ -172,6 +174,15 @@ impl BlockType {
             BlockType::Dirt => 1.,
         }
     }
+
+    pub const fn get_dropped_item_type(&self) -> ItemType {
+        match self {
+            BlockType::Air => ItemType::Air,
+            BlockType::Stone => ItemType::StoneBlock,
+            BlockType::Grass => ItemType::DirtBlock,
+            BlockType::Dirt => ItemType::DirtBlock,
+        }
+    } 
 }
 
 pub fn get_quad_color_from_texture_id(id: u8) -> Color {

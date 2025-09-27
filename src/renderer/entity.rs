@@ -1,8 +1,9 @@
+use libm::tanf;
+
 use crate::{
-    camera,
     constants::EntityType,
-    eadk::{self, Rect},
-    renderer::{frustum::Frustum, misc::UnBoundedRect, *},
+    entity::item::ItemEntityCustomData,
+    renderer::{frustum::Frustum, *},
     world::World,
 };
 
@@ -25,6 +26,16 @@ impl Renderer {
             }
 
             if let EntityType::Item { .. } = entity.get_type() {
+                // Extract the custom data of the entity
+                let custom_data = &entity.custom_data;
+                let custom_data_box = custom_data
+                    .as_ref()
+                    .expect("Item Entity must have custom_data.");
+                let item_data = custom_data_box.downcast_ref::<ItemEntityCustomData>().expect("Item Entity custom data must be an instance of struct ItemEntityCustomData.");
+
+
+                let texture_id = item_data.item_stack.get_item_type().get_texture_id();
+
                 // Transform and project the point
                 let pos = entity.pos;
                 let transformed = (mat_view * Vector4::new(pos.x, pos.y, pos.z, 1.0)).xyz();
@@ -36,10 +47,10 @@ impl Renderer {
                     -((SCREEN_TILE_HEIGHT * tile_y) as isize),
                 );
 
-                let default_size = 0.5;
+                let default_size = ITEM_ENTITY_SPRITE_SIZE;
                 let sprite_size: isize = ((default_size
                     / self.camera.get_pos().metric_distance(&pos))
-                    * (SCREEN_HEIGHTF / (2.0 * (FOV / 2.0).tan())))
+                    * (SCREEN_HEIGHTF / tanf(2.0 * (FOV / 2.0))))
                     as isize;
 
                 let point = projected.map(|v| v as isize) + tile_offset;
@@ -50,16 +61,11 @@ impl Renderer {
                         && point.x < SCREEN_TILE_WIDTH as isize + sprite_size / 2
                         && point.y < SCREEN_TILE_HEIGHT as isize + sprite_size / 2)
                 {
-                    self.draw_set_size_tile_on_frame_buffer(1, point.map(|v| v - sprite_size / 2), Vector2::repeat(sprite_size));
-                    /*self.push_unbounded_rect_uniform_on_frame_buffer(
-                        UnBoundedRect {
-                            x: point.x - sprite_size / 2,
-                            y: point.y - sprite_size / 2,
-                            width: sprite_size,
-                            height: sprite_size,
-                        },
-                        Color::from_888(255, 0, 0),
-                    );*/
+                    self.draw_set_size_tile_on_frame_buffer(
+                        texture_id,
+                        point.map(|v| v - sprite_size / 2),
+                        Vector2::repeat(sprite_size),
+                    );
                 }
             }
         }
