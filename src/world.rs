@@ -3,10 +3,12 @@ use core::any::Any;
 use libm::roundf;
 
 use crate::chunk::{self, Chunk};
-use crate::constants::world::CHUNK_SIZE;
+use crate::constants::world::{
+    CHUNK_SIZE, ITEM_MAGNET_FORCE, MAX_ITEM_MERGING_DISTANCE, MAX_PLAYER_ITEM_MAGNET_DISTANCE,
+};
 use crate::constants::{BlockType, EntityType, ItemType};
-use crate::entity::Entity;
 use crate::entity::item::ItemEntityCustomData;
+use crate::entity::{self, Entity};
 use crate::inventory::{Inventory, ItemStack};
 use crate::renderer::mesh::{Mesh, Quad};
 
@@ -104,6 +106,131 @@ impl World {
                 }
             }
         }
+    }
+
+    pub fn update_entities(&mut self, delta_time: f32) {
+        // Check for item merging and player magnet
+        'first_loop: for i in 0..self.loaded_entities.len() {
+            if self.loaded_entities[i].get_type() == EntityType::Item {
+                // Ignore items with custom data = None, they will be removed after
+                if self.loaded_entities[i].custom_data.is_none() {
+                    continue;
+                }
+
+                // Get the item_data from the first item
+                let first_item_data = ItemEntityCustomData::get_item_data(&self.loaded_entities[i])
+                    .expect("Item Entity must have ItemData as custom data.");
+                let first_item_stack = first_item_data.item_stack.clone();
+
+                let max_stack = first_item_stack.get_item_type().get_max_stack_amount();
+
+                for j in 0..self.loaded_entities.len() {
+                    if i != j
+                        && self.loaded_entities[j].custom_data.is_some() // Ignore items with custom data = None, they will be removed after
+                        && self.loaded_entities[j].get_type() == EntityType::Item
+                        && self.loaded_entities[i]
+                            .pos
+                            .metric_distance(&self.loaded_entities[j].pos)
+                            <= MAX_ITEM_MERGING_DISTANCE
+                    {
+                        // Check if the items can merge
+                        let second_item_data =
+                            ItemEntityCustomData::get_item_data(&self.loaded_entities[j])
+                                .expect("Item Entity must have ItemData as custom data.");
+                        let second_item_stack = second_item_data.item_stack.clone();
+
+                        if second_item_stack.get_item_type() != first_item_stack.get_item_type() {
+                            continue;
+                        }
+
+                        if let Some(first_bbox) = self.loaded_entities[i].get_bbox()
+                            && let Some(second_bbox) = self.loaded_entities[j].get_bbox()
+                            && first_bbox.is_coliding(&second_bbox)
+                        {
+                            if first_item_stack.get_amount() == max_stack
+                                || second_item_stack.get_amount() == max_stack
+                            {
+                                continue;
+                            }
+
+                            let total =
+                                first_item_stack.get_amount() + second_item_stack.get_amount();
+                            if total <= max_stack {
+                                // Merge the two items together and request the deletion of the second one
+                                self.loaded_entities[i].custom_data =
+                                    Some(Box::new(ItemEntityCustomData {
+                                        item_stack: ItemStack::new(
+                                            first_item_stack.get_item_type(),
+                                            total,
+                                            false,
+                                        ),
+                                    }));
+                                self.loaded_entities[j].custom_data = None; // Yes, this should be illegal but it can also be a feature.
+                                self.loaded_entities[i].velocity = Vector3::zeros();
+                                continue 'first_loop;
+                            } else {
+                                self.loaded_entities[i].custom_data =
+                                    Some(Box::new(ItemEntityCustomData {
+                                        item_stack: ItemStack::new(
+                                            first_item_stack.get_item_type(),
+                                            max_stack,
+                                            false,
+                                        ),
+                                    }));
+                                self.loaded_entities[j].custom_data =
+                                    Some(Box::new(ItemEntityCustomData {
+                                        item_stack: ItemStack::new(
+                                            first_item_stack.get_item_type(),
+                                            total - max_stack,
+                                            false,
+                                        ),
+                                    }));
+                                self.loaded_entities[i].velocity = Vector3::zeros();
+                                self.loaded_entities[j].velocity = Vector3::zeros();
+                            }
+                            continue;
+                        }
+
+                        // Calculate the direction to the other item
+                        let direction =
+                            (self.loaded_entities[j].pos - self.loaded_entities[i].pos).normalize();
+
+                        self.loaded_entities[i].velocity +=
+                            direction * ITEM_MAGNET_FORCE * delta_time;
+
+                        // Limit the magnet speed
+                        /*if self.loaded_entities[i].velocity.norm() > ITEM_MAGNET_SPEED {
+                            self.loaded_entities[i].velocity =
+                                self.loaded_entities[i].velocity.normalize()
+                                    * ITEM_MAGNET_SPEED
+                                    * delta_time;
+                        }*/
+                    }
+                }
+            }
+        }
+
+        // Player item magnet
+        for i in 0..self.loaded_entities.len() {
+            let distance = self.loaded_entities[i]
+                .pos
+                .metric_distance(&self.get_player_entity().pos);
+            if self.loaded_entities[i].get_type() == EntityType::Item
+                && self.loaded_entities[i].custom_data.is_some()
+                && distance < MAX_PLAYER_ITEM_MAGNET_DISTANCE
+            {
+                let direction =
+                    (self.get_player_entity().pos - self.loaded_entities[i].pos).normalize();
+
+                self.loaded_entities[i].velocity += direction * ITEM_MAGNET_FORCE * delta_time;
+            }
+        }
+
+        // Remove illegal items
+        self.loaded_entities.retain(|entity| {
+            entity.get_type() != EntityType::Item
+                || (entity.get_type() == EntityType::Item && !entity.custom_data.is_none())
+        });
     }
 
     pub fn push_chunk(&mut self, chunk: Chunk) {
@@ -364,7 +491,7 @@ impl World {
                 self.set_block_in_world(pos, block_type);
                 self.spawn_item_entity(
                     pos.map(|v| v as f32 + 0.5),
-                    ItemStack::new(drop_type, 1, false),
+                    ItemStack::new(drop_type, 11, false),
                 );
             }
         }

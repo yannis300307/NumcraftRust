@@ -27,12 +27,7 @@ impl Renderer {
 
             if let EntityType::Item { .. } = entity.get_type() {
                 // Extract the custom data of the entity
-                let custom_data = &entity.custom_data;
-                let custom_data_box = custom_data
-                    .as_ref()
-                    .expect("Item Entity must have custom_data.");
-                let item_data = custom_data_box.downcast_ref::<ItemEntityCustomData>().expect("Item Entity custom data must be an instance of struct ItemEntityCustomData.");
-
+                let item_data = ItemEntityCustomData::get_item_data(&entity).expect("Item Entity must have ItemData as custom data.");
 
                 let texture_id = item_data.item_stack.get_item_type().get_texture_id();
 

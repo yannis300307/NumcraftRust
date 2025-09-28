@@ -179,6 +179,7 @@ impl Game {
                 .update(self.timing_manager.get_delta_time(), &self.input_manager);
 
             self.world.check_mesh_regeneration();
+            self.world.update_entities(self.timing_manager.get_delta_time());
             self.physic_engine
                 .process(&mut self.world, self.timing_manager.get_delta_time());
 

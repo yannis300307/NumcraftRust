@@ -45,6 +45,10 @@ pub mod menu {
 
 pub mod world {
     pub const CHUNK_SIZE: usize = 8; // MAX 8
+
+    pub const MAX_ITEM_MERGING_DISTANCE: f32 = 2.;
+    pub const ITEM_MAGNET_FORCE: f32 = 20.;
+    pub const MAX_PLAYER_ITEM_MAGNET_DISTANCE: f32 = 2.2;
 }
 
 pub mod player {
@@ -72,7 +76,7 @@ impl EntityType {
     pub fn get_bbox(&self) -> Option<BoundingBox> {
         match self {
             EntityType::Player => Some(BoundingBox {
-                offset: Vector3::new(-0.4, 0., -0.4),
+                offset: Vector3::new(-0.4, -1.3, -0.4),
                 size: Vector3::new(0.8, 1.8, 0.8),
             }),
             EntityType::Item => Some(BoundingBox {
@@ -182,7 +186,7 @@ impl BlockType {
             BlockType::Grass => ItemType::DirtBlock,
             BlockType::Dirt => ItemType::DirtBlock,
         }
-    } 
+    }
 }
 
 pub fn get_quad_color_from_texture_id(id: u8) -> Color {

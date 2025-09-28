@@ -54,7 +54,7 @@ impl Player {
     }
 
     pub fn sync_with_camera(&self, camera: &mut Camera, player_entity: &mut Entity) {
-        camera.update_pos(player_entity.pos - Vector3::new(0., -0.1, 0.));
+        camera.update_pos(player_entity.pos - Vector3::new(0., 1.2, 0.));
         player_entity.rotation = *camera.get_rotation();
     }
 
@@ -207,18 +207,17 @@ impl Player {
                         .is_some_and(|entity_bbox| entity_bbox.is_coliding(&player_bbox))
                 {
                     // Recover the item_stack data from the item entity
-                    let custom_data = &entity.custom_data;
-                    let custom_data_box = custom_data
-                        .as_ref()
-                        .expect("Item Entity must have custom_data.");
-                    let item_data = custom_data_box.downcast_ref::<ItemEntityCustomData>().expect("Item Entity custom data must be an instance of struct ItemEntityCustomData.");
+                    let item_data = ItemEntityCustomData::get_item_data(&entity)
+                        .expect("Item Entity must have ItemData as custom data.");
 
-                    let item_stack =  item_data.item_stack;
+                    let item_stack = item_data.item_stack;
 
                     let remain = self.inventory.add_item_stack(item_stack.clone());
 
                     if remain != 0 {
-                        entity.custom_data = Some(Box::new(ItemEntityCustomData {item_stack: ItemStack::new(item_stack.get_item_type(), remain, false)}));
+                        entity.custom_data = Some(Box::new(ItemEntityCustomData {
+                            item_stack: ItemStack::new(item_stack.get_item_type(), remain, false),
+                        }));
                         return true;
                     }
 
