@@ -491,7 +491,7 @@ impl World {
                 self.set_block_in_world(pos, block_type);
                 self.spawn_item_entity(
                     pos.map(|v| v as f32 + 0.5),
-                    ItemStack::new(drop_type, 11, false),
+                    ItemStack::new(drop_type, 1, false),
                 );
             }
         }
