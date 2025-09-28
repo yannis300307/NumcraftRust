@@ -171,7 +171,7 @@ impl Game {
                 &self.physic_engine,
                 self.timing_manager.get_delta_time(),
             );
-            self.hud.update(&self.input_manager);
+            self.hud.update(&self.input_manager, &self.player);
             self.hud.sync(&self.player);
 
             self.renderer

@@ -53,6 +53,15 @@ impl Player {
         }
     }
 
+    pub fn get_block_breaking_progress(&self) -> Option<f32> {
+        if self.breaking_block_pos.is_none() {
+            return None;
+        }
+        let hardness = self.ray_cast_result.as_ref()?.block_type.get_hardness();
+
+        Some((hardness - self.breaking_state_timer) / hardness)
+    }
+
     pub fn sync_with_camera(&self, camera: &mut Camera, player_entity: &mut Entity) {
         camera.update_pos(player_entity.pos - Vector3::new(0., 1.2, 0.));
         player_entity.rotation = *camera.get_rotation();
@@ -220,7 +229,6 @@ impl Player {
                         }));
                         return true;
                     }
-
                     false
                 } else {
                     true

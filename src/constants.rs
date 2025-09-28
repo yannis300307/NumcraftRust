@@ -47,7 +47,7 @@ pub mod world {
     pub const CHUNK_SIZE: usize = 8; // MAX 8
 
     pub const MAX_ITEM_MERGING_DISTANCE: f32 = 2.;
-    pub const ITEM_MAGNET_FORCE: f32 = 20.;
+    pub const ITEM_MAGNET_FORCE: f32 = 10.;
     pub const MAX_PLAYER_ITEM_MAGNET_DISTANCE: f32 = 2.2;
 }
 
