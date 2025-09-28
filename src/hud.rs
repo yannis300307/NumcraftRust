@@ -3,6 +3,7 @@ use crate::{input_manager::InputManager, inventory::ItemStack, player::Player};
 pub struct Hud {
     slots: [ItemStack; 6],
     pub selected_slot: usize,
+    pub breaking_progress: Option<f32>,
 }
 
 impl Hud {
@@ -10,9 +11,10 @@ impl Hud {
         Hud {
             slots: [const { ItemStack::void() }; 6],
             selected_slot: 0,
+            breaking_progress: None,
         }
     }
-    pub fn update(&mut self, input_manager: &InputManager) {
+    pub fn update(&mut self, input_manager: &InputManager, player: &Player) {
         if input_manager.is_just_pressed(crate::eadk::input::Key::LeftParenthesis) {
             if self.selected_slot == 0 {
                 self.selected_slot = 5
@@ -27,12 +29,14 @@ impl Hud {
                 self.selected_slot += 1
             }
         }
+
+        self.breaking_progress = player.get_block_breaking_progress();
     }
 
     pub fn sync(&mut self, player: &Player) {
         let inventory_slots = player.inventory.get_all_slots();
         for i in 0..6 {
-            self.slots[i] = inventory_slots[18 + i];
+            self.slots[i] = inventory_slots[0 + i];
         }
     }
 

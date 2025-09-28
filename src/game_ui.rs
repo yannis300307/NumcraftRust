@@ -10,6 +10,7 @@ use crate::{
 #[cfg(target_os = "none")]
 use alloc::{string::String, vec::Vec};
 
+#[allow(unused)]
 pub enum GameUIElements {
     /// A simple button
     Button {
@@ -40,7 +41,6 @@ pub struct AnchorContainer {
     pub element: GameUIElements,
 
     pub pos: Vector2<u16>,
-    pub selectable: bool,
     pub id: usize,
 
     pub neighbors: ContainerNeighbors,
@@ -53,22 +53,7 @@ pub struct ContainerNeighbors {
     pub right_id: Option<usize>,
 }
 
-impl ContainerNeighbors {
-    pub fn new(
-        up_id: Option<usize>,
-        down_id: Option<usize>,
-        left_id: Option<usize>,
-        right_id: Option<usize>,
-    ) -> Self {
-        ContainerNeighbors {
-            up_id,
-            down_id,
-            left_id,
-            right_id,
-        }
-    }
-}
-
+#[allow(unused)]
 pub enum NeighborDirection {
     Top,
     Bottom,
@@ -120,16 +105,9 @@ impl GameUI {
         id: usize,
         neighbors: ContainerNeighbors,
     ) -> Self {
-        let selectable = match element {
-            GameUIElements::Button { .. } => true,
-            GameUIElements::ItemSlot { .. } => true,
-            GameUIElements::Label { .. } => false,
-        };
-
         let container = AnchorContainer {
             element,
             pos,
-            selectable,
             id,
             neighbors,
         };
@@ -169,16 +147,9 @@ impl GameUI {
         id: usize,
         neighbors: ContainerNeighbors,
     ) {
-        let selectable = match element {
-            GameUIElements::Button { .. } => true,
-            GameUIElements::ItemSlot { .. } => true,
-            GameUIElements::Label { .. } => false,
-        };
-
         let container = AnchorContainer {
             element,
             pos,
-            selectable,
             id,
             neighbors,
         };

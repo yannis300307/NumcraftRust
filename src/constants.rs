@@ -1,6 +1,7 @@
+use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 
-use crate::{eadk::Color, mesh::QuadDir};
+use crate::{eadk::Color, physic::BoundingBox, renderer::mesh::QuadDir};
 
 pub mod rendering {
     pub const SCREEN_WIDTH: usize = 320;
@@ -19,6 +20,10 @@ pub mod rendering {
 
     pub const BLURING_SCREEN_SUBDIVISION: usize = 5;
     pub const BLURING_RADIUS: isize = 2;
+
+    pub const MAX_ENTITY_RENDER_DISTANCE: f32 = 10.;
+
+    pub const ITEM_ENTITY_SPRITE_SIZE: f32 = 0.8;
 }
 
 pub mod color_palette {
@@ -40,13 +45,52 @@ pub mod menu {
 
 pub mod world {
     pub const CHUNK_SIZE: usize = 8; // MAX 8
+
+    pub const MAX_ITEM_MERGING_DISTANCE: f32 = 2.;
+    pub const ITEM_MAGNET_FORCE: f32 = 10.;
+    pub const MAX_PLAYER_ITEM_MAGNET_DISTANCE: f32 = 2.2;
 }
 
 pub mod player {
     use core::f32::consts::PI;
 
     pub const ROTATION_SPEED: f32 = PI / 3.0; // rad / sec
-    pub const MOVEMENT_SPEED: f32 = 4.0;
+    pub const FLY_SPEED: f32 = 4.0;
+    pub const WALK_FORCE: f32 = 20.0;
+    pub const MAX_WALKING_VELOCITY: f32 = 4.;
+    pub const JUMP_FORCE: f32 = 5.;
+}
+
+pub mod physic {
+    use nalgebra::Vector3;
+
+    pub const GRAVITY_FACTOR: f32 = 10.0;
+    pub const MAX_FALLING_VELOCITY: f32 = 5.;
+    pub const ON_FLOOR_FRICTION: f32 = 10.;
+
+    pub const BLOCK_COLLISION_SCANNING_SIZE: Vector3<isize> = Vector3::new(2, 3, 2);
+}
+
+#[allow(unreachable_patterns)]
+impl EntityType {
+    pub fn get_bbox(&self) -> Option<BoundingBox> {
+        match self {
+            EntityType::Player => Some(BoundingBox {
+                offset: Vector3::new(-0.4, -1.3, -0.4),
+                size: Vector3::new(0.8, 1.8, 0.8),
+            }),
+            EntityType::Item => Some(BoundingBox {
+                offset: Vector3::new(-0.2, -0.2, -0.2),
+                size: Vector3::new(0.4, 0.4, 0.4),
+            }),
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum EntityType {
+    Player = 0,
+    Item = 1,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -123,6 +167,24 @@ impl BlockType {
             2 => Some(BlockType::Grass),
             3 => Some(BlockType::Dirt),
             _ => None,
+        }
+    }
+
+    pub const fn get_hardness(&self) -> f32 {
+        match self {
+            BlockType::Air => 0.,
+            BlockType::Stone => 2.,
+            BlockType::Grass => 1.2,
+            BlockType::Dirt => 1.,
+        }
+    }
+
+    pub const fn get_dropped_item_type(&self) -> ItemType {
+        match self {
+            BlockType::Air => ItemType::Air,
+            BlockType::Stone => ItemType::StoneBlock,
+            BlockType::Grass => ItemType::DirtBlock,
+            BlockType::Dirt => ItemType::DirtBlock,
         }
     }
 }

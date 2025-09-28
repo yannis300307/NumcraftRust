@@ -25,8 +25,7 @@ impl Game {
                 id: 1,
             })
             .with_element(MenuElement::Button {
-                // TODO : Implement Game Mode
-                text: "Game mode : Creative".to_string(),
+                text: "Game mode : Survival".to_string(),
                 is_pressed: false,
                 allow_margin: true,
                 id: 2,
@@ -43,6 +42,8 @@ impl Game {
 
         self.timing_manager.reset();
 
+        let mut game_mode = GameMode::Survival;
+
         loop {
             self.input_manager.update();
             self.timing_manager.update();
@@ -55,7 +56,7 @@ impl Game {
 
             // Handle the navigation in the menu
             menu.check_inputs(&self.input_manager);
-            for element in menu.get_elements() {
+            for element in menu.get_elements_mut() {
                 match element {
                     MenuElement::Button {
                         is_pressed: true,
@@ -86,8 +87,26 @@ impl Game {
 
                         self.save_manager.set_world_seed(world_seed);
                         self.save_manager.set_world_name(&world_name);
+                        self.save_manager.set_gamemode(game_mode);
 
                         return GameState::LoadWorld(file_name.clone(), true);
+                    }
+                    MenuElement::Button {
+                        is_pressed: true,
+                        id: 2,
+                        text,
+                        ..
+                    } => {
+                        match game_mode {
+                            GameMode::Survival => {
+                                *text = "Game mode : Creative".to_string();
+                                game_mode = GameMode::Creative;
+                            }
+                            GameMode::Creative => {
+                                *text = "Game mode : Survival".to_string();
+                                game_mode = GameMode::Survival;
+                            }
+                        };
                     }
                     _ => (),
                 }

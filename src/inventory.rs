@@ -4,10 +4,7 @@ use core::{mem, usize};
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    constants::ItemType,
-    eadk::input::{Key, KeyboardState},
-};
+use crate::constants::ItemType;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ItemStack {
@@ -437,5 +434,56 @@ impl Inventory {
 
     pub fn get_all_slots(&self) -> &Vec<ItemStack> {
         &self.slots
+    }
+
+    /// Add an item stack to the inventory. Returns the number of remaining items.
+    pub fn add_item_stack(&mut self, item_stack: ItemStack) -> u8 {
+        let max_stack = item_stack.get_item_type().get_max_stack_amount();
+        let mut amount = item_stack.amount as usize;
+
+        // Check incomplete stacks
+        for i in 0..self.slots.len() {
+            if self.slots[i].get_item_type() == item_stack.get_item_type() {
+                let total = self.slots[i].get_amount() as usize + amount;
+
+                if total <= max_stack as usize {
+                    self.replace_slot_item_stack(
+                        i,
+                        ItemStack::new(item_stack.get_item_type(), total as u8, false),
+                    );
+                    return 0;
+                } else {
+                    self.replace_slot_item_stack(
+                        i,
+                        ItemStack::new(item_stack.get_item_type(), max_stack, false),
+                    );
+                    amount = total - max_stack as usize;
+                }
+            }
+            if amount == 0 {
+                return 0;
+            }
+        }
+
+        // Check for empty slots
+        for i in 0..self.slots.len() {
+            if self.slots[i].get_item_type() == ItemType::Air {
+                if amount <= max_stack as usize {
+                    self.replace_slot_item_stack(
+                        i,
+                        ItemStack::new(item_stack.get_item_type(), amount as u8, false),
+                    );
+                    return 0;
+                } else {
+                    self.replace_slot_item_stack(
+                        i,
+                        ItemStack::new(item_stack.get_item_type(), max_stack, false),
+                    );
+                    amount -= max_stack as usize;
+                }
+            }
+        }
+
+        return amount as u8;
     }
 }

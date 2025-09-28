@@ -1,5 +1,6 @@
 use crate::{
     constants::{ItemType, color_palette::GAMEUI_SLOT_COLOR},
+    eadk::Rect,
     hud::Hud,
     renderer::*,
 };
@@ -68,6 +69,56 @@ impl Renderer {
             self.draw_slot_frame_buffer(Vector2::new(2, 85), hud, 3);
             self.draw_slot_frame_buffer(Vector2::new(36, 85), hud, 4);
             self.draw_slot_frame_buffer(Vector2::new(70, 85), hud, 5);
+        }
+
+        self.draw_breaking_indicator(tile_x, tile_y, hud);
+    }
+
+    pub fn draw_breaking_indicator(&mut self, tile_x: usize, tile_y: usize, hud: &Hud) {
+        if let Some(progress) = hud.breaking_progress {
+            let bar_len = (40. * progress) as u16;
+            if tile_x == 0 && tile_y == 1 {
+                self.push_rect_uniform_on_frame_buffer(
+                    Rect {
+                        x: 138,
+                        y: 18,
+                        width: 22,
+                        height: 9,
+                    },
+                    Color::from_888(100, 100, 100),
+                );
+                self.push_rect_uniform_on_frame_buffer(
+                    Rect {
+                        x: 140,
+                        y: 20,
+                        width: bar_len.min(20),
+                        height: 5,
+                    },
+                    Color::from_888(200, 200, 200),
+                );
+            }
+            if tile_x == 1 && tile_y == 1 {
+                self.push_rect_uniform_on_frame_buffer(
+                    Rect {
+                        x: 0,
+                        y: 18,
+                        width: 22,
+                        height: 9,
+                    },
+                    Color::from_888(100, 100, 100),
+                );
+                if bar_len > 20 {
+                    self.push_rect_uniform_on_frame_buffer(
+                        Rect {
+                            x: 0,
+                            y: 20,
+                            width: (bar_len - 20),
+                            height: 5,
+                        },
+                        Color::from_888(200, 200, 200),
+                    );
+                }
+            }
         }
     }
 

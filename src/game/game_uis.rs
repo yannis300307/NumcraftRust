@@ -1,21 +1,21 @@
-use crate::{game::*, game_ui::NeighborDirection, input_manager, inventory::Inventory};
+use crate::{game::*, game_ui::NeighborDirection, inventory::Inventory};
 
 pub enum PlayerInventoryPage {
-    Normal,
+    Survival,
     Creative,
 }
 
 impl Game {
     pub fn player_inventory_loop(&mut self, page: PlayerInventoryPage) -> GameState {
         match page {
-            PlayerInventoryPage::Normal => self.player_inventory_normal_loop(),
+            PlayerInventoryPage::Survival => self.player_inventory_survival_loop(),
             PlayerInventoryPage::Creative => self.player_inventory_creative_loop(),
         }
 
         GameState::InGame
     }
 
-    fn player_inventory_normal_loop(&mut self) {
+    fn player_inventory_survival_loop(&mut self) {
         // Clear the hud
         self.renderer
             .draw_game(&mut self.world, &self.player, 0., &self.hud, false);
@@ -23,8 +23,8 @@ impl Game {
         let mut inventories = [&mut self.player.inventory];
 
         let mut ui = GameUI::new(true)
-            .with_slot_grid(Vector2::new(65, 56), 6, 3, 0, 0, 0)
-            .with_slot_grid(Vector2::new(65, 154), 6, 1, 0, 18, 18)
+            .with_slot_grid(Vector2::new(65, 56), 6, 3, 0, 0, 6)
+            .with_slot_grid(Vector2::new(65, 154), 6, 1, 0, 18, 0)
             .with_links(&[
                 (12, 18, NeighborDirection::Bottom),
                 (13, 19, NeighborDirection::Bottom),
@@ -80,8 +80,8 @@ impl Game {
         let mut inventories = [&mut self.player.inventory, &mut creative_inventory];
 
         let mut ui = GameUI::new(true)
-            .with_slot_grid(Vector2::new(10, 41), 6, 3, 0, 0, 0)
-            .with_slot_grid(Vector2::new(10, 139), 6, 1, 0, 18, 18)
+            .with_slot_grid(Vector2::new(10, 41), 6, 3, 0, 0, 6)
+            .with_slot_grid(Vector2::new(10, 139), 6, 1, 0, 18, 0)
             .with_links(&[
                 (12, 18, NeighborDirection::Bottom),
                 (13, 19, NeighborDirection::Bottom),

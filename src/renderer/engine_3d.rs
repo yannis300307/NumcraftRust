@@ -1,4 +1,18 @@
-use crate::{hud::Hud, renderer::*};
+use crate::{
+    constants::get_quad_color_from_texture_id,
+    eadk::{
+        Rect,
+        display::{push_rect, wait_for_vblank},
+    },
+    hud::Hud,
+    player::Player,
+    renderer::{
+        frustum::Frustum,
+        mesh::{Quad, Triangle, Triangle2D},
+        *,
+    },
+    world::World,
+};
 
 /// Fill a triangle in the frame buffer
 pub fn fill_triangle(
@@ -358,11 +372,11 @@ impl Renderer {
             Perspective3::new(ASPECT_RATIO, self.camera.get_fov(), ZNEAR, ZFAR);
     }
 
-    fn project_point(&self, point: Vector3<f32>) -> Vector2<f32> {
+    pub fn project_point(&self, point: Vector3<f32>) -> Vector2<f32> {
         self.projection_matrix.project_vector(&point).xy() * -1.0
     }
 
-    pub fn clear_screen(&mut self, color: eadk::Color) {
+    pub fn clear_screen(&mut self, color: Color) {
         self.tile_frame_buffer.fill(color);
     }
 
@@ -555,12 +569,13 @@ impl Renderer {
             for y in 0..SCREEN_TILE_SUBDIVISION {
                 self.clear_screen(Color::from_components(0b01110, 0b110110, 0b11111));
                 self.draw_triangles(x, y);
+                self.draw_flat_model_entities(world, &mat_view, x, y, &frustum);
 
                 if draw_hud {
                     self.draw_hud(hud, fps_count, x, y);
                 }
 
-                eadk::display::push_rect(
+                push_rect(
                     Rect {
                         x: (SCREEN_TILE_WIDTH * x) as u16,
                         y: (SCREEN_TILE_HEIGHT * y) as u16,
@@ -572,7 +587,7 @@ impl Renderer {
             }
         }
         if self.enable_vsync {
-            eadk::display::wait_for_vblank();
+            wait_for_vblank();
         }
     }
 }

@@ -1,33 +1,43 @@
 use core::f32::consts::PI;
 
 use libm::sincosf;
+#[allow(unused_imports)]
 use nalgebra::{ComplexField, Vector3};
 
 use crate::{
     camera::Camera,
-    constants::{BlockType, player::MOVEMENT_SPEED},
+    constants::{
+        BlockType, EntityType,
+        player::{FLY_SPEED, JUMP_FORCE, MAX_WALKING_VELOCITY, WALK_FORCE},
+    },
     eadk,
+    entity::{Entity, item::ItemEntityCustomData},
+    game::GameMode,
     hud::Hud,
     input_manager::InputManager,
-    inventory::Inventory,
-    mesh::{Mesh, Quad, QuadDir},
+    inventory::{Inventory, ItemStack},
+    physic::PhysicEngine,
+    renderer::mesh::{Mesh, Quad, QuadDir},
     world::World,
 };
 
+#[cfg(target_os = "none")]
+use alloc::boxed::Box;
+
 pub struct Player {
-    pub pos: Vector3<f32>,
-    pub rotation: Vector3<f32>,
     ray_cast_result: Option<RaycastResult>,
     pub inventory: Inventory,
+    breaking_state_timer: f32,
+    breaking_block_pos: Option<Vector3<isize>>,
 }
 
 impl Player {
-    pub fn new() -> Self {
+    pub fn new(player_entity: &mut Entity) -> Self {
         Player {
-            pos: Vector3::new(0., 0., 0.),
-            rotation: Vector3::new(0., 0., 0.),
             ray_cast_result: None,
             inventory: Inventory::new(24),
+            breaking_state_timer: 0.,
+            breaking_block_pos: None,
         }
     }
 
@@ -43,20 +53,18 @@ impl Player {
         }
     }
 
-    pub fn sync_with_camera(&mut self, camera: &mut Camera) {
-        camera.update_pos(self.pos - Vector3::new(0., 1.70, 0.));
-        self.rotation = *camera.get_rotation();
+    pub fn get_block_breaking_progress(&self) -> Option<f32> {
+        if self.breaking_block_pos.is_none() {
+            return None;
+        }
+        let hardness = self.ray_cast_result.as_ref()?.block_type.get_hardness();
+
+        Some((hardness - self.breaking_state_timer) / hardness)
     }
 
-    pub fn set_pos_rotation(
-        &mut self,
-        camera: &mut Camera,
-        rotation: Vector3<f32>,
-        pos: Vector3<f32>,
-    ) {
-        self.pos = pos;
-        camera.set_rotation(rotation);
-        self.sync_with_camera(camera);
+    pub fn sync_with_camera(&self, camera: &mut Camera, player_entity: &mut Entity) {
+        camera.update_pos(player_entity.pos - Vector3::new(0., 1.2, 0.));
+        player_entity.rotation = *camera.get_rotation();
     }
 
     pub fn set_inventory(&mut self, inventory: Inventory) {
@@ -70,50 +78,115 @@ impl Player {
         world: &mut World,
         camera: &mut Camera,
         hud: &Hud,
+        game_mode: GameMode,
+        physic_engine: &PhysicEngine,
+        delta_time: f32,
     ) {
-        self.sync_with_camera(camera);
-        self.rotation = *camera.get_rotation();
-
         self.ray_cast_result = self.ray_cast(camera, world, 10);
+
+        let player_entity = world.get_player_entity_mut();
+
+        self.sync_with_camera(camera, player_entity);
+        player_entity.rotation = *camera.get_rotation();
 
         // Movements
         if input_manager.is_keydown(eadk::input::Key::Toolbox) {
             // Forward
-            let translation = sincosf(self.rotation.y);
-            self.pos.x += translation.0 * delta * MOVEMENT_SPEED;
-            self.pos.z += translation.1 * delta * MOVEMENT_SPEED;
+            let translation = sincosf(player_entity.rotation.y);
+            if game_mode == GameMode::Creative {
+                player_entity.pos.x += translation.0 * delta * FLY_SPEED;
+                player_entity.pos.z += translation.1 * delta * FLY_SPEED;
+            } else {
+                player_entity.velocity.x += translation.0 * delta * WALK_FORCE;
+                player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
+            }
         }
         if input_manager.is_keydown(eadk::input::Key::Comma) {
             // Backward
-            let translation = sincosf(self.rotation.y);
-            self.pos.x -= translation.0 * delta * MOVEMENT_SPEED;
-            self.pos.z -= translation.1 * delta * MOVEMENT_SPEED;
+            let translation = sincosf(player_entity.rotation.y);
+            if game_mode == GameMode::Creative {
+                player_entity.pos.x -= translation.0 * delta * FLY_SPEED;
+                player_entity.pos.z -= translation.1 * delta * FLY_SPEED;
+            } else {
+                player_entity.velocity.x -= translation.0 * delta * WALK_FORCE;
+                player_entity.velocity.z -= translation.1 * delta * WALK_FORCE;
+            }
         }
         if input_manager.is_keydown(eadk::input::Key::Imaginary) {
             // Left
-            let translation = sincosf(self.rotation.y + PI / 2.0);
-            self.pos.x -= translation.0 * delta * MOVEMENT_SPEED;
-            self.pos.z -= translation.1 * delta * MOVEMENT_SPEED;
+            let translation = sincosf(player_entity.rotation.y + PI / 2.0);
+            if game_mode == GameMode::Creative {
+                player_entity.pos.x -= translation.0 * delta * FLY_SPEED;
+                player_entity.pos.z -= translation.1 * delta * FLY_SPEED;
+            } else {
+                player_entity.velocity.x -= translation.0 * delta * WALK_FORCE;
+                player_entity.velocity.z -= translation.1 * delta * WALK_FORCE;
+            }
         }
         if input_manager.is_keydown(eadk::input::Key::Power) {
             // Right
-            let translation = sincosf(self.rotation.y + PI / 2.0);
-            self.pos.x += translation.0 * delta * MOVEMENT_SPEED;
-            self.pos.z += translation.1 * delta * MOVEMENT_SPEED;
+            let translation = sincosf(player_entity.rotation.y + PI / 2.0);
+            if game_mode == GameMode::Creative {
+                player_entity.pos.x += translation.0 * delta * FLY_SPEED;
+                player_entity.pos.z += translation.1 * delta * FLY_SPEED;
+            } else {
+                player_entity.velocity.x += translation.0 * delta * WALK_FORCE;
+                player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
+            }
         }
         if input_manager.is_keydown(eadk::input::Key::Shift) {
             // Up
-            self.pos.y -= delta * MOVEMENT_SPEED;
+            if game_mode == GameMode::Creative {
+                player_entity.pos.y -= delta * FLY_SPEED;
+            } else if player_entity.is_on_floor {
+                player_entity.velocity.y -= JUMP_FORCE;
+            }
         }
         if input_manager.is_keydown(eadk::input::Key::Exp) {
             // Down
-            self.pos.y += delta * MOVEMENT_SPEED;
+            if game_mode == GameMode::Creative {
+                player_entity.pos.y += delta * FLY_SPEED;
+            }
         }
 
-        if input_manager.is_just_pressed(eadk::input::Key::Back) {
-            // Break Block
-            if let Some(result) = &self.ray_cast_result {
-                world.set_block_in_world(result.block_pos, BlockType::Air);
+        // Limit speed
+        if player_entity.velocity.xz().norm() > MAX_WALKING_VELOCITY {
+            let max_velocity = player_entity.velocity.xz().normalize() * MAX_WALKING_VELOCITY;
+            player_entity.velocity.x = max_velocity.x;
+            player_entity.velocity.z = max_velocity.y;
+        }
+
+        // Break Block
+        if game_mode == GameMode::Creative {
+            if input_manager.is_just_pressed(eadk::input::Key::Back) {
+                if let Some(result) = &self.ray_cast_result {
+                    world.set_block_in_world(result.block_pos, BlockType::Air);
+                }
+            }
+        } else {
+            if input_manager.is_keydown(eadk::input::Key::Back) {
+                if let Some(ray_cast) = &self.ray_cast_result {
+                    if self
+                        .breaking_block_pos
+                        .is_some_and(|pos| pos == ray_cast.block_pos)
+                    {
+                        self.breaking_state_timer -= delta_time;
+                        if self.breaking_state_timer <= 0. {
+                            world.replace_block_and_drop_item(ray_cast.block_pos, BlockType::Air);
+                            self.breaking_block_pos = None;
+                            self.breaking_state_timer = 0.;
+                        }
+                    } else {
+                        self.breaking_block_pos = Some(ray_cast.block_pos);
+                        self.breaking_state_timer = ray_cast.block_type.get_hardness();
+                    }
+                } else {
+                    self.breaking_block_pos = None;
+                    self.breaking_state_timer = 0.;
+                }
+            } else {
+                self.breaking_block_pos = None;
+                self.breaking_state_timer = 0.;
             }
         }
 
@@ -124,15 +197,43 @@ impl Player {
                 if world
                     .get_block_in_world(block_pos)
                     .is_some_and(|b| b.is_air())
-                // Just in case
+                    && physic_engine.can_place_block(world, block_pos)
+                    && let Some(item_type) = self.inventory.take_one(0 + hud.selected_slot)
+                    && let Some(block_type) = item_type.get_matching_block_type()
                 {
-                    if let Some(item_type) = self.inventory.take_one(18 + hud.selected_slot)
-                        && let Some(block_type) = item_type.get_matching_block_type()
-                    {
-                        world.set_block_in_world(block_pos, block_type);
-                    }
+                    world.set_block_in_world(block_pos, block_type);
                 }
             }
+        }
+
+        let player_entity = world.get_player_entity();
+
+        if let Some(player_bbox) = player_entity.get_bbox() {
+            world.get_all_entities_mut().retain_mut(|entity| {
+                if let EntityType::Item { .. } = entity.get_type()
+                    && entity
+                        .get_bbox()
+                        .is_some_and(|entity_bbox| entity_bbox.is_coliding(&player_bbox))
+                {
+                    // Recover the item_stack data from the item entity
+                    let item_data = ItemEntityCustomData::get_item_data(&entity)
+                        .expect("Item Entity must have ItemData as custom data.");
+
+                    let item_stack = item_data.item_stack;
+
+                    let remain = self.inventory.add_item_stack(item_stack.clone());
+
+                    if remain != 0 {
+                        entity.custom_data = Some(Box::new(ItemEntityCustomData {
+                            item_stack: ItemStack::new(item_stack.get_item_type(), remain, false),
+                        }));
+                        return true;
+                    }
+                    false
+                } else {
+                    true
+                }
+            });
         }
     }
 
@@ -184,7 +285,9 @@ impl Player {
         while !(max_x > 1.0 && max_y > 1.0 && max_z > 1.0) {
             let current_voxel_pos_isize = current_voxel_pos.map(|x| x as isize);
             let result = world.get_block_in_world(current_voxel_pos_isize);
-            if !result.is_none_or(|b| b == BlockType::Air) {
+            if let Some(block_type) = result
+                && !block_type.is_air()
+            {
                 let voxel_normal = if step_dir == 0 {
                     if dx < 0. {
                         QuadDir::Right
@@ -205,6 +308,7 @@ impl Player {
                 return Some(RaycastResult {
                     block_pos: current_voxel_pos_isize,
                     face_dir: voxel_normal,
+                    block_type: block_type,
                 });
             }
 
@@ -235,4 +339,5 @@ impl Player {
 struct RaycastResult {
     pub block_pos: Vector3<isize>,
     pub face_dir: QuadDir,
+    pub block_type: BlockType,
 }

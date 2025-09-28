@@ -6,10 +6,7 @@ use alloc::{
 
 use nalgebra::Vector2;
 
-use crate::{
-    eadk::input::{Key, KeyboardState},
-    input_manager::InputManager,
-};
+use crate::{eadk::input::Key, input_manager::InputManager};
 
 pub enum MenuElement {
     /// A simple button
@@ -237,6 +234,7 @@ impl Menu {
     }
 
     pub fn finish_buttons_handling(&mut self) {
+        let mut changed = false;
         for element in self.get_elements_mut() {
             if let MenuElement::Button {
                 // Disable all buttons
@@ -244,8 +242,15 @@ impl Menu {
                 ..
             } = element
             {
+                if *is_pressed {
+                    changed = true;
+                }
+
                 *is_pressed = false;
             }
+        }
+        if changed {
+            self.need_redraw = true;
         }
     }
 

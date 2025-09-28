@@ -1,4 +1,12 @@
-use crate::renderer::*;
+use crate::{
+    constants::color_palette::*,
+    eadk::{
+        Point, Rect,
+        display::{draw_string, push_rect_uniform, wait_for_vblank},
+    },
+    menu::{Menu, MenuElement, TextAnchor},
+    renderer::*,
+};
 
 impl Renderer {
     pub fn draw_menu(&self, menu: &mut Menu) {
@@ -33,22 +41,20 @@ impl Renderer {
                         height: 30,
                     }
                 }
+            } else if let MenuElement::ButtonOption { text, .. } = &elements[i] {
+                let option_button_width = 20 + text.len() * 10;
+                Rect {
+                    x: (menu.pos.x + menu.width - option_button_width) as u16,
+                    y: element_y as u16,
+                    width: option_button_width as u16,
+                    height: 30,
+                }
             } else {
-                if let MenuElement::ButtonOption { text, .. } = &elements[i] {
-                    let option_button_width = 20 + text.len() * 10;
-                    Rect {
-                        x: (menu.pos.x + menu.width - option_button_width) as u16,
-                        y: element_y as u16,
-                        width: option_button_width as u16,
-                        height: 30,
-                    }
-                } else {
-                    Rect {
-                        x: menu.pos.x as u16,
-                        y: element_y as u16,
-                        width: menu.width as u16,
-                        height: 30,
-                    }
+                Rect {
+                    x: menu.pos.x as u16,
+                    y: element_y as u16,
+                    width: menu.width as u16,
+                    height: 30,
                 }
             };
 
@@ -102,9 +108,9 @@ impl Renderer {
                     push_rect_uniform(default_rect, element_bg_color);
                     draw_outline();
                     let text_x = menu.pos.x + (default_rect.width as usize - 10 * text.len()) / 2;
-                    eadk::display::draw_string(
+                    draw_string(
                         text,
-                        eadk::Point {
+                        Point {
                             x: text_x as u16,
                             y: (element_y + 6) as u16,
                         },
@@ -120,9 +126,9 @@ impl Renderer {
                     let x_pos =
                         default_rect.x + (value * (menu.width - cursor_width - 4) as f32) as u16;
                     let text_x = menu.pos.x + (default_rect.width as usize - 10 * text.len()) / 2;
-                    eadk::display::draw_string(
+                    draw_string(
                         text.as_str(),
-                        eadk::Point {
+                        Point {
                             x: text_x as u16,
                             y: (element_y + 6) as u16,
                         },
@@ -149,9 +155,9 @@ impl Renderer {
                         TextAnchor::Center => menu.pos.x + (menu.width - 10 * text.len()) / 2,
                         TextAnchor::Right => menu.pos.x + menu.width - 10 * text.len() - 10,
                     };
-                    eadk::display::draw_string(
+                    draw_string(
                         text,
-                        eadk::Point {
+                        Point {
                             x: text_y as u16,
                             y: (element_y + 6) as u16,
                         },
@@ -164,9 +170,9 @@ impl Renderer {
                     push_rect_uniform(default_rect, element_bg_color);
                     draw_outline();
 
-                    eadk::display::draw_string(
+                    draw_string(
                         text.as_str(),
-                        eadk::Point {
+                        Point {
                             x: default_rect.x + 10,
                             y: (element_y + 6) as u16,
                         },
@@ -185,9 +191,9 @@ impl Renderer {
                     draw_outline();
                     let text_x = menu.pos.x + 10;
                     if value.is_empty() {
-                        eadk::display::draw_string(
+                        draw_string(
                             &placeholder_text,
-                            eadk::Point {
+                            Point {
                                 x: text_x as u16,
                                 y: (element_y + 6) as u16,
                             },
@@ -196,9 +202,9 @@ impl Renderer {
                             element_bg_color,
                         );
                     } else {
-                        eadk::display::draw_string(
+                        draw_string(
                             &value,
-                            eadk::Point {
+                            Point {
                                 x: text_x as u16,
                                 y: (element_y + 6) as u16,
                             },

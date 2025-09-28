@@ -10,32 +10,19 @@ use core::{cmp::Ordering, f32, mem::swap};
 
 use crate::{
     camera::Camera,
-    constants::{
-        color_palette::{
-            MENU_BACKGROUND_COLOR, MENU_ELEMENT_BACKGROUND_COLOR,
-            MENU_ELEMENT_BACKGROUND_COLOR_HOVER, MENU_OUTLINE_COLOR, MENU_TEXT_COLOR,
-        },
-        get_quad_color_from_texture_id,
-        rendering::*,
-        world::CHUNK_SIZE,
-    },
-    eadk::{
-        self, COLOR_BLACK, Color, Point, Rect,
-        display::{pull_rect, push_rect, push_rect_uniform, wait_for_vblank},
-    },
-    frustum::Frustum,
-    game_ui::{GameUI, GameUIElements},
-    menu::{Menu, MenuElement, TextAnchor},
-    mesh::{Quad, SmallTriangle2D, Triangle, Triangle2D},
-    player::Player,
-    world::World,
+    constants::{rendering::*, world::CHUNK_SIZE},
+    eadk::Color,
+    renderer::mesh::SmallTriangle2D,
 };
 
-mod renderer_engine3d;
-mod renderer_game_ui;
-mod renderer_hud;
-mod renderer_menus;
-mod renderer_misc;
+mod engine_3d;
+mod hud;
+mod menus;
+mod ui;
+mod frustum;
+pub mod mesh;
+mod misc;
+mod entity;
 
 // Screen size related constants
 

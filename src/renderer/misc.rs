@@ -1,5 +1,13 @@
-use crate::{eadk::SCREEN_RECT, renderer::*};
+use crate::{eadk::{display::{draw_string, pull_rect, push_rect, push_rect_uniform}, Point, Rect, SCREEN_RECT}, renderer::*};
 
+pub struct UnBoundedRect {
+    pub x: isize,
+    pub y: isize,
+    pub width: isize,
+    pub height: isize,
+}
+
+#[allow(dead_code)]
 impl Renderer {
     pub fn draw_string(&mut self, text: &str, pos: &Vector2<usize>) {
         let mut text_cursor: usize = 0;
@@ -75,13 +83,24 @@ impl Renderer {
         }
     }
 
+    pub fn push_unbounded_rect_uniform_on_frame_buffer(&mut self, rect: UnBoundedRect, color: Color) {
+        if rect.x + rect.width <= 0 || rect.y + rect.height <= 0 {
+            return;
+        }
+        for x in rect.x.max(0)..(rect.x + rect.width).min(SCREEN_TILE_WIDTH as isize) {
+            for y in rect.y.max(0)..(rect.y + rect.height).min(SCREEN_TILE_HEIGHT as isize) {
+                self.tile_frame_buffer[x as usize + y as usize * SCREEN_TILE_WIDTH] = color;
+            }
+        }
+    }
+
     pub fn show_msg(message: &[&str], background_color: Color) {
-        eadk::display::push_rect_uniform(SCREEN_RECT, background_color);
+        push_rect_uniform(SCREEN_RECT, background_color);
         
         let mut y = (SCREEN_HEIGHT - message.len() * 20) / 2;
 
         for line in message {
-            eadk::display::draw_string(
+            draw_string(
                 line,
                 Point {
                     x: ((320 - line.len() * 10) / 2) as u16,
