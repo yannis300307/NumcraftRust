@@ -7,8 +7,8 @@ use crate::constants::world::{
     CHUNK_SIZE, ITEM_MAGNET_FORCE, MAX_ITEM_MERGING_DISTANCE, MAX_PLAYER_ITEM_MAGNET_DISTANCE,
 };
 use crate::constants::{BlockType, EntityType, ItemType};
+use crate::entity::Entity;
 use crate::entity::item::ItemEntityCustomData;
-use crate::entity::{self, Entity};
 use crate::inventory::{Inventory, ItemStack};
 use crate::renderer::mesh::{Mesh, Quad};
 
