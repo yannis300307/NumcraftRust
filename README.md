@@ -40,7 +40,7 @@ NumcraftRust should run on both N120, N115 and N110 models. You will get better 
 - [X] Menu to select between multiple worlds
 - [ ] Lightning engine
 - [ ] Mobs
-- [ ] Survival mode
+- [X] Survival mode
 
 If I have the time:
 - [ ] TNT
