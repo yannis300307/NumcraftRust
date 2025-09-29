@@ -49,6 +49,7 @@ If I have the time:
 - [ ] Make a tool to convert Minecraft schematics to Numcraft structures
 - [ ] Structures such as Villages
 - [ ] Upsilon / Omega compatibility
+- [ ] Mini games
 
 Good ideas but I will never have the time to do that :
 - [ ] Mod support
