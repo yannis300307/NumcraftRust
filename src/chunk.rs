@@ -6,6 +6,8 @@ use crate::{
 use fastnoise_lite::FastNoiseLite;
 use libm::roundf;
 use nalgebra::Vector3;
+use rand_core::{RngCore, SeedableRng};
+use rand_xorshift::XorShiftRng;
 
 const BLOCK_COUNT: usize = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
@@ -67,6 +69,7 @@ impl Chunk {
     }
 
     pub fn generate_chunk(&mut self, noise: &FastNoiseLite) {
+        // TODO : move this function in World or another struct
         if self.generated {
             return;
         }
@@ -106,6 +109,21 @@ impl Chunk {
                 }
             }
         }
+
+        let seed = 1;
+        let mut rng = XorShiftRng::seed_from_u64(0);
+
+        for x in 0..CHUNK_SIZE_I {
+            for z in 0..CHUNK_SIZE_I {
+                if rng.next_u32() < u32::MAX / 2 {
+                   /* self.set_at(
+                            Vector3::new(x as usize, 2, z as usize),
+                            crate::constants::BlockType::Sand,
+                        );*/
+                }
+            }
+        }
+
         self.generated = true
     }
 
