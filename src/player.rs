@@ -58,6 +58,9 @@ impl Player {
             return None;
         }
         let hardness = self.ray_cast_result.as_ref()?.block_type.get_hardness();
+        if hardness <= 0. {
+            return None;
+        }
 
         Some((hardness - self.breaking_state_timer) / hardness)
     }
@@ -177,8 +180,11 @@ impl Player {
                             self.breaking_state_timer = 0.;
                         }
                     } else {
-                        self.breaking_block_pos = Some(ray_cast.block_pos);
-                        self.breaking_state_timer = ray_cast.block_type.get_hardness();
+                        let hardness = ray_cast.block_type.get_hardness();
+                        if hardness >= 0. {
+                            self.breaking_block_pos = Some(ray_cast.block_pos);
+                            self.breaking_state_timer = ray_cast.block_type.get_hardness();
+                        }
                     }
                 } else {
                     self.breaking_block_pos = None;
