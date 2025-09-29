@@ -8,27 +8,30 @@ use crate::{
 impl Renderer {
     pub fn draw_hud(&mut self, hud: &Hud, fps_count: f32, tile_x: usize, tile_y: usize) {
         if tile_x == 0 && tile_y == 0 {
-            self.draw_string(
-                format!("FPS:{fps_count:.2}").as_str(),
-                &Vector2::new(10, 10),
-            );
+            if hud.show_debug {
+                self.draw_string(
+                    format!("FPS:{fps_count:.2}").as_str(),
+                    &Vector2::new(10, 10),
+                );
 
-            self.draw_string(
-                format!("Tris:{}", self.triangles_to_render.len()).as_str(),
-                &Vector2::new(10, 30),
-            );
+                self.draw_string(
+                    format!("Tris:{}", self.triangles_to_render.len()).as_str(),
+                    &Vector2::new(10, 30),
+                );
 
-            self.draw_string(
-                format!(
-                    "{:.1},{:.1},{:.1}",
-                    self.camera.get_pos().x,
-                    self.camera.get_pos().y,
-                    self.camera.get_pos().z
-                )
-                .as_str(),
-                &Vector2::new(10, 50),
-            );
+                self.draw_string(
+                    format!(
+                        "{:.1},{:.1},{:.1}",
+                        self.camera.get_pos().x,
+                        self.camera.get_pos().y,
+                        self.camera.get_pos().z
+                    )
+                    .as_str(),
+                    &Vector2::new(10, 50),
+                );
+            }
         }
+        
         let mut draw_cross = |x, y| {
             self.draw_image_negate(
                 CROSS_DATA,
