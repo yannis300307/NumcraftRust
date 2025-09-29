@@ -66,7 +66,7 @@ impl Player {
     }
 
     pub fn sync_with_camera(&self, camera: &mut Camera, player_entity: &mut Entity) {
-        camera.update_pos(player_entity.pos - Vector3::new(0., 1.2, 0.));
+        camera.update_pos(player_entity.pos + Vector3::new(0., 1.2, 0.));
         player_entity.rotation = *camera.get_rotation();
     }
 
@@ -119,17 +119,6 @@ impl Player {
             // Left
             let translation = sincosf(player_entity.rotation.y + PI / 2.0);
             if game_mode == GameMode::Creative {
-                player_entity.pos.x -= translation.0 * delta * FLY_SPEED;
-                player_entity.pos.z -= translation.1 * delta * FLY_SPEED;
-            } else {
-                player_entity.velocity.x -= translation.0 * delta * WALK_FORCE;
-                player_entity.velocity.z -= translation.1 * delta * WALK_FORCE;
-            }
-        }
-        if input_manager.is_keydown(eadk::input::Key::Power) {
-            // Right
-            let translation = sincosf(player_entity.rotation.y + PI / 2.0);
-            if game_mode == GameMode::Creative {
                 player_entity.pos.x += translation.0 * delta * FLY_SPEED;
                 player_entity.pos.z += translation.1 * delta * FLY_SPEED;
             } else {
@@ -137,18 +126,29 @@ impl Player {
                 player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
             }
         }
+        if input_manager.is_keydown(eadk::input::Key::Power) {
+            // Right
+            let translation = sincosf(player_entity.rotation.y + PI / 2.0);
+            if game_mode == GameMode::Creative {
+                player_entity.pos.x -= translation.0 * delta * FLY_SPEED;
+                player_entity.pos.z -= translation.1 * delta * FLY_SPEED;
+            } else {
+                player_entity.velocity.x -= translation.0 * delta * WALK_FORCE;
+                player_entity.velocity.z -= translation.1 * delta * WALK_FORCE;
+            }
+        }
         if input_manager.is_keydown(eadk::input::Key::Shift) {
             // Up
             if game_mode == GameMode::Creative {
-                player_entity.pos.y -= delta * FLY_SPEED;
+                player_entity.pos.y += delta * FLY_SPEED;
             } else if player_entity.is_on_floor {
-                player_entity.velocity.y -= JUMP_FORCE;
+                player_entity.velocity.y += JUMP_FORCE;
             }
         }
         if input_manager.is_keydown(eadk::input::Key::Exp) {
             // Down
             if game_mode == GameMode::Creative {
-                player_entity.pos.y += delta * FLY_SPEED;
+                player_entity.pos.y -= delta * FLY_SPEED;
             }
         }
 
@@ -296,21 +296,22 @@ impl Player {
             {
                 let voxel_normal = if step_dir == 0 {
                     if dx < 0. {
-                        QuadDir::Right
-                    } else {
                         QuadDir::Left
+                    } else {
+                        QuadDir::Right
                     }
                 } else if step_dir == 1 {
                     if dy < 0. {
-                        QuadDir::Bottom
-                    } else {
                         QuadDir::Top
+                    } else {
+                        QuadDir::Bottom
                     }
                 } else if dz < 0. {
                     QuadDir::Back
                 } else {
                     QuadDir::Front
                 };
+
                 return Some(RaycastResult {
                     block_pos: current_voxel_pos_isize,
                     face_dir: voxel_normal,

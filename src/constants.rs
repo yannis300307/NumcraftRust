@@ -76,7 +76,7 @@ impl EntityType {
     pub fn get_bbox(&self) -> Option<BoundingBox> {
         match self {
             EntityType::Player => Some(BoundingBox {
-                offset: Vector3::new(-0.4, -1.3, -0.4),
+                offset: Vector3::new(-0.4, -0.5, -0.4),
                 size: Vector3::new(0.8, 1.8, 0.8),
             }),
             EntityType::Item => Some(BoundingBox {

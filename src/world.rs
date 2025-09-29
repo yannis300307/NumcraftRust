@@ -258,8 +258,9 @@ impl World {
 
     /// Return the terrain height at the given world block x-z coordinates. The vector must be (x, z)!
     pub fn get_terrain_height(&self, pos: Vector2<isize>) -> isize {
+        todo!("DEPRECATED: remaque this");
         let negative_1_to_1 = self.gen_noise.get_noise_2d((pos.x) as f32, (pos.y) as f32);
-        roundf((negative_1_to_1 + 1.) / 2. * 14.0 + 8.0) as isize
+        roundf((negative_1_to_1 + 1.) / 2. * 14.0 - 2.0) as isize
     }
 
     /// Add a chunk and return a reference to it as an option

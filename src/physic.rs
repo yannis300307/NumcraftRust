@@ -21,7 +21,7 @@ impl PhysicEngine {
     pub fn process(&self, world: &mut World, delta_time: f32) {
         for entity in world.get_all_entities_mut().iter_mut() {
             if entity.gravity {
-                entity.velocity.y += GRAVITY_FACTOR * delta_time;
+                entity.velocity.y -= GRAVITY_FACTOR * delta_time;
             }
         }
 
@@ -66,7 +66,7 @@ impl PhysicEngine {
             && let Some(entity) = world.get_entity_by_id_mut(entity_id)
         {
             if state {
-                if movement.y > 0. {
+                if movement.y < 0. {
                     entity.is_on_floor = true;
                 }
 

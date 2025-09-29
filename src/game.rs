@@ -76,7 +76,7 @@ impl Game {
 
             let player_spawn_pos = Vector3::new(
                 16.5,
-                (self.world.get_terrain_height(Vector2::new(16, 16)) - 3) as f32,
+                20.,
                 16.5,
             );
 

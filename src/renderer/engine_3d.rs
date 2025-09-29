@@ -373,7 +373,7 @@ impl Renderer {
     }
 
     pub fn project_point(&self, point: Vector3<f32>) -> Vector2<f32> {
-        self.projection_matrix.project_vector(&point).xy() * -1.0
+        self.projection_matrix.project_vector(&point).xy()
     }
 
     pub fn clear_screen(&mut self, color: Color) {

@@ -78,7 +78,7 @@ impl Chunk {
                     (x + chunk_block_pos.x) as f32,
                     (z + chunk_block_pos.z) as f32,
                 );
-                let height = roundf((negative_1_to_1 + 1.) / 2. * 14.0 + 8.0) as isize;
+                let height = roundf((negative_1_to_1 + 1.) / 2. * 14.0 - 2.0) as isize;
 
                 for y in 0..CHUNK_SIZE_I {
                     let block_y = chunk_block_pos.y + y;
@@ -90,14 +90,14 @@ impl Chunk {
                         );
                     }
 
-                    if block_y > height && block_y <= height + 3 {
+                    if block_y < height && block_y >= height - 3 {
                         self.set_at(
                             Vector3::new(x as usize, y as usize, z as usize),
                             crate::constants::BlockType::Dirt,
                         );
                     }
 
-                    if block_y > height + 3 {
+                    if block_y < height - 3 {
                         self.set_at(
                             Vector3::new(x as usize, y as usize, z as usize),
                             crate::constants::BlockType::Stone,
