@@ -4,9 +4,8 @@ use alloc::vec::Vec;
 use nalgebra::{Vector2, Vector3};
 
 use crate::{
-    chunk::Chunk,
-    constants::{BlockType, world::CHUNK_SIZE},
-    world::World,
+    constants::{world::CHUNK_SIZE, BlockType},
+    world::{chunk::Chunk, World},
 };
 
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
@@ -293,7 +292,7 @@ fn get_block_in_chunk_or_world(
         || pos.z < 0
         || pos.z >= CHUNK_SIZE_I
     {
-        world.get_block_in_world(pos + *chunk.get_pos() * CHUNK_SIZE_I)
+        world.chunks_manager.get_block_in_world(pos + *chunk.get_pos() * CHUNK_SIZE_I)
     } else {
         Some(chunk.get_at_unchecked(pos))
     }

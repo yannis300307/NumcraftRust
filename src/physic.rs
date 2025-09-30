@@ -109,7 +109,7 @@ impl PhysicEngine {
                     for bz in (entity_block_pos.z - BLOCK_COLLISION_SCANNING_SIZE.z)
                         ..=(entity_block_pos.z + BLOCK_COLLISION_SCANNING_SIZE.z)
                     {
-                        let block_or_none = world.get_block_in_world(Vector3::new(bx, by, bz));
+                        let block_or_none = world.chunks_manager.get_block_in_world(Vector3::new(bx, by, bz));
                         if block_or_none.is_none() || block_or_none.is_some_and(|b| !b.is_air()) {
                             let block_bbox = BoundingBox {
                                 offset: Vector3::new(bx as f32, by as f32, bz as f32),

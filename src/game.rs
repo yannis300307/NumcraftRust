@@ -74,11 +74,7 @@ impl Game {
 
             self.world.load_area(0, 4, 0, 4, 0, 4);
 
-            let player_spawn_pos = Vector3::new(
-                16.5,
-                20.,
-                16.5,
-            );
+            let player_spawn_pos = Vector3::new(16.5, 20., 16.5);
 
             self.player.inventory.fill(ItemStack::void());
 
@@ -108,7 +104,7 @@ impl Game {
                             .get_chunk_at_pos(Vector3::new(x, y, z))
                             .unwrap();
 
-                        self.world.push_chunk(chunk);
+                        self.world.chunks_manager.push_chunk(chunk);
                     }
                 }
             }
@@ -179,7 +175,8 @@ impl Game {
                 .update(self.timing_manager.get_delta_time(), &self.input_manager);
 
             self.world.check_mesh_regeneration();
-            self.world.update_entities(self.timing_manager.get_delta_time());
+            self.world
+                .update_entities(self.timing_manager.get_delta_time());
             self.physic_engine
                 .process(&mut self.world, self.timing_manager.get_delta_time());
 
@@ -199,7 +196,7 @@ impl Game {
     }
 
     fn exit_world(&mut self) {
-        for chunk in self.world.chunks.iter() {
+        for chunk in self.world.chunks_manager.chunks.iter() {
             self.save_manager.set_chunk(chunk);
         }
         self.world.clear();

@@ -18,7 +18,6 @@ static HEAP: Heap = Heap::empty();
 extern crate alloc;
 
 mod camera;
-mod chunk;
 pub mod constants;
 pub mod eadk;
 mod game;
@@ -38,6 +37,7 @@ mod save_manager;
 mod settings;
 mod storage_lib;
 mod timing;
+pub mod misc;
 
 #[used]
 #[cfg(target_os = "none")]

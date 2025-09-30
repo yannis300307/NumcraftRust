@@ -163,7 +163,7 @@ impl Player {
         if game_mode == GameMode::Creative {
             if input_manager.is_just_pressed(eadk::input::Key::Back) {
                 if let Some(result) = &self.ray_cast_result {
-                    world.set_block_in_world(result.block_pos, BlockType::Air);
+                    world.chunks_manager.set_block_in_world(result.block_pos, BlockType::Air);
                 }
             }
         } else {
@@ -201,13 +201,13 @@ impl Player {
             if let Some(result) = &self.ray_cast_result {
                 let block_pos = result.block_pos + result.face_dir.get_normal_vector();
                 if world
-                    .get_block_in_world(block_pos)
+                    .chunks_manager.get_block_in_world(block_pos)
                     .is_some_and(|b| b.is_air())
                     && physic_engine.can_place_block(world, block_pos)
                     && let Some(item_type) = self.inventory.take_one(0 + hud.selected_slot)
                     && let Some(block_type) = item_type.get_matching_block_type()
                 {
-                    world.set_block_in_world(block_pos, block_type);
+                    world.chunks_manager.set_block_in_world(block_pos, block_type);
                 }
             }
         }
@@ -290,7 +290,7 @@ impl Player {
 
         while !(max_x > 1.0 && max_y > 1.0 && max_z > 1.0) {
             let current_voxel_pos_isize = current_voxel_pos.map(|x| x as isize);
-            let result = world.get_block_in_world(current_voxel_pos_isize);
+            let result = world.chunks_manager.get_block_in_world(current_voxel_pos_isize);
             if let Some(block_type) = result
                 && !block_type.is_air()
             {

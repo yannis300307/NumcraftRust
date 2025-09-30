@@ -10,8 +10,7 @@ use postcard::{from_bytes, to_allocvec};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    chunk::Chunk,
-    constants::{BlockType, world::CHUNK_SIZE},
+    constants::{world::CHUNK_SIZE, BlockType},
     eadk::{self},
     game::GameMode,
     inventory::Inventory,
@@ -22,7 +21,7 @@ use crate::{
         storage_extapp_file_list_with_extension, storage_extapp_file_read,
         storage_extapp_file_read_header, storage_file_write,
     },
-    world::World,
+    world::{chunk::Chunk, World},
 };
 
 #[derive(Serialize, Deserialize)]
