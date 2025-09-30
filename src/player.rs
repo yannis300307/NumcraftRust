@@ -32,7 +32,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(player_entity: &mut Entity) -> Self {
+    pub fn new() -> Self {
         Player {
             ray_cast_result: None,
             inventory: Inventory::new(24),

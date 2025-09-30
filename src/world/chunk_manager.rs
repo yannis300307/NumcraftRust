@@ -1,14 +1,15 @@
+use libm::roundf;
 use nalgebra::Vector3;
 
 use crate::{
-    constants::BlockType,
+    constants::{BlockType, world::CHUNK_SIZE},
     misc::div_floor,
-    world::{CHUNK_SIZE_I, chunk::Chunk},
+    renderer::mesh::Mesh,
+    world::{CHUNK_SIZE_I, chunk::Chunk, world_generator::WorldGenerator},
 };
 
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
-
 
 /// Convert the block position from world space to chunk space
 pub fn get_chunk_local_coords(pos: Vector3<isize>) -> Vector3<isize> {
@@ -136,6 +137,69 @@ impl ChunksManager {
             }
         } else {
             false
+        }
+    }
+
+    /// Generate the chunks around the given position The position is in global blocks space, not world chunk space
+    pub fn generate_world_around_pos(
+        &mut self,
+        pos: Vector3<f32>,
+        render_distance: isize,
+        world_generator: &mut WorldGenerator,
+    ) {
+        // Convert global block space coordinates to chnuk space
+        let pos_chunk_coords = Vector3::new(
+            roundf(pos.x / CHUNK_SIZE as f32) as isize,
+            roundf(pos.y / CHUNK_SIZE as f32) as isize,
+            roundf(pos.z / CHUNK_SIZE as f32) as isize,
+        );
+
+        // Unload chunks that are no longer in the view distance
+        self.chunks.retain(|chunk| {
+            let relative_chunk_pos = chunk.get_pos() - pos_chunk_coords;
+            !(relative_chunk_pos.x < -render_distance
+                || relative_chunk_pos.x >= render_distance
+                || relative_chunk_pos.y < -render_distance
+                || relative_chunk_pos.y >= render_distance
+                || relative_chunk_pos.z < -render_distance
+                || relative_chunk_pos.z >= render_distance)
+        });
+
+        // Load chunks around
+        for x in -render_distance..render_distance {
+            for y in -render_distance..render_distance {
+                for z in -render_distance..render_distance {
+                    let chunk_pos: Vector3<isize> = Vector3::new(x, y, z) + pos_chunk_coords;
+
+                    // Prevent creating chunks that already exist
+                    if !self.get_chunk_exists_at(chunk_pos) {
+                        self.add_chunk(chunk_pos);
+                        let chunk = self.chunks.last_mut().unwrap();
+
+                        world_generator.generate_chunk(chunk);
+
+                        // Reload chunks around this chunk to prevent mesh gap issues
+                        self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(-1, 0, 0));
+                        self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(1, 0, 0));
+                        self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, -1, 0));
+                        self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 1, 0));
+                        self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 0, -1));
+                        self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 0, 1));
+                    }
+                }
+            }
+        }
+
+        // Generate or regenerate mesh if needed
+        self.check_mesh_regeneration();
+    }
+
+    pub fn check_mesh_regeneration(&mut self) {
+        for i in 0..self.chunks.len() {
+            if self.chunks[i].need_new_mesh {
+                let new_mesh = Mesh::generate_chunk(self, &self.chunks[i]);
+                self.chunks[i].set_mesh(new_mesh);
+            }
         }
     }
 }

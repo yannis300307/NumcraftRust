@@ -1,7 +1,5 @@
 use core::any::Any;
 
-use libm::roundf;
-
 use crate::constants::world::{
     CHUNK_SIZE, ITEM_MAGNET_FORCE, MAX_ITEM_MERGING_DISTANCE, MAX_PLAYER_ITEM_MAGNET_DISTANCE,
 };
@@ -9,8 +7,7 @@ use crate::constants::{BlockType, EntityType, ItemType};
 use crate::entity::Entity;
 use crate::entity::item::ItemEntityCustomData;
 use crate::inventory::{Inventory, ItemStack};
-use crate::renderer::mesh::Mesh;
-use crate::world::chunk_container::ChunksManager;
+use crate::world::chunk_manager::ChunksManager;
 use crate::world::world_generator::WorldGenerator;
 
 #[cfg(target_os = "none")]
@@ -19,13 +16,13 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use fastnoise_lite::FastNoiseLite;
-use nalgebra::{Vector2, Vector3};
+use nalgebra::Vector3;
 
 #[cfg(target_os = "none")]
 use alloc::boxed::Box;
 
 pub mod chunk;
-pub mod chunk_container;
+pub mod chunk_manager;
 pub mod world_generator;
 
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
@@ -222,85 +219,9 @@ impl World {
         });
     }
 
-    /// Return the terrain height at the given world block x-z coordinates. The vector must be (x, z)!
-    pub fn get_terrain_height(&self, pos: Vector2<isize>) -> isize {
-        todo!("DEPRECATED: remaque this");
-        let negative_1_to_1 = self.gen_noise.get_noise_2d((pos.x) as f32, (pos.y) as f32);
-        roundf((negative_1_to_1 + 1.) / 2. * 14.0 - 2.0) as isize
-    }
-
     /// Set the world generation seed
     pub fn set_seed(&mut self, seed: i32) {
         self.gen_noise.seed = seed;
-    }
-
-    /// Generate the chunks around the given position The position is in global blocks space, not world chunk space
-    pub fn generate_world_around_pos(
-        &mut self,
-        pos: Vector3<f32>,
-        render_distance: isize,
-        world_generator: &mut WorldGenerator,
-    ) {
-        // Convert global block space coordinates to chnuk space
-        let pos_chunk_coords = Vector3::new(
-            roundf(pos.x / CHUNK_SIZE as f32) as isize,
-            roundf(pos.y / CHUNK_SIZE as f32) as isize,
-            roundf(pos.z / CHUNK_SIZE as f32) as isize,
-        );
-
-        // Unload chunks that are no longer in the view distance
-        self.chunks_manager.chunks.retain(|chunk| {
-            let relative_chunk_pos = chunk.get_pos() - pos_chunk_coords;
-            !(relative_chunk_pos.x < -render_distance
-                || relative_chunk_pos.x >= render_distance
-                || relative_chunk_pos.y < -render_distance
-                || relative_chunk_pos.y >= render_distance
-                || relative_chunk_pos.z < -render_distance
-                || relative_chunk_pos.z >= render_distance)
-        });
-
-        // Load chunks around
-        for x in -render_distance..render_distance {
-            for y in -render_distance..render_distance {
-                for z in -render_distance..render_distance {
-                    let chunk_pos: Vector3<isize> = Vector3::new(x, y, z) + pos_chunk_coords;
-
-                    // Prevent creating chunks that already exist
-                    if !self.chunks_manager.get_chunk_exists_at(chunk_pos) {
-                        self.chunks_manager.add_chunk(chunk_pos);
-                        let chunk = self.chunks_manager.chunks.last_mut().unwrap();
-
-                        world_generator.generate_chunk(chunk);
-
-                        // Reload chunks around this chunk to prevent mesh gap issues
-                        self.chunks_manager
-                            .request_mesh_regen_if_exists(chunk_pos + Vector3::new(-1, 0, 0));
-                        self.chunks_manager
-                            .request_mesh_regen_if_exists(chunk_pos + Vector3::new(1, 0, 0));
-                        self.chunks_manager
-                            .request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, -1, 0));
-                        self.chunks_manager
-                            .request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 1, 0));
-                        self.chunks_manager
-                            .request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 0, -1));
-                        self.chunks_manager
-                            .request_mesh_regen_if_exists(chunk_pos + Vector3::new(0, 0, 1));
-                    }
-                }
-            }
-        }
-
-        // Generate or regenerate mesh if needed
-        self.check_mesh_regeneration();
-    }
-
-    pub fn check_mesh_regeneration(&mut self) {
-        for i in 0..self.chunks_manager.chunks.len() {
-            if self.chunks_manager.chunks[i].need_new_mesh {
-                let new_mesh = Mesh::generate_chunk(self, &self.chunks_manager.chunks[i]);
-                self.chunks_manager.chunks[i].set_mesh(new_mesh);
-            }
-        }
     }
 
     fn register_inventory(&mut self, inventory: Inventory) {

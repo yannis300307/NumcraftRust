@@ -51,8 +51,8 @@ pub struct Game {
 
 impl Game {
     pub fn new() -> Self {
-        let mut world = World::new();
-        let player = Player::new(world.get_player_entity_mut());
+        let world = World::new();
+        let player = Player::new();
 
         Game {
             renderer: Renderer::new(),
@@ -174,7 +174,7 @@ impl Game {
                 .camera
                 .update(self.timing_manager.get_delta_time(), &self.input_manager);
 
-            self.world.check_mesh_regeneration();
+            self.world.chunks_manager.check_mesh_regeneration();
             self.world
                 .update_entities(self.timing_manager.get_delta_time());
             self.physic_engine
