@@ -19,89 +19,38 @@ fn convert_image(file_name: &str) {
     fs::write(format!("target/{file_name}.bin").as_str(), data).unwrap();
 }
 
-fn main() {
-    // Turn icon.png into icon.nwi
-    println!("cargo:rerun-if-changed=assets/icon.png");
-    let output = {
-        if let Ok(out) = Command::new("sh")
-            .arg("-c")
-            .arg("npx --yes -- nwlink@0.0.19 png-nwi assets/icon.png target/icon.nwi")
+fn compile_c_libs() {
+    unsafe { std::env::set_var("CC", "arm-none-eabi-gcc") };
+
+    let program = "npx";
+
+    let nwlink_flags = String::from_utf8(
+        Command::new(program)
+            .args(["--yes", "--", "nwlink@0.0.19", "eadk-cflags"])
             .output()
-        {
-            out
-        } else {
-            panic!(
-                "Your OS is not supported! If you're using Windows, please compile Numcraft in WSL."
-            );
-        }
-    };
-    assert!(
-        output.status.success(),
-        "{}",
-        String::from_utf8_lossy(&output.stderr)
-    );
+            .expect("Failed to get nwlink eadk-cflags")
+            .stdout,
+    )
+    .expect("Invalid UTF-8 in nwlink flags");
 
-    // Convert font to usable data
-    println!("cargo:rerun-if-changed=assets/font.png");
-    convert_image("font");
+    let mut build = cc::Build::new();
+    build.file("src/libs/storage.c");
+    build.flag("-std=c99");
+    build.flag("-Os");
+    build.flag("-Wall");
+    build.flag("-ggdb");
+    build.warnings(false);
 
-    // Convert other textures
-    println!("cargo:rerun-if-changed=assets/cross.png");
-    convert_image("cross");
-
-    // Convert tileset
-    println!("cargo:rerun-if-changed=assets/tileset.png");
-    println!("Converting tileset");
-
-    let img = ImageReader::open(format!("assets/tileset.png").as_str())
-        .unwrap()
-        .decode()
-        .unwrap();
-
-    let mut data: Vec<u8> = Vec::new();
-
-    for pix in img.pixels() {
-        data.extend(
-            (((pix.2.0[0] as u16 & 0b11111000) << 8)
-                | ((pix.2.0[1] as u16 & 0b11111100) << 3)
-                | (pix.2.0[2] as u16 >> 3))
-                .to_be_bytes(),
-        );
+    for flag in nwlink_flags.split_whitespace() {
+        build.flag(flag);
     }
 
-    fs::write(format!("target/tileset.bin").as_str(), data).unwrap();
+    build.compile("storage_c");
+}
 
-    // Compile storage.c
-    if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "none" {
-        unsafe { std::env::set_var("CC", "arm-none-eabi-gcc") };
-
-        let program = "npx";
-
-        let nwlink_flags = String::from_utf8(
-            Command::new(program)
-                .args(["--yes", "--", "nwlink@0.0.19", "eadk-cflags"])
-                .output()
-                .expect("Failed to get nwlink eadk-cflags")
-                .stdout,
-        )
-        .expect("Invalid UTF-8 in nwlink flags");
-
-        let mut build = cc::Build::new();
-        build.file("src/libs/storage.c");
-        build.flag("-std=c99");
-        build.flag("-Os");
-        build.flag("-Wall");
-        build.flag("-ggdb");
-        build.warnings(false);
-
-        for flag in nwlink_flags.split_whitespace() {
-            build.flag(flag);
-        }
-
-        build.compile("storage_c");
-    } else {
-        println!("cargo:rerun-if-changed=epsilon_simulator/ion/src/simulator/shared/keyboard.cpp");
-        let remapped = "constexpr static KeySDLKeyPair sKeyPairs[] = {\
+fn patch_simulator() {
+    println!("cargo:rerun-if-changed=epsilon_simulator/ion/src/simulator/shared/keyboard.cpp");
+    let remapped = "constexpr static KeySDLKeyPair sKeyPairs[] = {\
   KeySDLKeyPair(Key::OK,        SDL_SCANCODE_RETURN),\
   KeySDLKeyPair(Key::Back,      SDL_SCANCODE_BACKSPACE),\
   KeySDLKeyPair(Key::EXE,       SDL_SCANCODE_ESCAPE),\
@@ -121,19 +70,84 @@ fn main() {
   KeySDLKeyPair(Key::Right,     SDL_SCANCODE_RIGHT),\
 };";
 
-        let file_content = fs::read_to_string("epsilon_simulator/ion/src/simulator/shared/keyboard.cpp")
+    let file_content = fs::read_to_string("epsilon_simulator/ion/src/simulator/shared/keyboard.cpp")
         .expect("Cannot open keyboard.cpp file from emulator. Please check if the simulator is clonned properly.");
 
-        if !file_content.contains(remapped) {
-            let re = Regex::new(r"constexpr static KeySDLKeyPair sKeyPairs\[] ?= ?\{[\S\s]*?};")
-                .unwrap();
-            let result = re.replace(&file_content, remapped);
+    if !file_content.contains(remapped) {
+        let re =
+            Regex::new(r"constexpr static KeySDLKeyPair sKeyPairs\[] ?= ?\{[\S\s]*?};").unwrap();
+        let result = re.replace(&file_content, remapped);
 
-            fs::write(
-                "epsilon_simulator/ion/src/simulator/shared/keyboard.cpp",
-                result.as_bytes(),
-            )
-            .unwrap();
+        fs::write(
+            "epsilon_simulator/ion/src/simulator/shared/keyboard.cpp",
+            result.as_bytes(),
+        )
+        .unwrap();
+    }
+}
+
+pub fn convert_tileset() {
+    let img = ImageReader::open(format!("assets/tileset.png").as_str())
+        .unwrap()
+        .decode()
+        .unwrap();
+
+    let mut data: Vec<u8> = Vec::new();
+
+    for pix in img.pixels() {
+        data.extend(
+            (((pix.2.0[0] as u16 & 0b11111000) << 8)
+                | ((pix.2.0[1] as u16 & 0b11111100) << 3)
+                | (pix.2.0[2] as u16 >> 3))
+                .to_be_bytes(),
+        );
+    }
+
+    fs::write(format!("target/tileset.bin").as_str(), data).unwrap();
+}
+
+pub fn convert_icon() {
+    let output = {
+        if let Ok(out) = Command::new("sh")
+            .arg("-c")
+            .arg("npx --yes -- nwlink@0.0.19 png-nwi assets/icon.png target/icon.nwi")
+            .output()
+        {
+            out
+        } else {
+            panic!(
+                "Your OS is not supported! If you're using Windows, please compile Numcraft in WSL."
+            );
         }
+    };
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+fn main() {
+    // Turn icon.png into icon.nwi
+    println!("cargo:rerun-if-changed=assets/icon.png");
+    convert_icon();
+
+    // Convert font to usable data
+    println!("cargo:rerun-if-changed=assets/font.png");
+    convert_image("font");
+
+    // Convert other textures
+    println!("cargo:rerun-if-changed=assets/cross.png");
+    convert_image("cross");
+
+    // Convert tileset
+    println!("cargo:rerun-if-changed=assets/tileset.png");
+    convert_tileset();
+
+    // Compile storage.c
+    if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "none" {
+        compile_c_libs();
+    } else {
+        patch_simulator();
     }
 }
