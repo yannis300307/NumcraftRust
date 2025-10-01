@@ -45,18 +45,18 @@ const ZFAR: f32 = 1000.0;
 // Other
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 
-static FONT_DATA: &[u8] = include_bytes!("../target/font.bin");
+static FONT_DATA: &[u8] = include_bytes!("../target/assets/font.bin");
 const FONT_WIDTH: usize = 1045;
 const FONT_HEIGHT: usize = 15;
 
-static CROSS_DATA: &[u8] = include_bytes!("../target/cross.bin");
+static CROSS_DATA: &[u8] = include_bytes!("../target/assets/cross.bin");
 const CROSS_WIDTH: usize = 14;
 const CROSS_HEIGHT: usize = 14;
 
 const FONT_CHAR_WIDTH: usize = 11;
 static FONT_ORDER: &str = "!\" $%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^+`abcdefghijklmnopqrstuvwxyz{|}~€";
 
-static TILESET_DATA: &[u8] = include_bytes!("../target/tileset.bin");
+static TILESET_DATA: &[u8] = include_bytes!("../target/assets/tileset.bin");
 
 pub struct Renderer {
     pub camera: Camera,

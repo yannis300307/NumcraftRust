@@ -1,14 +1,18 @@
 current_target := shell("rustc -vV | grep \"host:\" | awk '{print $2}'")
 
-build:
+build: setup_target
     cargo build --release --bin Numcraft --target=thumbv7em-none-eabihf
 
-send:
+send: setup_target
     cargo run --release --bin Numcraft --target=thumbv7em-none-eabihf
 
-check:
+check: setup_target
     cargo build --release --bin Numcraft --target=thumbv7em-none-eabihf
     cargo build --release --target={{current_target}} --lib
+
+
+setup_target:
+    mkdir -p target/assets target/structs
 
 [macos]
 run_nwb:
@@ -18,7 +22,7 @@ run_nwb:
 run_nwb:
     ./epsilon_simulator/output/release/simulator/linux/epsilon.bin --nwb ./target/{{current_target}}/release/libnumcraft_sim.so
 
-sim jobs="1":
+sim jobs="1": setup_target
     -git clone https://github.com/numworks/epsilon.git epsilon_simulator -b version-20 # Broken with version 21. Nice!
     cargo build --release --target={{current_target}} --lib
     if [ ! -f "target/simulator_patched" ]; then \

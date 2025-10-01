@@ -1,5 +1,7 @@
 use image::{self, GenericImageView, ImageReader};
 use regex::Regex;
+use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 use std::{fs, process::Command};
 
 fn convert_image(file_name: &str) {
@@ -16,7 +18,7 @@ fn convert_image(file_name: &str) {
 
     let data = converted_pixels.as_slice();
 
-    fs::write(format!("target/{file_name}.bin").as_str(), data).unwrap();
+    fs::write(format!("target/assets/{file_name}.bin").as_str(), data).unwrap();
 }
 
 fn compile_c_libs() {
@@ -103,7 +105,7 @@ pub fn convert_tileset() {
         );
     }
 
-    fs::write(format!("target/tileset.bin").as_str(), data).unwrap();
+    fs::write(format!("target/assets/tileset.bin").as_str(), data).unwrap();
 }
 
 pub fn convert_icon() {
@@ -127,6 +129,59 @@ pub fn convert_icon() {
     );
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct StructureFile {
+    name: String,
+    size: [u8; 3],
+    data: Vec<Vec<String>>,
+    palette: Value,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Structure {
+    size: [u8; 3],
+    data: Vec<u8>,
+}
+
+pub fn convert_struct(file_name: &str) {
+    let raw = fs::read_to_string(file_name)
+        .expect(format!("Unable to read the file {}", file_name).as_str());
+    let structure_file: StructureFile =
+        serde_json::from_str(&raw).expect(format!("Invalid Json for file {}", file_name).as_str());
+
+    let mut data = Vec::new();
+
+    let pallette = structure_file.palette;
+
+    for x in 0..structure_file.size[0] as usize {
+        for y in 0..structure_file.size[1] as usize {
+            for z in 0..structure_file.size[2] as usize {
+                let letter = structure_file.data[y][z].as_bytes()[x];
+                let block_id = &pallette[str::from_utf8(&[letter])
+                    .expect(format!("Invalid char for structure in file {}", file_name).as_str())];
+                data.push(
+                    block_id.as_u64().expect(
+                        format!("Invalid char for structure in file {}", file_name).as_str(),
+                    ) as u8,
+                );
+            }
+        }
+    }
+
+    let structure = Structure {
+        size: structure_file.size,
+        data,
+    };
+
+    let serialized = postcard::to_allocvec(&structure)
+        .expect(format!("Cannot serialize structure for file {}", file_name).as_str());
+    fs::write(
+        format!("target/structs/{}.bin", structure_file.name).to_string(),
+        serialized,
+    )
+    .expect(format!("Unable to write the structure file for file {}", file_name).as_str());
+}
+
 fn main() {
     // Turn icon.png into icon.nwi
     println!("cargo:rerun-if-changed=assets/icon.png");
@@ -143,6 +198,9 @@ fn main() {
     // Convert tileset
     println!("cargo:rerun-if-changed=assets/tileset.png");
     convert_tileset();
+
+    println!("cargo:rerun-if-changed=structs/tree1.json");
+    convert_struct("structs/tree1.json");
 
     // Compile storage.c
     if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "none" {

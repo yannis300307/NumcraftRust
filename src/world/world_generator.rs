@@ -86,6 +86,4 @@ impl WorldGenerator {
 
         chunk.generated = true;
     }
-
-    
 }

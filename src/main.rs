@@ -52,7 +52,7 @@ pub static EADK_APP_API_LEVEL: u32 = 0;
 #[used]
 #[cfg(target_os = "none")]
 #[unsafe(link_section = ".rodata.eadk_app_icon")]
-pub static EADK_APP_ICON: [u8; 3437] = *include_bytes!("../target/icon.nwi");
+pub static EADK_APP_ICON: [u8; 3437] = *include_bytes!("../target/assets/icon.nwi");
 
 #[unsafe(no_mangle)]
 fn main() -> isize {

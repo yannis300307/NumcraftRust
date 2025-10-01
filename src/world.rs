@@ -24,6 +24,7 @@ use alloc::boxed::Box;
 pub mod chunk;
 pub mod chunk_manager;
 pub mod world_generator;
+mod structures;
 
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 
