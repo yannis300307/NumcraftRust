@@ -1,0 +1,36 @@
+{
+    "name": "tree1",
+    "size": [
+        3,
+        4,
+        3
+    ],
+    "data": [
+        [
+            "xxx",
+            "xox",
+            "xxx"
+        ],
+        [
+            "xxx",
+            "xox",
+            "xxx"
+        ],
+        [
+            "uuu",
+            "uou",
+            "uuu"
+        ],
+        [
+            "xux",
+            "uuu",
+            "xux"
+        ]
+    ],
+    "palette": {
+        "x": 0,
+        "o": 7,
+        "u": 8
+    }
+    
+}

@@ -4,6 +4,7 @@ pub struct Hud {
     slots: [ItemStack; 6],
     pub selected_slot: usize,
     pub breaking_progress: Option<f32>,
+    pub show_debug: bool,
 }
 
 impl Hud {
@@ -12,22 +13,27 @@ impl Hud {
             slots: [const { ItemStack::void() }; 6],
             selected_slot: 0,
             breaking_progress: None,
+            show_debug: false,
         }
     }
     pub fn update(&mut self, input_manager: &InputManager, player: &Player) {
         if input_manager.is_just_pressed(crate::eadk::input::Key::LeftParenthesis) {
             if self.selected_slot == 0 {
-                self.selected_slot = 5
+                self.selected_slot = 5;
             } else {
-                self.selected_slot -= 1
+                self.selected_slot -= 1;
             }
         }
         if input_manager.is_just_pressed(crate::eadk::input::Key::RightParenthesis) {
             if self.selected_slot == 5 {
-                self.selected_slot = 0
+                self.selected_slot = 0;
             } else {
-                self.selected_slot += 1
+                self.selected_slot += 1;
             }
+        }
+
+        if input_manager.is_just_pressed(crate::eadk::input::Key::Dot) {
+            self.show_debug = !self.show_debug;
         }
 
         self.breaking_progress = player.get_block_breaking_progress();

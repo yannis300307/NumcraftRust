@@ -4,15 +4,14 @@ use alloc::vec::Vec;
 use nalgebra::{Vector2, Vector3};
 
 use crate::{
-    chunk::Chunk,
-    constants::{BlockType, world::CHUNK_SIZE},
-    world::World,
+    constants::{world::CHUNK_SIZE, BlockType},
+    world::{chunk::Chunk, chunk_manager::ChunksManager},
 };
 
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 
 #[repr(u8)]
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum QuadDir {
     Front = 1,
     Back = 2,
@@ -39,10 +38,10 @@ impl QuadDir {
         match *self {
             QuadDir::Front => Vector3::new(0, 0, -1),
             QuadDir::Back => Vector3::new(0, 0, 1),
-            QuadDir::Top => Vector3::new(0, -1, 0),
-            QuadDir::Bottom => Vector3::new(0, 1, 0),
-            QuadDir::Right => Vector3::new(1, 0, 0),
-            QuadDir::Left => Vector3::new(-1, 0, 0),
+            QuadDir::Bottom => Vector3::new(0, -1, 0),
+            QuadDir::Top => Vector3::new(0, 1, 0),
+            QuadDir::Left => Vector3::new(1, 0, 0),
+            QuadDir::Right => Vector3::new(-1, 0, 0),
         }
     }
 }
@@ -125,7 +124,7 @@ impl Quad {
                     light,
                 },
             ),
-            QuadDir::Top => (
+            QuadDir::Bottom => (
                 Triangle {
                     p1: Vector3::new(pos_x_plus_one, pos_y, pos_z),
                     p2: Vector3::new(pos_x_plus_one, pos_y, pos_z_plus_one),
@@ -141,7 +140,7 @@ impl Quad {
                     light,
                 },
             ),
-            QuadDir::Bottom => (
+            QuadDir::Top => (
                 Triangle {
                     p1: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
                     p2: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
@@ -157,7 +156,7 @@ impl Quad {
                     light,
                 },
             ),
-            QuadDir::Right => (
+            QuadDir::Left => (
                 Triangle {
                     p3: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
                     p2: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
@@ -173,7 +172,7 @@ impl Quad {
                     light,
                 },
             ),
-            QuadDir::Left => (
+            QuadDir::Right => (
                 Triangle {
                     p1: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
                     p2: Vector3::new(pos_x, pos_y_plus_one, pos_z),
@@ -283,7 +282,7 @@ impl Triangle {
 
 fn get_block_in_chunk_or_world(
     pos: Vector3<isize>,
-    world: &World,
+    chunks_manager: &ChunksManager,
     chunk: &Chunk,
 ) -> Option<BlockType> {
     if pos.x < 0
@@ -293,7 +292,7 @@ fn get_block_in_chunk_or_world(
         || pos.z < 0
         || pos.z >= CHUNK_SIZE_I
     {
-        world.get_block_in_world(pos + *chunk.get_pos() * CHUNK_SIZE_I)
+        chunks_manager.get_block_in_world(pos + *chunk.get_pos() * CHUNK_SIZE_I)
     } else {
         Some(chunk.get_at_unchecked(pos))
     }
@@ -330,7 +329,7 @@ impl Mesh {
         }
     }
 
-    pub fn generate_chunk(world: &World, chunk: &Chunk) -> Self {
+    pub fn generate_chunk(chunks_manager: &ChunksManager, chunk: &Chunk) -> Self {
         let mut quads = Vec::new();
 
         for x in 0..CHUNK_SIZE as isize {
@@ -342,7 +341,7 @@ impl Mesh {
 
                         let grid_additional_light = if (x + y + z) % 2 == 0 { 2 } else { 0 }; // Make one block/2 darker to increase visibility
 
-                        if get_block_in_chunk_or_world(Vector3::new(x, y, z - 1), world, chunk)
+                        if get_block_in_chunk_or_world(Vector3::new(x, y, z - 1), chunks_manager, chunk)
                             .is_some_and(|block| block.is_air())
                         {
                             quads.push(Quad::new(
@@ -354,7 +353,7 @@ impl Mesh {
                             ));
                         }
 
-                        if get_block_in_chunk_or_world(Vector3::new(x, y, z + 1), world, chunk)
+                        if get_block_in_chunk_or_world(Vector3::new(x, y, z + 1), chunks_manager, chunk)
                             .is_some_and(|block| block.is_air())
                         {
                             quads.push(Quad::new(
@@ -366,7 +365,7 @@ impl Mesh {
                             ));
                         }
 
-                        if get_block_in_chunk_or_world(Vector3::new(x + 1, y, z), world, chunk)
+                        if get_block_in_chunk_or_world(Vector3::new(x - 1, y, z), chunks_manager, chunk)
                             .is_some_and(|block| block.is_air())
                         {
                             quads.push(Quad::new(
@@ -377,7 +376,7 @@ impl Mesh {
                                     - grid_additional_light,
                             ));
                         }
-                        if get_block_in_chunk_or_world(Vector3::new(x - 1, y, z), world, chunk)
+                        if get_block_in_chunk_or_world(Vector3::new(x + 1, y, z), chunks_manager, chunk)
                             .is_some_and(|block| block.is_air())
                         {
                             quads.push(Quad::new(
@@ -389,7 +388,7 @@ impl Mesh {
                             ));
                         }
 
-                        if get_block_in_chunk_or_world(Vector3::new(x, y - 1, z), world, chunk)
+                        if get_block_in_chunk_or_world(Vector3::new(x, y + 1, z), chunks_manager, chunk)
                             .is_some_and(|block| block.is_air())
                         {
                             quads.push(Quad::new(
@@ -401,7 +400,7 @@ impl Mesh {
                             ));
                         }
 
-                        if get_block_in_chunk_or_world(Vector3::new(x, y + 1, z), world, chunk)
+                        if get_block_in_chunk_or_world(Vector3::new(x, y - 1, z), chunks_manager, chunk)
                             .is_some_and(|block| block.is_air())
                         {
                             quads.push(Quad::new(

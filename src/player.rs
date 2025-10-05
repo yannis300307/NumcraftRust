@@ -32,7 +32,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(player_entity: &mut Entity) -> Self {
+    pub fn new() -> Self {
         Player {
             ray_cast_result: None,
             inventory: Inventory::new(24),
@@ -58,12 +58,15 @@ impl Player {
             return None;
         }
         let hardness = self.ray_cast_result.as_ref()?.block_type.get_hardness();
+        if hardness <= 0. {
+            return None;
+        }
 
         Some((hardness - self.breaking_state_timer) / hardness)
     }
 
     pub fn sync_with_camera(&self, camera: &mut Camera, player_entity: &mut Entity) {
-        camera.update_pos(player_entity.pos - Vector3::new(0., 1.2, 0.));
+        camera.update_pos(player_entity.pos + Vector3::new(0., 1.2, 0.));
         player_entity.rotation = *camera.get_rotation();
     }
 
@@ -116,17 +119,6 @@ impl Player {
             // Left
             let translation = sincosf(player_entity.rotation.y + PI / 2.0);
             if game_mode == GameMode::Creative {
-                player_entity.pos.x -= translation.0 * delta * FLY_SPEED;
-                player_entity.pos.z -= translation.1 * delta * FLY_SPEED;
-            } else {
-                player_entity.velocity.x -= translation.0 * delta * WALK_FORCE;
-                player_entity.velocity.z -= translation.1 * delta * WALK_FORCE;
-            }
-        }
-        if input_manager.is_keydown(eadk::input::Key::Power) {
-            // Right
-            let translation = sincosf(player_entity.rotation.y + PI / 2.0);
-            if game_mode == GameMode::Creative {
                 player_entity.pos.x += translation.0 * delta * FLY_SPEED;
                 player_entity.pos.z += translation.1 * delta * FLY_SPEED;
             } else {
@@ -134,18 +126,29 @@ impl Player {
                 player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
             }
         }
+        if input_manager.is_keydown(eadk::input::Key::Power) {
+            // Right
+            let translation = sincosf(player_entity.rotation.y + PI / 2.0);
+            if game_mode == GameMode::Creative {
+                player_entity.pos.x -= translation.0 * delta * FLY_SPEED;
+                player_entity.pos.z -= translation.1 * delta * FLY_SPEED;
+            } else {
+                player_entity.velocity.x -= translation.0 * delta * WALK_FORCE;
+                player_entity.velocity.z -= translation.1 * delta * WALK_FORCE;
+            }
+        }
         if input_manager.is_keydown(eadk::input::Key::Shift) {
             // Up
             if game_mode == GameMode::Creative {
-                player_entity.pos.y -= delta * FLY_SPEED;
+                player_entity.pos.y += delta * FLY_SPEED;
             } else if player_entity.is_on_floor {
-                player_entity.velocity.y -= JUMP_FORCE;
+                player_entity.velocity.y += JUMP_FORCE;
             }
         }
         if input_manager.is_keydown(eadk::input::Key::Exp) {
             // Down
             if game_mode == GameMode::Creative {
-                player_entity.pos.y += delta * FLY_SPEED;
+                player_entity.pos.y -= delta * FLY_SPEED;
             }
         }
 
@@ -160,7 +163,9 @@ impl Player {
         if game_mode == GameMode::Creative {
             if input_manager.is_just_pressed(eadk::input::Key::Back) {
                 if let Some(result) = &self.ray_cast_result {
-                    world.set_block_in_world(result.block_pos, BlockType::Air);
+                    world
+                        .chunks_manager
+                        .set_block_in_world(result.block_pos, BlockType::Air);
                 }
             }
         } else {
@@ -177,8 +182,11 @@ impl Player {
                             self.breaking_state_timer = 0.;
                         }
                     } else {
-                        self.breaking_block_pos = Some(ray_cast.block_pos);
-                        self.breaking_state_timer = ray_cast.block_type.get_hardness();
+                        let hardness = ray_cast.block_type.get_hardness();
+                        if hardness >= 0. {
+                            self.breaking_block_pos = Some(ray_cast.block_pos);
+                            self.breaking_state_timer = ray_cast.block_type.get_hardness();
+                        }
                     }
                 } else {
                     self.breaking_block_pos = None;
@@ -195,13 +203,16 @@ impl Player {
             if let Some(result) = &self.ray_cast_result {
                 let block_pos = result.block_pos + result.face_dir.get_normal_vector();
                 if world
+                    .chunks_manager
                     .get_block_in_world(block_pos)
                     .is_some_and(|b| b.is_air())
                     && physic_engine.can_place_block(world, block_pos)
                     && let Some(item_type) = self.inventory.take_one(0 + hud.selected_slot)
                     && let Some(block_type) = item_type.get_matching_block_type()
                 {
-                    world.set_block_in_world(block_pos, block_type);
+                    world
+                        .chunks_manager
+                        .set_block_in_world(block_pos, block_type);
                 }
             }
         }
@@ -284,27 +295,30 @@ impl Player {
 
         while !(max_x > 1.0 && max_y > 1.0 && max_z > 1.0) {
             let current_voxel_pos_isize = current_voxel_pos.map(|x| x as isize);
-            let result = world.get_block_in_world(current_voxel_pos_isize);
+            let result = world
+                .chunks_manager
+                .get_block_in_world(current_voxel_pos_isize);
             if let Some(block_type) = result
                 && !block_type.is_air()
             {
                 let voxel_normal = if step_dir == 0 {
                     if dx < 0. {
-                        QuadDir::Right
-                    } else {
                         QuadDir::Left
+                    } else {
+                        QuadDir::Right
                     }
                 } else if step_dir == 1 {
                     if dy < 0. {
-                        QuadDir::Bottom
-                    } else {
                         QuadDir::Top
+                    } else {
+                        QuadDir::Bottom
                     }
                 } else if dz < 0. {
                     QuadDir::Back
                 } else {
                     QuadDir::Front
                 };
+
                 return Some(RaycastResult {
                     block_pos: current_voxel_pos_isize,
                     face_dir: voxel_normal,

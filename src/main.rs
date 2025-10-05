@@ -1,5 +1,7 @@
 #![cfg_attr(target_os = "none", no_std)]
 #![no_main]
+#![feature(const_index)]
+#![feature(const_trait_impl)]
 
 #[allow(unused_imports)]
 #[cfg(target_os = "none")]
@@ -18,7 +20,6 @@ static HEAP: Heap = Heap::empty();
 extern crate alloc;
 
 mod camera;
-mod chunk;
 pub mod constants;
 pub mod eadk;
 mod game;
@@ -38,6 +39,7 @@ mod save_manager;
 mod settings;
 mod storage_lib;
 mod timing;
+pub mod misc;
 
 #[used]
 #[cfg(target_os = "none")]
@@ -52,7 +54,7 @@ pub static EADK_APP_API_LEVEL: u32 = 0;
 #[used]
 #[cfg(target_os = "none")]
 #[unsafe(link_section = ".rodata.eadk_app_icon")]
-pub static EADK_APP_ICON: [u8; 3437] = *include_bytes!("../target/icon.nwi");
+pub static EADK_APP_ICON: [u8; 3437] = *include_bytes!("../target/assets/icon.nwi");
 
 #[unsafe(no_mangle)]
 fn main() -> isize {

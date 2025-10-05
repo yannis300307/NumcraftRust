@@ -3,8 +3,6 @@ use crate::{
     renderer::mesh::Mesh,
 };
 
-use fastnoise_lite::FastNoiseLite;
-use libm::roundf;
 use nalgebra::Vector3;
 
 const BLOCK_COUNT: usize = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
@@ -64,33 +62,6 @@ impl Chunk {
 
     pub fn get_pos(&self) -> &Vector3<isize> {
         &self.pos
-    }
-
-    pub fn generate_chunk(&mut self, noise: &FastNoiseLite) {
-        if self.generated {
-            return;
-        }
-
-        let chunk_block_pos = self.pos * CHUNK_SIZE_I;
-        for x in 0..CHUNK_SIZE_I {
-            for z in 0..CHUNK_SIZE_I {
-                let negative_1_to_1 = noise.get_noise_2d(
-                    (x + chunk_block_pos.x) as f32,
-                    (z + chunk_block_pos.z) as f32,
-                );
-                let height = roundf((negative_1_to_1 + 1.) / 2. * 14.0 + 8.0) as isize;
-
-                for y in 0..CHUNK_SIZE_I {
-                    if chunk_block_pos.y + y >= height {
-                        self.set_at(
-                            Vector3::new(x as usize, y as usize, z as usize),
-                            crate::constants::BlockType::Grass,
-                        );
-                    }
-                }
-            }
-        }
-        self.generated = true
     }
 
     pub fn get_all_blocks(&self) -> &[BlockType; BLOCK_COUNT] {

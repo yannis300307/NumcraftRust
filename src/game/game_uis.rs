@@ -76,6 +76,30 @@ impl Game {
             2,
             ItemStack::new(crate::constants::ItemType::GrassBlock, 1, true),
         );
+        creative_inventory.replace_slot_item_stack(
+            3,
+            ItemStack::new(crate::constants::ItemType::SandBlock, 1, true),
+        );
+        creative_inventory.replace_slot_item_stack(
+            4,
+            ItemStack::new(crate::constants::ItemType::CobblestoneBlock, 1, true),
+        );
+        creative_inventory.replace_slot_item_stack(
+            5,
+            ItemStack::new(crate::constants::ItemType::BorderBlock, 1, true),
+        );
+        creative_inventory.replace_slot_item_stack(
+            6,
+            ItemStack::new(crate::constants::ItemType::LogBlock, 1, true),
+        );
+        creative_inventory.replace_slot_item_stack(
+            7,
+            ItemStack::new(crate::constants::ItemType::LeavesBlock, 1, true),
+        );
+        creative_inventory.replace_slot_item_stack(
+            8,
+            ItemStack::new(crate::constants::ItemType::PlanksBlock, 1, true),
+        );
 
         let mut inventories = [&mut self.player.inventory, &mut creative_inventory];
 

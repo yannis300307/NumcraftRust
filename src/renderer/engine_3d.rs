@@ -373,7 +373,7 @@ impl Renderer {
     }
 
     pub fn project_point(&self, point: Vector3<f32>) -> Vector2<f32> {
-        self.projection_matrix.project_vector(&point).xy() * -1.0
+        self.projection_matrix.project_vector(&point).xy()
     }
 
     pub fn clear_screen(&mut self, color: Color) {
@@ -520,7 +520,10 @@ impl Renderer {
             ZFAR,
         );
 
-        for chunk in world.get_chunks_sorted_by_distance(*self.camera.get_pos()) {
+        for chunk in world
+            .chunks_manager
+            .get_chunks_sorted_by_distance(*self.camera.get_pos())
+        {
             let chunk_blocks_pos = chunk.get_pos() * CHUNK_SIZE_I;
             let chunk_blocks_posf = chunk_blocks_pos.map(|x| x as f32);
             let chunk_blocks_pos_maxf =

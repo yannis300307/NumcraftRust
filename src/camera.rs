@@ -5,7 +5,8 @@ use nalgebra::{Matrix4, UnitQuaternion, Vector3};
 
 use crate::{
     constants::{player::ROTATION_SPEED, rendering::FOV},
-    eadk, input_manager::InputManager,
+    eadk,
+    input_manager::InputManager,
 };
 
 pub struct Camera {
@@ -36,22 +37,23 @@ impl Camera {
     pub fn update(&mut self, delta: f32, input_manager: &InputManager) {
         // Rotation
         if input_manager.is_keydown(eadk::input::Key::Right) {
-            self.rotation.y += delta * ROTATION_SPEED;
-        }
-        if input_manager.is_keydown(eadk::input::Key::Left) {
             self.rotation.y -= delta * ROTATION_SPEED;
         }
-        if input_manager.is_keydown(eadk::input::Key::Up) {
-            self.rotation.x += delta * ROTATION_SPEED;
-            if self.rotation.x >= PI / 2.0 - 0.0001 {
-                self.rotation.x = PI / 2.0 - 0.0001
-            }
+        if input_manager.is_keydown(eadk::input::Key::Left) {
+            self.rotation.y += delta * ROTATION_SPEED;
         }
-        if input_manager.is_keydown(eadk::input::Key::Down) {
+        if input_manager.is_keydown(eadk::input::Key::Up) {
             self.rotation.x -= delta * ROTATION_SPEED;
 
             if self.rotation.x <= -PI / 2.0 + 0.0001 {
                 self.rotation.x = -PI / 2.0 + 0.0001
+            }
+        }
+        if input_manager.is_keydown(eadk::input::Key::Down) {
+            self.rotation.x += delta * ROTATION_SPEED;
+
+            if self.rotation.x >= PI / 2.0 - 0.0001 {
+                self.rotation.x = PI / 2.0 - 0.0001
             }
         }
     }
