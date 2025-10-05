@@ -1,5 +1,5 @@
 use libm::roundf;
-use nalgebra::Vector3;
+use nalgebra::{Vector2, Vector3};
 
 use crate::{
     constants::{BlockType, world::CHUNK_SIZE},
@@ -30,12 +30,12 @@ impl ChunksManager {
     }
 
     /// Return the chunk at the given position. Return an Option containing a MUTABLE reference to the chunk
-    fn get_chunk_at_pos_mut(&mut self, pos: Vector3<isize>) -> Option<&mut Chunk> {
+    pub fn get_chunk_at_pos_mut(&mut self, pos: Vector3<isize>) -> Option<&mut Chunk> {
         self.chunks.iter_mut().find(|chunk| *chunk.get_pos() == pos)
     }
 
     /// Return the chunk at the given position. Return an Option containing a reference to the chunk
-    fn get_chunk_at_pos(&self, pos: Vector3<isize>) -> Option<&Chunk> {
+    pub fn get_chunk_at_pos(&self, pos: Vector3<isize>) -> Option<&Chunk> {
         self.chunks.iter().find(|&chunk| *chunk.get_pos() == pos)
     }
 
@@ -174,9 +174,8 @@ impl ChunksManager {
                     // Prevent creating chunks that already exist
                     if !self.get_chunk_exists_at(chunk_pos) {
                         self.add_chunk(chunk_pos);
-                        let chunk = self.chunks.last_mut().unwrap();
 
-                        world_generator.generate_chunk(chunk);
+                        world_generator.generate_chunk(self, chunk_pos);
 
                         // Reload chunks around this chunk to prevent mesh gap issues
                         self.request_mesh_regen_if_exists(chunk_pos + Vector3::new(-1, 0, 0));

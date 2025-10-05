@@ -23,8 +23,8 @@ use alloc::boxed::Box;
 
 pub mod chunk;
 pub mod chunk_manager;
-pub mod world_generator;
 mod structures;
+pub mod world_generator;
 
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 
@@ -88,8 +88,15 @@ impl World {
             for y in y_start..y_stop {
                 for z in z_start..z_stop {
                     self.chunks_manager.add_chunk(Vector3::new(x, y, z));
-                    let chunk = self.chunks_manager.chunks.last_mut().unwrap();
-                    self.world_generator.generate_chunk(chunk);
+                }
+            }
+        }
+        
+        for x in x_start..x_stop {
+            for y in y_start..y_stop {
+                for z in z_start..z_stop {
+                    self.world_generator
+                        .generate_chunk(&mut self.chunks_manager, Vector3::new(x, y, z));
                 }
             }
         }
