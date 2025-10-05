@@ -4,7 +4,14 @@ use nalgebra::Vector3;
 use rand_core::{RngCore, SeedableRng};
 use rand_xorshift::XorShiftRng;
 
-use crate::{constants::world::*, world::chunk::Chunk};
+use crate::{
+    constants::world::*,
+    world::{
+        chunk::Chunk,
+        chunk_manager::ChunksManager,
+        structures::{Structure, TREE1},
+    },
+};
 
 const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 
@@ -73,17 +80,34 @@ impl WorldGenerator {
             + (self.noise.seed as i64 + 2147483648)) as u64;
         let mut rng = XorShiftRng::seed_from_u64(seed);
 
-        for x in 0..CHUNK_SIZE_I {
-            for z in 0..CHUNK_SIZE_I {
-                if rng.next_u32() < u32::MAX / 16 {
-                    chunk.set_at(
-                        Vector3::new(x as usize, 2, z as usize),
-                        crate::constants::BlockType::Sand,
-                    );
+        for x in 0..CHUNK_SIZE {
+            for z in 0..CHUNK_SIZE {
+                if rng.next_u32() < u32::MAX / 1024 {
+                    self.place_struct(chunk, &TREE1, Vector3::new(x, 1, z));
                 }
             }
         }
 
         chunk.generated = true;
+    }
+
+    pub fn place_struct(
+        &self,
+        chunk: &mut Chunk,
+        structure: &'static Structure,
+        pos: Vector3<usize>,
+    ) {
+        for y in 0..structure.size.y {
+            for x in 0..structure.size.x {
+                for z in 0..structure.size.z {
+                    if let Some(block) = structure.get_block_at(Vector3::new(x, y, z)) {
+                        chunk.set_at(
+                            pos + Vector3::new(x as usize, y as usize, z as usize),
+                            block,
+                        );
+                    }
+                }
+            }
+        }
     }
 }

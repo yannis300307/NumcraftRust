@@ -1,5 +1,7 @@
 #![cfg_attr(target_os = "none", no_std)]
 #![no_main]
+#![feature(const_index)]
+#![feature(const_trait_impl)]
 
 #[allow(unused_imports)]
 #[cfg(target_os = "none")]

@@ -137,12 +137,6 @@ struct StructureFile {
     palette: Value,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Structure {
-    size: [u8; 3],
-    data: Vec<u8>,
-}
-
 pub fn convert_struct(file_name: &str) {
     let raw = fs::read_to_string(file_name)
         .expect(format!("Unable to read the file {}", file_name).as_str());
@@ -153,9 +147,9 @@ pub fn convert_struct(file_name: &str) {
 
     let pallette = structure_file.palette;
 
-    for x in 0..structure_file.size[0] as usize {
-        for y in 0..structure_file.size[1] as usize {
-            for z in 0..structure_file.size[2] as usize {
+    for y in 0..structure_file.size[1] as usize {
+        for z in 0..structure_file.size[2] as usize {
+            for x in 0..structure_file.size[0] as usize {
                 let letter = structure_file.data[y][z].as_bytes()[x];
                 let block_id = &pallette[str::from_utf8(&[letter])
                     .expect(format!("Invalid char for structure in file {}", file_name).as_str())];
@@ -168,16 +162,16 @@ pub fn convert_struct(file_name: &str) {
         }
     }
 
-    let structure = Structure {
-        size: structure_file.size,
-        data,
-    };
+    let mut raw: Vec<u8> = Vec::new();
+    raw.extend_from_slice(&structure_file.size[0].to_be_bytes());
+    raw.extend_from_slice(&structure_file.size[1].to_be_bytes());
+    raw.extend_from_slice(&structure_file.size[2].to_be_bytes());
 
-    let serialized = postcard::to_allocvec(&structure)
-        .expect(format!("Cannot serialize structure for file {}", file_name).as_str());
+    raw.extend(data);
+
     fs::write(
         format!("target/structs/{}.bin", structure_file.name).to_string(),
-        serialized,
+        raw,
     )
     .expect(format!("Unable to write the structure file for file {}", file_name).as_str());
 }
