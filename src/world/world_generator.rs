@@ -104,7 +104,12 @@ impl WorldGenerator {
                     z + chunk_block_pos.z,
                 );
                 if rng.next_u32() < u32::MAX / 64 {
-                self.place_struct_check_space(chunks_manager, &TREE1, world_pos, Vector3::new(1, 0, 1));
+                    self.place_struct_check_space(
+                        chunks_manager,
+                        &TREE1,
+                        world_pos - Vector3::new(1, 0, 1),
+                        Vector3::new(1, 0, 1),
+                    );
                 }
             }
         }
@@ -144,10 +149,7 @@ impl WorldGenerator {
                 for z in 0..structure.size.z {
                     if let Some(block) = structure.get_block_at(Vector3::new(x, y, z)) {
                         let dest_pos = pos + Vector3::new(x as isize, y as isize, z as isize);
-                        chunks_manager.set_block_in_world(
-                            dest_pos,
-                            block,
-                        );
+                        chunks_manager.set_block_in_world(dest_pos, block);
                     }
                 }
             }
