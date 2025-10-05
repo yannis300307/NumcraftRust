@@ -21,9 +21,9 @@ pub struct WorldGenerator {
 
 impl WorldGenerator {
     pub fn new() -> Self {
-        WorldGenerator {
-            noise: FastNoiseLite::new(),
-        }
+        let mut noise = FastNoiseLite::new();
+        noise.set_noise_type(Some(fastnoise_lite::NoiseType::OpenSimplex2));
+        WorldGenerator { noise }
     }
 
     pub fn set_seed(&mut self, seed: i32) {

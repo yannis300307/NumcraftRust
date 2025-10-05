@@ -30,7 +30,6 @@ const CHUNK_SIZE_I: isize = CHUNK_SIZE as isize;
 
 pub struct World {
     pub chunks_manager: ChunksManager,
-    gen_noise: FastNoiseLite,
     registered_inventories: Vec<Inventory>,
     loaded_entities: Vec<Entity>,
     next_available_entity_id: usize,
@@ -53,16 +52,11 @@ impl World {
     pub fn new() -> Self {
         let mut world = World {
             chunks_manager: ChunksManager::new(),
-            gen_noise: FastNoiseLite::new(),
             registered_inventories: Vec::new(),
             loaded_entities: vec![Entity::new(0, EntityType::Player, None)], // The player entity is always loaded and id 0
             next_available_entity_id: 1,
             world_generator: WorldGenerator::new(),
         };
-
-        world
-            .gen_noise
-            .set_noise_type(Some(fastnoise_lite::NoiseType::OpenSimplex2));
 
         world
     }
@@ -91,7 +85,7 @@ impl World {
                 }
             }
         }
-        
+
         for x in x_start..x_stop {
             for y in y_start..y_stop {
                 for z in z_start..z_stop {
@@ -229,7 +223,7 @@ impl World {
 
     /// Set the world generation seed
     pub fn set_seed(&mut self, seed: i32) {
-        self.gen_noise.seed = seed;
+        self.world_generator.set_seed(seed);
     }
 
     fn register_inventory(&mut self, inventory: Inventory) {
