@@ -112,7 +112,7 @@ pub fn convert_icon() {
     let output = {
         if let Ok(out) = Command::new("sh")
             .arg("-c")
-            .arg("npx --yes -- nwlink@0.0.19 png-nwi assets/icon.png target/icon.nwi")
+            .arg("npx --yes -- nwlink@0.0.19 png-nwi assets/icon.png target/assets/icon.nwi")
             .output()
         {
             out
