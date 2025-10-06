@@ -1,4 +1,5 @@
 use crate::{
+    constants::ItemType,
     game::*,
     game_ui::{ContainerNeighbors, GameUIElements, NeighborDirection},
     inventory::Inventory,
@@ -55,9 +56,8 @@ impl Game {
                 (26, 1, NeighborDirection::Bottom),
                 (27, 2, NeighborDirection::Bottom),
                 (28, 4, NeighborDirection::Bottom),
-                
                 (25, 28, NeighborDirection::Right),
-                (27, 28, NeighborDirection::Right)
+                (27, 28, NeighborDirection::Right),
             ])
             .sync(&inventories);
 
@@ -71,6 +71,26 @@ impl Game {
             self.input_manager.update_timing(&self.timing_manager);
 
             if !ui.update(&self.input_manager, &mut inventories) {
+                // Bring the items back in the inventory
+                for slot in 0..inventories[1].get_all_slots().len() {
+                    let item_stack = inventories[1].get_all_slots()[slot].clone();
+                    if item_stack.get_item_type() != ItemType::Air {
+                        let remaining = inventories[0].add_item_stack(item_stack);
+                        if remaining != 0 {
+                            // Hum... wait?!
+                            // I have no choice... Spawn the item.
+                            // I should be carreful about duplication here...
+                            let pos = self.world.get_player_entity().pos;
+                            self.world.spawn_item_entity(
+                                pos,
+                                ItemStack::new(item_stack.get_item_type(), remaining, false),
+                            );
+                        }
+                    }
+                }
+
+                // Then clear the crafting inventory.
+                inventories[1].fill(ItemStack::void());
                 break;
             }
 
