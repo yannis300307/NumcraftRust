@@ -1,4 +1,8 @@
-use crate::{game::*, game_ui::NeighborDirection, inventory::Inventory};
+use crate::{
+    game::*,
+    game_ui::{ContainerNeighbors, GameUIElements, NeighborDirection},
+    inventory::Inventory,
+};
 
 pub enum PlayerInventoryPage {
     Survival,
@@ -20,11 +24,27 @@ impl Game {
         self.renderer
             .draw_game(&mut self.world, &self.player, 0., &self.hud, false);
 
-        let mut inventories = [&mut self.player.inventory];
+        let mut inventories = [
+            &mut self.player.inventory,
+            &mut self.crafting_manager.crafting_inventory_2x2,
+        ];
 
         let mut ui = GameUI::new(true)
-            .with_slot_grid(Vector2::new(65, 56), 6, 3, 0, 0, 6)
-            .with_slot_grid(Vector2::new(65, 154), 6, 1, 0, 18, 0)
+            .with_slot_grid(Vector2::new(65, 86), 6, 3, 0, 0, 6)
+            .with_slot_grid(Vector2::new(65, 184), 6, 1, 0, 18, 0)
+            .with_slot_grid(Vector2::new(97, 16), 2, 2, 1, 24, 0)
+            .with_element(
+                GameUIElements::create_slot(1, 4),
+                Vector2::new(193, 32),
+                28,
+                ContainerNeighbors::default(),
+            )
+            .with_element(
+                GameUIElements::Arrow { filling: 0. },
+                Vector2::new(161, 32),
+                29,
+                ContainerNeighbors::default(),
+            )
             .with_links(&[
                 (12, 18, NeighborDirection::Bottom),
                 (13, 19, NeighborDirection::Bottom),
@@ -32,6 +52,12 @@ impl Game {
                 (15, 21, NeighborDirection::Bottom),
                 (16, 22, NeighborDirection::Bottom),
                 (17, 23, NeighborDirection::Bottom),
+                (26, 1, NeighborDirection::Bottom),
+                (27, 2, NeighborDirection::Bottom),
+                (28, 4, NeighborDirection::Bottom),
+                
+                (25, 28, NeighborDirection::Right),
+                (27, 28, NeighborDirection::Right)
             ])
             .sync(&inventories);
 
@@ -106,6 +132,7 @@ impl Game {
         let mut ui = GameUI::new(true)
             .with_slot_grid(Vector2::new(10, 41), 6, 3, 0, 0, 6)
             .with_slot_grid(Vector2::new(10, 139), 6, 1, 0, 18, 0)
+            .with_slot_grid(Vector2::new(218, 9), 3, 7, 1, 24, 0)
             .with_links(&[
                 (12, 18, NeighborDirection::Bottom),
                 (13, 19, NeighborDirection::Bottom),
@@ -113,9 +140,6 @@ impl Game {
                 (15, 21, NeighborDirection::Bottom),
                 (16, 22, NeighborDirection::Bottom),
                 (17, 23, NeighborDirection::Bottom),
-            ])
-            .with_slot_grid(Vector2::new(218, 9), 3, 7, 1, 24, 0)
-            .with_links(&[
                 (5, 27, NeighborDirection::Right),
                 (11, 30, NeighborDirection::Right),
                 (17, 33, NeighborDirection::Right),

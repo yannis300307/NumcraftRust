@@ -25,6 +25,9 @@ pub enum GameUIElements {
         inventory_id: usize,
         inventory_slot_index: usize,
     },
+    Arrow {
+        filling: f32
+    },
 }
 
 impl GameUIElements {
@@ -51,6 +54,17 @@ pub struct ContainerNeighbors {
     pub down_id: Option<usize>,
     pub left_id: Option<usize>,
     pub right_id: Option<usize>,
+}
+
+impl Default for ContainerNeighbors {
+    fn default() -> Self {
+        ContainerNeighbors {
+            up_id: None,
+            down_id: None,
+            left_id: None,
+            right_id: None,
+        }
+    }
 }
 
 #[allow(unused)]

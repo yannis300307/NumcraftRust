@@ -14,6 +14,7 @@ use crate::{
         rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
     eadk::{self, Color},
+    game::crafting_manager::CraftingManager,
     game_ui::GameUI,
     hud::Hud,
     input_manager::InputManager,
@@ -28,6 +29,7 @@ use crate::{
     world::World,
 };
 
+mod crafting_manager;
 mod game_menus;
 pub mod game_uis;
 
@@ -47,6 +49,7 @@ pub struct Game {
     hud: Hud,
     timing_manager: TimingManager,
     physic_engine: PhysicEngine,
+    crafting_manager: CraftingManager,
 }
 
 impl Game {
@@ -64,6 +67,7 @@ impl Game {
             hud: Hud::new(),
             timing_manager: TimingManager::new(),
             physic_engine: PhysicEngine::new(),
+            crafting_manager: CraftingManager::new()
         }
     }
 

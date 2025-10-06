@@ -88,7 +88,7 @@ fn patch_simulator() {
     }
 }
 
-pub fn convert_tileset() {
+fn convert_tileset() {
     let img = ImageReader::open(format!("assets/tileset.png").as_str())
         .unwrap()
         .decode()
@@ -108,7 +108,7 @@ pub fn convert_tileset() {
     fs::write(format!("target/assets/tileset.bin").as_str(), data).unwrap();
 }
 
-pub fn convert_icon() {
+fn convert_icon() {
     let output = {
         if let Ok(out) = Command::new("sh")
             .arg("-c")
@@ -137,7 +137,7 @@ struct StructureFile {
     palette: Value,
 }
 
-pub fn convert_struct(file_name: &str) {
+fn convert_struct(file_name: &str) {
     let raw = fs::read_to_string(file_name)
         .expect(format!("Unable to read the file {}", file_name).as_str());
     let structure_file: StructureFile =
@@ -176,6 +176,10 @@ pub fn convert_struct(file_name: &str) {
     .expect(format!("Unable to write the structure file for file {}", file_name).as_str());
 }
 
+fn convert_craft(file_name: &str) {
+    
+}
+
 fn main() {
     // Turn icon.png into icon.nwi
     println!("cargo:rerun-if-changed=assets/icon.png");
@@ -193,9 +197,14 @@ fn main() {
     println!("cargo:rerun-if-changed=assets/tileset.png");
     convert_tileset();
 
-    println!("cargo:rerun-if-changed=structs/tree1.json");
-    convert_struct("structs/tree1.json");
+    println!("cargo:rerun-if-changed=structs");
 
+    for file in fs::read_dir("structs").unwrap() {
+        convert_struct(file.expect("Invalid file in struct directory.").path().as_os_str().to_str().unwrap());
+    }
+
+
+    
     // Compile storage.c
     if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "none" {
         compile_c_libs();

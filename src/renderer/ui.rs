@@ -4,7 +4,7 @@ use crate::{
         color_palette::{GAMEUI_SLOT_COLOR, GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR},
     },
     eadk::{
-        COLOR_BLACK, Point, Rect,
+        self, COLOR_BLACK, Point, Rect,
         display::{draw_string, pull_rect, push_rect, push_rect_uniform},
     },
     game_ui::{GameUI, GameUIElements},
@@ -103,128 +103,174 @@ impl Renderer {
         let x = element.pos.x;
         let y = element.pos.y;
 
-        if let GameUIElements::ItemSlot { item_stack, .. } = &element.element {
-            // Background
-            if item_stack.get_item_type() == ItemType::Air {
-                push_rect_uniform(
-                    Rect {
-                        x: x + 3,
-                        y: y + 3,
-                        width: 24,
-                        height: 24,
-                    },
-                    GAMEUI_SLOT_COLOR,
-                );
-            }
-
-            let color = if game_ui.selected_id.is_some_and(|id| id == element.id) {
-                Color::from_888(255, 242, 0)
-            } else if game_ui.cursor_id == element.id {
-                Color::from_888(255, 0, 0)
-            } else {
-                GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR
-            };
-            // Outline
-            push_rect_uniform(
-                Rect {
-                    x: x,
-                    y: y,
-                    width: 3,
-                    height: 30,
-                },
-                color,
-            );
-            push_rect_uniform(
-                Rect {
-                    x: x,
-                    y: y,
-                    width: 30,
-                    height: 3,
-                },
-                color,
-            );
-            push_rect_uniform(
-                Rect {
-                    x: x,
-                    y: y + 27,
-                    width: 30,
-                    height: 3,
-                },
-                color,
-            );
-            push_rect_uniform(
-                Rect {
-                    x: x + 27,
-                    y: y,
-                    width: 3,
-                    height: 30,
-                },
-                color,
-            );
-
-            // Item texture
-            let texture_id = item_stack.get_item_type().get_texture_id();
-
-            if texture_id != 0 {
-                self.draw_scalled_tile_on_screen(texture_id, Vector2::new(3 + x, 3 + y), 3);
-
-                if !item_stack.creative_slot
-                    || (game_ui.selected_amount.is_some()
-                        && game_ui.selected_id.is_some_and(|id| id == element_id))
-                {
-                    // Item amount
-                    let amount_text = if let Some(selected_id) = game_ui.selected_id
-                        && selected_id == element.id
-                        && let Some(amount) = game_ui.selected_amount
-                    {
-                        format!("{}", amount)
-                    } else {
-                        format!("{}", item_stack.get_amount())
-                    };
-
-                    draw_string(
-                        amount_text.as_str(),
-                        Point {
-                            x: (30 - 7 * amount_text.len() + x as usize) as u16,
-                            y: y,
+        match &element.element {
+            GameUIElements::ItemSlot { item_stack, .. } => {
+                // Background
+                if item_stack.get_item_type() == ItemType::Air {
+                    push_rect_uniform(
+                        Rect {
+                            x: x + 3,
+                            y: y + 3,
+                            width: 24,
+                            height: 24,
                         },
-                        false,
-                        Color::from_888(255, 255, 255),
                         GAMEUI_SLOT_COLOR,
                     );
                 }
-            }
 
-            // Amount selection bar
-            if let Some(amount) = game_ui.selected_amount
-                && game_ui.selected_id.is_some_and(|id| id == element.id)
-                && item_stack.get_amount() != 0
-            {
-                let amount_bar_lenght = 30 * amount / item_stack.get_amount() as usize;
-
+                let color = if game_ui.selected_id.is_some_and(|id| id == element.id) {
+                    Color::from_888(255, 242, 0)
+                } else if game_ui.cursor_id == element.id {
+                    Color::from_888(255, 0, 0)
+                } else {
+                    GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR
+                };
+                // Outline
+                push_rect_uniform(
+                    Rect {
+                        x: x,
+                        y: y,
+                        width: 3,
+                        height: 30,
+                    },
+                    color,
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: x,
+                        y: y,
+                        width: 30,
+                        height: 3,
+                    },
+                    color,
+                );
                 push_rect_uniform(
                     Rect {
                         x: x,
                         y: y + 27,
-                        width: amount_bar_lenght as u16,
+                        width: 30,
                         height: 3,
                     },
-                    if game_ui.is_selecting_amount {
-                        Color::from_888(100, 150, 255)
-                    } else {
-                        Color::from_888(50, 100, 255)
-                    },
+                    color,
                 );
                 push_rect_uniform(
                     Rect {
-                        x: x + amount_bar_lenght as u16,
-                        y: y + 27,
-                        width: (30 - amount_bar_lenght) as u16,
-                        height: 3,
+                        x: x + 27,
+                        y: y,
+                        width: 3,
+                        height: 30,
                     },
-                    Color::from_888(100, 100, 100),
+                    color,
+                );
+
+                // Item texture
+                let texture_id = item_stack.get_item_type().get_texture_id();
+
+                if texture_id != 0 {
+                    self.draw_scalled_tile_on_screen(texture_id, Vector2::new(3 + x, 3 + y), 3);
+
+                    if !item_stack.creative_slot
+                        || (game_ui.selected_amount.is_some()
+                            && game_ui.selected_id.is_some_and(|id| id == element_id))
+                    {
+                        // Item amount
+                        let amount_text = if let Some(selected_id) = game_ui.selected_id
+                            && selected_id == element.id
+                            && let Some(amount) = game_ui.selected_amount
+                        {
+                            format!("{}", amount)
+                        } else {
+                            format!("{}", item_stack.get_amount())
+                        };
+
+                        draw_string(
+                            amount_text.as_str(),
+                            Point {
+                                x: (30 - 7 * amount_text.len() + x as usize) as u16,
+                                y: y,
+                            },
+                            false,
+                            Color::from_888(255, 255, 255),
+                            GAMEUI_SLOT_COLOR,
+                        );
+                    }
+                }
+
+                // Amount selection bar
+                if let Some(amount) = game_ui.selected_amount
+                    && game_ui.selected_id.is_some_and(|id| id == element.id)
+                    && item_stack.get_amount() != 0
+                {
+                    let amount_bar_lenght = 30 * amount / item_stack.get_amount() as usize;
+
+                    push_rect_uniform(
+                        Rect {
+                            x: x,
+                            y: y + 27,
+                            width: amount_bar_lenght as u16,
+                            height: 3,
+                        },
+                        if game_ui.is_selecting_amount {
+                            Color::from_888(100, 150, 255)
+                        } else {
+                            Color::from_888(50, 100, 255)
+                        },
+                    );
+                    push_rect_uniform(
+                        Rect {
+                            x: x + amount_bar_lenght as u16,
+                            y: y + 27,
+                            width: (30 - amount_bar_lenght) as u16,
+                            height: 3,
+                        },
+                        Color::from_888(100, 100, 100),
+                    );
+                }
+            }
+            GameUIElements::Button { text, is_pressed } => todo!(),
+            GameUIElements::Label { text } => {
+                eadk::display::draw_string(
+                    text,
+                    Point { x, y },
+                    false,
+                    Color::from_888(0, 0, 0),
+                    Color::from_888(255, 255, 255),
                 );
             }
+            GameUIElements::Arrow { filling } => {
+                eadk::display::push_rect_uniform(
+                    Rect {
+                        x: element.pos.x + 2,
+                        y: element.pos.y + 12,
+                        width: 16,
+                        height: 6,
+                    },
+                    Color::from_888(150, 150, 150),
+                );
+
+                for i in 0..=10 {
+                    eadk::display::push_rect_uniform(
+                        Rect {
+                            x: element.pos.x + 18 + i,
+                            y: element.pos.y - (10 - i) + 2 + 12,
+                            width: 1,
+                            height: (10 - i) * 2 + 2,
+                        },
+                        Color::from_888(150, 150, 150),
+                    );
+                }
+            }
+        }
+
+        #[cfg(feature = "debug_ui")]
+        {
+            eadk::display::draw_string(
+                format!("{}", element_id).as_str(),
+                Point { x: x + 2, y: y + 2 },
+                false,
+                Color::from_888(0, 0, 0),
+                Color::from_888(255, 255, 255),
+            );
         }
     }
 
