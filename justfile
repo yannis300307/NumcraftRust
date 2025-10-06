@@ -12,7 +12,7 @@ check: setup_target
 
 
 setup_target:
-    mkdir -p target/assets target/structs
+    mkdir -p target/assets target/structs target/crafts
 
 [macos]
 run_nwb:

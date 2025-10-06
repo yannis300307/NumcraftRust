@@ -140,6 +140,23 @@ impl ItemType {
         }
     }
 
+    pub const fn get_from_id(id: u8) -> Option<Self> {
+        match id {
+            0 => Some(ItemType::Air),
+
+            1 => Some(ItemType::StoneBlock),
+            2 => Some(ItemType::GrassBlock),
+            3 => Some(ItemType::DirtBlock),
+            4 => Some(ItemType::SandBlock),
+            5 => Some(ItemType::CobblestoneBlock),
+            6 => Some(ItemType::BorderBlock),
+            7 => Some(ItemType::LogBlock),
+            8 => Some(ItemType::LeavesBlock),
+            9 => Some(ItemType::PlanksBlock),
+            _ => None,
+        }
+    }
+
     pub fn get_max_stack_amount(&self) -> u8 {
         match *self {
             ItemType::Air => 0,

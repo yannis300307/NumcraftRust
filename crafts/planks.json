@@ -1,12 +1,12 @@
 {
     "name": "planks",
     "pattern" : [
-        "x  ",
+        "xx ",
         "   ",
         "   "
     ],
-    "strict_shape": false,
-    "pallette": {
+    "strict_shape": true,
+    "palette": {
         "x": 7
     },
     "result": 9
