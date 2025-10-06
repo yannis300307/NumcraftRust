@@ -39,8 +39,10 @@ pub mod color_palette {
     pub const GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR: Color = Color::from_888(120, 120, 120);
 }
 
-pub mod menu {
+pub mod save_manager {
     pub const SETTINGS_FILENAME: &str = "settings.ncd"; // NCD = NumCraftData
+
+    pub const WORLD_VERSION: u16 = 0; // Update the version at each world breaking update
 }
 
 pub mod world {

@@ -10,7 +10,7 @@ use postcard::{from_bytes, to_allocvec};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    constants::{world::CHUNK_SIZE, BlockType},
+    constants::{BlockType, save_manager::WORLD_VERSION, world::CHUNK_SIZE},
     eadk::{self},
     game::GameMode,
     inventory::Inventory,
@@ -21,7 +21,7 @@ use crate::{
         storage_extapp_file_list_with_extension, storage_extapp_file_read,
         storage_extapp_file_read_header, storage_file_write,
     },
-    world::{chunk::Chunk, World},
+    world::{World, chunk::Chunk},
 };
 
 #[derive(Serialize, Deserialize)]
@@ -33,6 +33,7 @@ pub struct PlayerData {
 
 #[derive(Serialize, Deserialize)]
 pub struct WorldInfo {
+    pub world_version: u16,
     pub world_name: String,
     pub world_seed: i32,
     pub gamemode: GameMode,
@@ -41,6 +42,7 @@ pub struct WorldInfo {
 impl WorldInfo {
     pub fn new() -> Self {
         WorldInfo {
+            world_version: WORLD_VERSION,
             world_name: String::new(),
             world_seed: 1,
             gamemode: GameMode::Survival,
