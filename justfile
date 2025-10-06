@@ -22,9 +22,14 @@ run_nwb:
 run_nwb:
     ./epsilon_simulator/output/release/simulator/linux/epsilon.bin --nwb ./target/{{current_target}}/release/libnumcraft_sim.so
 
-sim jobs="1": setup_target
+sim jobs="1" features="": setup_target
     -git clone https://github.com/numworks/epsilon.git epsilon_simulator -b version-20 # Broken with version 21. Nice!
-    cargo build --release --target={{current_target}} --lib
+    if [ -n "{{features}}"];then \
+        cargo build --release --target={{current_target}} --lib;\
+    else \
+        cargo build --release --target={{current_target}} --lib --features {{features}};\
+    fi
+
     if [ ! -f "target/simulator_patched" ]; then \
         cd epsilon_simulator && make PLATFORM=simulator -j {{jobs}}; \
         cd ..; \
