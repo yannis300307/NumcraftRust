@@ -25,7 +25,7 @@ impl Game {
         self.renderer
             .draw_game(&mut self.world, &self.player, 0., &self.hud, false);
 
-        let mut inventories = [
+        let inventories = [
             &mut self.player.inventory,
             &mut self.crafting_manager.crafting_inventory_2x2,
         ];
@@ -35,7 +35,7 @@ impl Game {
             .with_slot_grid(Vector2::new(65, 184), 6, 1, 0, 18, 0)
             .with_slot_grid(Vector2::new(97, 16), 2, 2, 1, 24, 0)
             .with_element(
-                GameUIElements::create_slot(1, 4),
+                GameUIElements::create_one_way_slot_slot(1, 4),
                 Vector2::new(193, 32),
                 28,
                 ContainerNeighbors::default(),
@@ -69,6 +69,12 @@ impl Game {
             self.input_manager.update();
             self.timing_manager.update();
             self.input_manager.update_timing(&self.timing_manager);
+            self.crafting_manager.update_2x2();
+
+            let mut inventories = [
+                &mut self.player.inventory,
+                &mut self.crafting_manager.crafting_inventory_2x2,
+            ];
 
             if !ui.update(&self.input_manager, &mut inventories) {
                 // Bring the items back in the inventory

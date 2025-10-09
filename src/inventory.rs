@@ -4,7 +4,7 @@ use core::{mem, usize};
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
-use crate::constants::ItemType;
+use crate::{constants::ItemType, entity::item};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ItemStack {
@@ -22,7 +22,7 @@ impl ItemStack {
         }
     }
 
-    pub fn new(item_type: ItemType, amount: u8, creative_slot: bool) -> Self {
+    pub const fn new(item_type: ItemType, amount: u8, creative_slot: bool) -> Self {
         ItemStack {
             item_type,
             amount,
@@ -379,8 +379,11 @@ impl Inventory {
         } else {
             let item_stack = &mut self.slots[slot_index];
 
+            if other != item_stack {
+                self.modified = true;
+            }
+
             mem::swap(other, item_stack);
-            self.modified = true;
 
             Some(())
         }
@@ -410,8 +413,10 @@ impl Inventory {
         if first >= self.slots.len() || second >= self.slots.len() {
             None
         } else {
+            if first != second {
+                self.modified = true;
+            }
             self.slots.swap(first, second);
-            self.modified = true;
 
             Some(())
         }
@@ -425,8 +430,11 @@ impl Inventory {
         if slot_index >= self.slots.len() {
             None
         } else {
+            if self.slots[slot_index] != item_stack {
+                self.modified = true;
+            }
+
             self.slots[slot_index] = item_stack;
-            self.modified = true;
 
             Some(())
         }
@@ -485,5 +493,13 @@ impl Inventory {
         }
 
         return amount as u8;
+    }
+
+    pub fn get_item_stack_at_slot_index(&self, index: usize) -> Option<&ItemStack> {
+        self.slots.get(index)
+    }
+
+    pub fn get_item_type_at_slot_index(&self, index: usize) -> Option<ItemType> {
+        Some(self.get_item_stack_at_slot_index(index)?.get_item_type())
     }
 }

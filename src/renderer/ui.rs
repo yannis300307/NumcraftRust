@@ -260,6 +260,91 @@ impl Renderer {
                     );
                 }
             }
+            GameUIElements::OneWayItemSlot { item_stack, .. } => {
+                // Background
+                if item_stack.get_item_type() == ItemType::Air {
+                    push_rect_uniform(
+                        Rect {
+                            x: x + 3,
+                            y: y + 3,
+                            width: 24,
+                            height: 24,
+                        },
+                        GAMEUI_SLOT_COLOR,
+                    );
+                }
+
+                let color = if game_ui.selected_id.is_some_and(|id| id == element.id) {
+                    Color::from_888(255, 242, 0)
+                } else if game_ui.cursor_id == element.id {
+                    Color::from_888(255, 0, 0)
+                } else {
+                    GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR
+                };
+                // Outline
+                push_rect_uniform(
+                    Rect {
+                        x: x,
+                        y: y,
+                        width: 3,
+                        height: 30,
+                    },
+                    color,
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: x,
+                        y: y,
+                        width: 30,
+                        height: 3,
+                    },
+                    color,
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: x,
+                        y: y + 27,
+                        width: 30,
+                        height: 3,
+                    },
+                    color,
+                );
+                push_rect_uniform(
+                    Rect {
+                        x: x + 27,
+                        y: y,
+                        width: 3,
+                        height: 30,
+                    },
+                    color,
+                );
+
+                // Item texture
+                let texture_id = item_stack.get_item_type().get_texture_id();
+
+                if texture_id != 0 {
+                    self.draw_scalled_tile_on_screen(texture_id, Vector2::new(3 + x, 3 + y), 3);
+
+                    if !item_stack.creative_slot
+                        || (game_ui.selected_amount.is_some()
+                            && game_ui.selected_id.is_some_and(|id| id == element_id))
+                    {
+                        // Item amount
+                        let amount_text = format!("{}", item_stack.get_amount());
+
+                        draw_string(
+                            amount_text.as_str(),
+                            Point {
+                                x: (30 - 7 * amount_text.len() + x as usize) as u16,
+                                y: y,
+                            },
+                            false,
+                            Color::from_888(255, 255, 255),
+                            GAMEUI_SLOT_COLOR,
+                        );
+                    }
+                }
+            }
         }
 
         #[cfg(feature = "debug_ui")]

@@ -183,6 +183,7 @@ struct CraftFile {
     strict_shape: bool,
     palette: Value,
     result: u8,
+    result_amount: u8,
 }
 
 fn convert_craft(file_name: &str) {
@@ -225,6 +226,7 @@ fn convert_craft(file_name: &str) {
 
     data.push(if craft_file.strict_shape { 1 } else { 0 });
     data.push(craft_file.result);
+    data.push(craft_file.result_amount);
 
     fs::write(
         format!("target/crafts/{}.bin", craft_file.name).to_string(),
