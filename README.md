@@ -104,3 +104,6 @@ You can speed up the simulator build by setting the job number.
 ```shell
 just sim 5
 ```
+
+## Legal info
+NumWorks is a registered trademark.
