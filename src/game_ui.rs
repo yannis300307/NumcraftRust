@@ -25,11 +25,27 @@ pub enum GameUIElements {
         inventory_id: usize,
         inventory_slot_index: usize,
     },
+    Arrow {
+        filling: f32,
+    },
+    OneWayItemSlot {
+        item_stack: ItemStack,
+        inventory_id: usize,
+        inventory_slot_index: usize,
+    },
 }
 
 impl GameUIElements {
     pub fn create_slot(inventory_id: usize, inventory_slot_index: usize) -> Self {
         Self::ItemSlot {
+            item_stack: ItemStack::void(),
+            inventory_id,
+            inventory_slot_index,
+        }
+    }
+
+    pub fn create_one_way_slot_slot(inventory_id: usize, inventory_slot_index: usize) -> Self {
+        Self::OneWayItemSlot {
             item_stack: ItemStack::void(),
             inventory_id,
             inventory_slot_index,
@@ -51,6 +67,17 @@ pub struct ContainerNeighbors {
     pub down_id: Option<usize>,
     pub left_id: Option<usize>,
     pub right_id: Option<usize>,
+}
+
+impl Default for ContainerNeighbors {
+    fn default() -> Self {
+        ContainerNeighbors {
+            up_id: None,
+            down_id: None,
+            left_id: None,
+            right_id: None,
+        }
+    }
 }
 
 #[allow(unused)]
@@ -240,12 +267,21 @@ impl GameUI {
             }
         }
 
+        // Mainly for crafting
+        for inventory in inventories.iter() {
+            if inventory.modified {
+                self.update_slots(inventories);
+            }
+        }
+
         if input_manager.is_just_pressed(input::Key::Ok) {
+            // If the selected element is the same as the one at the position of the cursor and that the user is not currently selecting an item amount
             if self
                 .selected_id
                 .is_some_and(|index| index == self.cursor_id)
                 && !self.is_selecting_amount
             {
+                // If the selected element is an ItemSlot
                 if let Some(element) = self.get_element_with_id(self.cursor_id)
                     && let GameUIElements::ItemSlot { item_stack, .. } = &element.element
                 {
@@ -254,9 +290,12 @@ impl GameUI {
                     self.ask_redraw();
                 }
             } else {
+                // If the user was selecting an amount, we disable the amount selection
                 if self.is_selecting_amount {
                     self.is_selecting_amount = false;
                     self.ask_redraw();
+
+                // If an element is selected but it is not the one at the position of the cursor and that both are ItemSlots
                 } else if let Some(selected_id) = self.selected_id
                     && selected_id != self.cursor_id
                     && let Some(start_elem) = self.get_element_with_id(selected_id)
@@ -272,6 +311,7 @@ impl GameUI {
                         ..
                     } = end_elem.element
                 {
+                    // If the 2 item slots are in the same inventories
                     if start_inventory_id == end_inventory_id {
                         inventories[start_inventory_id].move_item(
                             start_inventory_slot_index,
@@ -309,6 +349,21 @@ impl GameUI {
                 {
                     self.selected_id = Some(self.cursor_id);
                     self.ask_redraw();
+                } else if let Some(element) = self.get_element_with_id(self.cursor_id)
+                    && let GameUIElements::OneWayItemSlot {
+                        item_stack,
+                        inventory_id,
+                        inventory_slot_index,
+                        ..
+                    } = &element.element
+                    && item_stack.get_item_type() != ItemType::Air
+                {
+                    // Here, I concider the inventory at index 0 as the player's inventory or the main inventory.
+                    if *inventory_id == 1 {
+                        inventories[0].add_item_stack(item_stack.clone());
+                        inventories[1]
+                            .replace_slot_item_stack(*inventory_slot_index, ItemStack::void());
+                    }
                 }
             }
         }
@@ -332,6 +387,12 @@ impl GameUI {
     fn update_slots(&mut self, inventories: &[&mut Inventory]) {
         for element in &mut self.elements {
             if let GameUIElements::ItemSlot {
+                item_stack,
+                inventory_id,
+                inventory_slot_index,
+                ..
+            }
+            | GameUIElements::OneWayItemSlot {
                 item_stack,
                 inventory_id,
                 inventory_slot_index,

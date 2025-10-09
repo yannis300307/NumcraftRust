@@ -18,6 +18,10 @@ bench = false
 crate-type = ["cdylib"]
 name = "numcraft_sim"
 
+[features]
+
+debug_ui = []
+
 [profile.dev]
 panic="abort"
 strip=true

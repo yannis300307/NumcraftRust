@@ -1,4 +1,9 @@
-use crate::{game::*, game_ui::NeighborDirection, inventory::Inventory};
+use crate::{
+    constants::ItemType,
+    game::*,
+    game_ui::{ContainerNeighbors, GameUIElements, NeighborDirection},
+    inventory::Inventory,
+};
 
 pub enum PlayerInventoryPage {
     Survival,
@@ -20,11 +25,27 @@ impl Game {
         self.renderer
             .draw_game(&mut self.world, &self.player, 0., &self.hud, false);
 
-        let mut inventories = [&mut self.player.inventory];
+        let inventories = [
+            &mut self.player.inventory,
+            &mut self.crafting_manager.crafting_inventory_2x2,
+        ];
 
         let mut ui = GameUI::new(true)
-            .with_slot_grid(Vector2::new(65, 56), 6, 3, 0, 0, 6)
-            .with_slot_grid(Vector2::new(65, 154), 6, 1, 0, 18, 0)
+            .with_slot_grid(Vector2::new(65, 86), 6, 3, 0, 0, 6)
+            .with_slot_grid(Vector2::new(65, 184), 6, 1, 0, 18, 0)
+            .with_slot_grid(Vector2::new(97, 16), 2, 2, 1, 24, 0)
+            .with_element(
+                GameUIElements::create_one_way_slot_slot(1, 4),
+                Vector2::new(193, 32),
+                28,
+                ContainerNeighbors::default(),
+            )
+            .with_element(
+                GameUIElements::Arrow { filling: 0. },
+                Vector2::new(161, 32),
+                29,
+                ContainerNeighbors::default(),
+            )
             .with_links(&[
                 (12, 18, NeighborDirection::Bottom),
                 (13, 19, NeighborDirection::Bottom),
@@ -32,6 +53,11 @@ impl Game {
                 (15, 21, NeighborDirection::Bottom),
                 (16, 22, NeighborDirection::Bottom),
                 (17, 23, NeighborDirection::Bottom),
+                (26, 1, NeighborDirection::Bottom),
+                (27, 2, NeighborDirection::Bottom),
+                (28, 4, NeighborDirection::Bottom),
+                (25, 28, NeighborDirection::Right),
+                (27, 28, NeighborDirection::Right),
             ])
             .sync(&inventories);
 
@@ -43,8 +69,34 @@ impl Game {
             self.input_manager.update();
             self.timing_manager.update();
             self.input_manager.update_timing(&self.timing_manager);
+            self.crafting_manager.update_2x2();
+
+            let mut inventories = [
+                &mut self.player.inventory,
+                &mut self.crafting_manager.crafting_inventory_2x2,
+            ];
 
             if !ui.update(&self.input_manager, &mut inventories) {
+                // Bring the items back in the inventory
+                for slot in 0..4 {
+                    let item_stack = inventories[1].get_all_slots()[slot].clone();
+                    if item_stack.get_item_type() != ItemType::Air {
+                        let remaining = inventories[0].add_item_stack(item_stack);
+                        if remaining != 0 {
+                            // Hum... wait?!
+                            // I have no choice... Spawn the item.
+                            // I should be carreful about duplication here...
+                            let pos = self.world.get_player_entity().pos;
+                            self.world.spawn_item_entity(
+                                pos,
+                                ItemStack::new(item_stack.get_item_type(), remaining, false),
+                            );
+                        }
+                    }
+                }
+
+                // Then clear the crafting inventory.
+                inventories[1].fill(ItemStack::void());
                 break;
             }
 
@@ -106,6 +158,7 @@ impl Game {
         let mut ui = GameUI::new(true)
             .with_slot_grid(Vector2::new(10, 41), 6, 3, 0, 0, 6)
             .with_slot_grid(Vector2::new(10, 139), 6, 1, 0, 18, 0)
+            .with_slot_grid(Vector2::new(218, 9), 3, 7, 1, 24, 0)
             .with_links(&[
                 (12, 18, NeighborDirection::Bottom),
                 (13, 19, NeighborDirection::Bottom),
@@ -113,9 +166,6 @@ impl Game {
                 (15, 21, NeighborDirection::Bottom),
                 (16, 22, NeighborDirection::Bottom),
                 (17, 23, NeighborDirection::Bottom),
-            ])
-            .with_slot_grid(Vector2::new(218, 9), 3, 7, 1, 24, 0)
-            .with_links(&[
                 (5, 27, NeighborDirection::Right),
                 (11, 30, NeighborDirection::Right),
                 (17, 33, NeighborDirection::Right),

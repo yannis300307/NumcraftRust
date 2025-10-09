@@ -1,0 +1,14 @@
+{
+    "name": "planks",
+    "pattern" : [
+        "x  ",
+        "   ",
+        "   "
+    ],
+    "strict_shape": false,
+    "palette": {
+        "x": 7
+    },
+    "result": 9,
+    "result_amount": 8
+}
