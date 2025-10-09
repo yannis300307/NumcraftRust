@@ -1,0 +1,15 @@
+{
+    "name": "grass",
+    "pattern" : [
+        "f  ",
+        "d  ",
+        "   "
+    ],
+    "strict_shape": true,
+    "palette": {
+        "f": 8,
+        "d": 3
+    },
+    "result": 2,
+    "result_amount": 1
+}

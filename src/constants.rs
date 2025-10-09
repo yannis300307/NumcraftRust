@@ -250,7 +250,7 @@ impl BlockType {
     pub const fn get_dropped_item_type(&self) -> ItemType {
         match self {
             BlockType::Air => ItemType::Air,
-            BlockType::Stone => ItemType::StoneBlock,
+            BlockType::Stone => ItemType::CobblestoneBlock,
             BlockType::Grass => ItemType::DirtBlock,
             BlockType::Dirt => ItemType::DirtBlock,
             BlockType::Sand => ItemType::SandBlock,

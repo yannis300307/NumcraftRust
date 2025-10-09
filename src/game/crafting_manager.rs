@@ -99,8 +99,6 @@ impl Craft {
             let width = x2 - x1;
             let height = y2 - y1;
 
-            println!("{:?} ---- {:?}", grid, self.pattern);
-
             // Check if it matches the shape
             for x in 0..3 {
                 for y in 0..3 {
@@ -135,12 +133,12 @@ impl Craft {
             }
 
             // Check if the items are the same
+            // These loop and sub loops do 162 iterations but can be optimised. TODO
             for item in items_grid.iter() {
-                let index = items_craft.iter().position(|other| *other == *item);
+                let count_grid = items_grid.iter().filter(|v| *v == item).count();
+                let count_craft = items_craft.iter().filter(|v| *v == item).count();
 
-                if let Some(index) = index {
-                    items_craft.remove(index);
-                } else {
+                if count_grid != count_craft {
                     return false;
                 }
             }
@@ -150,7 +148,11 @@ impl Craft {
     }
 }
 
-const CRAFTS: [Craft; 1] = [Craft::new(include_bytes!("../../target/crafts/planks.bin"))];
+const CRAFTS: [Craft; 3] = [
+    Craft::new(include_bytes!("../../target/crafts/planks.bin")),
+    Craft::new(include_bytes!("../../target/crafts/stone.bin")),
+    Craft::new(include_bytes!("../../target/crafts/grass.bin")),
+];
 
 pub struct CraftingManager {
     pub crafting_inventory_2x2: Inventory,
@@ -202,7 +204,6 @@ impl CraftingManager {
                 if craft.matches(grid) {
                     self.crafting_inventory_2x2
                         .replace_slot_item_stack(4, craft.result);
-                    //self.crafting_inventory_2x2.modified = false;
                     self.valid_craft = true;
                     found_craft = true;
                     break;

@@ -1,0 +1,14 @@
+{
+    "name": "stone",
+    "pattern" : [
+        "xx ",
+        "xx ",
+        "   "
+    ],
+    "strict_shape": false,
+    "palette": {
+        "x": 5
+    },
+    "result": 1,
+    "result_amount": 3
+}

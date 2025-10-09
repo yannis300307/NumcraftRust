@@ -78,7 +78,7 @@ impl Game {
 
             if !ui.update(&self.input_manager, &mut inventories) {
                 // Bring the items back in the inventory
-                for slot in 0..inventories[1].get_all_slots().len() {
+                for slot in 0..4 {
                     let item_stack = inventories[1].get_all_slots()[slot].clone();
                     if item_stack.get_item_type() != ItemType::Air {
                         let remaining = inventories[0].add_item_stack(item_stack);
