@@ -15,7 +15,6 @@ use alloc::vec;
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
 
-use fastnoise_lite::FastNoiseLite;
 use nalgebra::Vector3;
 
 #[cfg(target_os = "none")]

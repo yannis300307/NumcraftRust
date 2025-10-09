@@ -7,7 +7,6 @@ use rand_xorshift::XorShiftRng;
 use crate::{
     constants::world::*,
     world::{
-        chunk::{self, Chunk},
         chunk_manager::ChunksManager,
         structures::{Structure, TREE1},
     },

@@ -1,5 +1,5 @@
 use libm::roundf;
-use nalgebra::{Vector2, Vector3};
+use nalgebra::Vector3;
 
 use crate::{
     constants::{BlockType, world::CHUNK_SIZE},
