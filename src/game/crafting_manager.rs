@@ -17,8 +17,8 @@ impl Craft {
         let mut index = 0;
 
         // We can't use a for loop because it is not available in const context
-        while index <= 9 {
-            pattern[index % 3][index / 4] =
+        while index < 9 {
+            pattern[index % 3][index / 3] =
                 ItemType::get_from_id(data[index]).expect("Invalid item id in craft.");
             index += 1;
         }
@@ -43,7 +43,81 @@ impl Craft {
 
     pub fn matches(&self, grid: [[ItemType; 3]; 3]) -> bool {
         if self.strict_shape {
-            // TODO
+            // Get the tiniest possible rectangle in the grid
+
+            // Get the top left corner x
+            let mut x1 = 0;
+            'scan: while x1 < 3 {
+                for i in 0..3 {
+                    if grid[x1][i] != ItemType::Air {
+                        break 'scan;
+                    }
+                }
+                x1 += 1;
+            }
+            if x1 == 3 {
+                return false;
+            }
+
+            // Get the top left corner y
+            let mut y1 = 0;
+            'scan: while y1 < 3 {
+                for i in 0..3 {
+                    if grid[i][y1] != ItemType::Air {
+                        break 'scan;
+                    }
+                }
+                y1 += 1;
+            }
+
+            if y1 == 3 {
+                return false;
+            }
+
+            // Get the bottom right corner x
+            let mut x2 = 2;
+            'scan: while x2 > x1 {
+                for i in 0..3 {
+                    if grid[x2][i] != ItemType::Air {
+                        break 'scan;
+                    }
+                }
+                x2 -= 1;
+            }
+
+            // Get the bottom right corner x
+            let mut y2 = 2;
+            'scan: while y2 > y1 {
+                for i in 0..3 {
+                    if grid[i][y2] != ItemType::Air {
+                        break 'scan;
+                    }
+                }
+                y2 -= 1;
+            }
+
+            let width = x2 - x1;
+            let height = y2 - y1;
+
+            println!("{:?} ---- {:?}", grid, self.pattern);
+
+            // Check if it matches the shape
+            for x in 0..3 {
+                for y in 0..3 {
+                    if x <= width && y <= height {
+                        // Check if the pattern is right
+                        if self.pattern[x][y] != grid[x1 + x][y1 + y] {
+                            return false;
+                        }
+                    } else {
+                        // Check if there is no items outside of the pattern
+                        if self.pattern[x][y] != ItemType::Air {
+                            return false;
+                        }
+                    }
+                }
+            }
+
             true
         } else {
             // The max size is 3*3
