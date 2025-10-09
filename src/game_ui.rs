@@ -274,6 +274,10 @@ impl GameUI {
             }
         }
 
+        for inventory in &mut *inventories {
+            inventory.modified = false;
+        }
+
         if input_manager.is_just_pressed(input::Key::Ok) {
             // If the selected element is the same as the one at the position of the cursor and that the user is not currently selecting an item amount
             if self
@@ -380,6 +384,7 @@ impl GameUI {
         if input_manager.is_just_pressed(input::Key::Var) {
             return false;
         }
+        
         true
     }
 
