@@ -38,7 +38,7 @@ NumcraftRust should run on both N120, N115 and N110 models. You will get better 
 - [X] Main menu
 - [X] Creative menu to select multiple blocks
 - [X] Menu to select between multiple worlds
-- [ ] Lightning engine
+- [ ] Lighting engine
 - [ ] Mobs
 - [X] Survival mode
 
@@ -53,7 +53,7 @@ If I have the time:
 
 Good ideas but I will never have the time to do that :
 - [ ] Mod support
-- [ ] Multiplayer (impossible at that time)
+- [ ] Multiplayer (impossible at this point in time)
 
 ## Known Bugs:
 - Weird beahaviors in the negative coordinates
@@ -64,14 +64,14 @@ Good ideas but I will never have the time to do that :
 ## Setup the build environment
 
 To build this app, you will need to install an embedded ARM rust compiler, the [Arm GCC compiler](https://developer.arm.com/downloads/-/gnu-rm) as well as [Node.js](https://nodejs.org/en/). 
-The SDK for Epsilon apps is shipped as an npm module called [nwlink](https://www.npmjs.com/package/nwlink) that will automatically be installed at compile time.
+The SDK for Epsilon apps is shipped as a npm module called [nwlink](https://www.npmjs.com/package/nwlink) that will automatically be installed at compile time.
 **Make sure that `arm-none-eabi-gcc`is in your path.**
 
 For more explanations on how to install the c sdk, follow [this guide](https://www.numworks.com/engineering/software/build/).
 
 You might need to create a Python venv in the `epsilon_simulator` folder to install the pip packages on certain Linux distros. 
 
-Then, you can setup the dependencies as follow :
+Then, you can set up the dependencies as follows :
 ```shell
 brew install rustup node # Or equivalent on your OS
 rustup-init
