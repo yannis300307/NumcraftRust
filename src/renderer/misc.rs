@@ -76,6 +76,7 @@ impl Renderer {
     }
 
     pub fn push_rect_uniform_on_frame_buffer(&mut self, rect: Rect, color: Color) {
+        return;
         for x in rect.x..(rect.x + rect.width) {
             for y in rect.y..(rect.y + rect.height) {
                 self.tile_frame_buffer[x as usize + y as usize * SCREEN_TILE_WIDTH] = color;
