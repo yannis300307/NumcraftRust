@@ -20,6 +20,7 @@ pub fn fill_triangle(
     mut t1: Vector2<isize>,
     mut t2: Vector2<isize>,
     frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+	depth_buffer: &mut [f32; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
     color: Color,
 ) {
     if t0.y > t1.y {
@@ -50,15 +51,23 @@ pub fn fill_triangle(
             i as f32 / segment_heightf
         };
 
-        let mut a = t0.x as f32 + ((t2 - t0).x as f32 * alpha);
-        let mut b = if second_half {
+        let mut x_a = t0.x as f32 + ((t2 - t0).x as f32 * alpha);
+        let mut x_b = if second_half {
             t1.x as f32 + ((t2 - t1).x as f32 * beta)
         } else {
             t0.x as f32 + ((t1 - t0).x as f32 * beta)
         };
+		// Attention: calcule en affine
+		let mut z_a = t0.z as f32 + ((t2 - t0).z as f32 * alpha);
+        let mut z_b = if second_half {
+            t1.z as f32 + ((t2 - t1).z as f32 * beta)
+        } else {
+            t0.z as f32 + ((t1 - t0).z as f32 * beta)
+        };
 
-        if a > b {
-            swap(&mut a, &mut b);
+        if x_a > x_b {
+            swap(&mut x_a, &mut x_b);
+			swap(&mut z_a, &mut z_b);
         }
 
         let y = t0.y + i;
@@ -69,16 +78,23 @@ pub fn fill_triangle(
             break 'height_iter;
         }
 
-        if (b as usize) < 1 {
+        if (x_b as usize) < 1 {
             // prevent line bug
             continue;
         }
 
-        for j in (a as usize)..=(b as usize) {
+        for j in (x_a as usize)..=(x_b as usize) {
             if j >= SCREEN_TILE_WIDTH {
                 continue 'height_iter;
             }
-            frame_buffer[j + y as usize * SCREEN_TILE_WIDTH] = color;
+			let index = j + y as usize * SCREEN_TILE_WIDTH;
+			let gamma = (j as f32 - x_a) / (x_b - x_a);
+			let z = z_a + (z_b - z_a) * gamma;
+			if z >= depth_buffer[index] {
+				continue;
+			}
+			depth_buffer[index] = z;
+            frame_buffer[index] = color;
         }
     }
 }
@@ -105,6 +121,7 @@ pub fn draw_line(
 pub fn draw_2d_triangle(
     tri: &Triangle2D,
     frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+	depth_buffer: &mut [f32; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 ) {
     if tri.texture_id == 255 {
         // Block marker
@@ -127,6 +144,7 @@ pub fn draw_2d_triangle(
             Vector2::new(tri.p2.x as isize, tri.p2.y as isize),
             Vector2::new(tri.p3.x as isize, tri.p3.y as isize),
             frame_buffer,
+			depth_buffer,
             get_quad_color_from_texture_id(tri.texture_id).apply_light(tri.light * 17),
         );
     }
@@ -485,7 +503,7 @@ impl Renderer {
 
             tri_copy.p3 += tile_offset;
 
-            draw_2d_triangle(&tri_copy, &mut self.tile_frame_buffer);
+            draw_2d_triangle(&tri_copy, &mut self.tile_frame_buffer, &mut self.tile_depth_buffer);
         }
     }
 
