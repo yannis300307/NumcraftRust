@@ -178,7 +178,7 @@ impl Game {
                 .camera
                 .update(self.timing_manager.get_delta_time(), &self.input_manager);
 
-            self.world.chunks_manager.check_mesh_regeneration();
+            //self.world.chunks_manager.check_mesh_regeneration();
             self.world
                 .update_entities(self.timing_manager.get_delta_time());
             self.physic_engine

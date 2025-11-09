@@ -11,7 +11,7 @@ use crate::{
         mesh::{Quad, Triangle, Triangle2D},
         *,
     },
-    world::World,
+    world::{World, chunk_manager},
 };
 
 /// Fill a triangle in the frame buffer
@@ -508,7 +508,7 @@ impl Renderer {
         hud: &Hud,
         draw_hud: bool,
     ) {
-        self.triangles_to_render.clear();
+        /*self.triangles_to_render.clear();
 
         let mat_view = self.get_mat_view();
 
@@ -566,13 +566,14 @@ impl Renderer {
         let mut block_marker = player.get_block_marker();
         for quad in block_marker.0.get_reference_vec() {
             self.add_quad_to_render(quad, &mat_view, block_marker.1);
-        }
+        }*/
 
         for x in 0..SCREEN_TILE_SUBDIVISION {
             for y in 0..SCREEN_TILE_SUBDIVISION {
                 self.clear_screen(Color::from_components(0b01110, 0b110110, 0b11111));
-                self.draw_triangles(x, y);
-                self.draw_flat_model_entities(world, &mat_view, x, y, &frustum);
+                //self.draw_triangles(x, y);
+                //self.draw_flat_model_entities(world, &mat_view, x, y, &frustum);
+                ray_tracer::draw_terrain(&self.camera, &world.chunks_manager, &mut self.tile_frame_buffer, x, y);
 
                 if draw_hud {
                     self.draw_hud(hud, fps_count, x, y);

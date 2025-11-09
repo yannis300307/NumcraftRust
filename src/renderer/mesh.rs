@@ -331,6 +331,7 @@ impl Mesh {
 
     pub fn generate_chunk(chunks_manager: &ChunksManager, chunk: &Chunk) -> Self {
         let mut quads = Vec::new();
+        return Mesh { quads };
 
         for x in 0..CHUNK_SIZE as isize {
             for y in 0..CHUNK_SIZE as isize {

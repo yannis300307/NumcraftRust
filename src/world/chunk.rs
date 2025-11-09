@@ -60,6 +60,11 @@ impl Chunk {
         self.blocks[(pos.x + pos.y * CHUNK_SIZE_I + pos.z * CHUNK_SIZE_I * CHUNK_SIZE_I) as usize]
     }
 
+    #[inline]
+    pub fn fast_get_at_unchecked(&self, pos: Vector3<isize>) -> BlockType {
+        unsafe { self.blocks.get_unchecked((pos.x + pos.y * CHUNK_SIZE_I + pos.z * CHUNK_SIZE_I * CHUNK_SIZE_I) as usize).clone() }
+    }
+
     pub fn get_pos(&self) -> &Vector3<isize> {
         &self.pos
     }

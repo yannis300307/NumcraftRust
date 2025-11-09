@@ -12,12 +12,9 @@ use crate::{
 use alloc::vec::Vec;
 
 /// Convert the block position from world space to chunk space
+#[inline]
 pub fn get_chunk_local_coords(pos: Vector3<isize>) -> Vector3<isize> {
-    Vector3::new(
-        (pos.x % CHUNK_SIZE_I + CHUNK_SIZE_I) % CHUNK_SIZE_I,
-        (pos.y % CHUNK_SIZE_I + CHUNK_SIZE_I) % CHUNK_SIZE_I,
-        (pos.z % CHUNK_SIZE_I + CHUNK_SIZE_I) % CHUNK_SIZE_I,
-    )
+    pos.map(|x| x & 7)
 }
 
 pub struct ChunksManager {
@@ -92,6 +89,17 @@ impl ChunksManager {
         );
         self.get_chunk_at_pos(chunk_pos)
             .map(|chunk| chunk.get_at_unchecked(get_chunk_local_coords(pos)))
+    }
+
+    /// Return the block type of the block at the given position in world blocks space
+    #[inline]
+    pub fn get_block_in_world_unchecked(&self, pos: Vector3<isize>) -> BlockType {
+        let chunk_pos = Vector3::new(
+            pos.x / CHUNK_SIZE_I,
+            pos.y / CHUNK_SIZE_I,
+            pos.z / CHUNK_SIZE_I,
+        );
+        self.get_chunk_at_pos(chunk_pos).unwrap().fast_get_at_unchecked(get_chunk_local_coords(pos))
     }
 
     /// Request the regeneration of the chunk mesh if this chunk is already loaded
