@@ -11,7 +11,7 @@ use core::{cmp::Ordering, f32, mem::swap};
 use crate::{
     camera::Camera,
     constants::{rendering::*, world::CHUNK_SIZE},
-    eadk::Color,
+    eadk::{self, Color},
     renderer::mesh::SmallTriangle2D,
 };
 
@@ -60,18 +60,24 @@ static TILESET_DATA: &[u8] = include_bytes!("../target/assets/tileset.bin");
 
 pub struct Renderer {
     pub camera: Camera,
-    triangles_to_render: Vec<SmallTriangle2D>,
+    triangles_to_render: tinyvec::SliceVec<'static, SmallTriangle2D>,
     tile_frame_buffer: [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
     projection_matrix: Perspective3<f32>,
     pub enable_vsync: bool,
 }
 
+fn get_buffer() -> &'static mut [SmallTriangle2D] {
+    unsafe { core::slice::from_raw_parts_mut(eadk::HEAP_START as *mut SmallTriangle2D, MAX_TRIANGLES) }
+}
 impl Renderer {
     pub fn new() -> Self {
+        let buf = get_buffer();
+        let tri_vec = tinyvec::SliceVec::from_slice_len(buf, 0);
+
         let renderer: Renderer = Renderer {
             camera: Camera::new(),
             projection_matrix: Perspective3::new(ASPECT_RATIO, FOV, ZNEAR, ZFAR),
-            triangles_to_render: Vec::with_capacity(MAX_TRIANGLES),
+            triangles_to_render: tri_vec,
             tile_frame_buffer: [Color { rgb565: 0 }; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
             enable_vsync: true,
         };

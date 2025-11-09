@@ -459,7 +459,9 @@ impl Renderer {
                 }
 
                 for tri in clip_buffer {
-                    self.triangles_to_render.push(tri.to_small()); // Do nothing if overflow
+                    if self.triangles_to_render.len() < MAX_TRIANGLES {
+                        self.triangles_to_render.push(tri.to_small()); // Do nothing if overflow
+                    }
                 }
             };
 

@@ -61,8 +61,11 @@ fn main() -> isize {
     // Init the heap
     #[cfg(target_os = "none")]
     {
-        let heap_size: usize = heap_size();
-        unsafe { HEAP.init(eadk::HEAP_START as usize, heap_size) }
+        let tri_vec_size = size_of::<crate::renderer::mesh::SmallTriangle2D>() * constants::rendering::MAX_TRIANGLES;
+        let heap_size: usize = 100000 - tri_vec_size;
+
+        let start = unsafe {eadk::HEAP_START} as usize + tri_vec_size;
+        unsafe { HEAP.init(start, heap_size) }
     }
 
     while eadk::input::KeyboardState::scan().key_down(eadk::input::Key::Ok) {

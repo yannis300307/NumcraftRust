@@ -51,6 +51,7 @@ serde = {version = "1.0.219", default-features=false}
 enum-iterator = "2.3.0"
 rand_xorshift = "0.4.0"
 rand_core = "0.9.3"
+tinyvec = "1.10.0"
 
 [build-dependencies]
 image = "0.25.6"

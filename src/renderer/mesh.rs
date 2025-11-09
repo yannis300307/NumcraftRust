@@ -237,6 +237,8 @@ impl Triangle2D {
     }
 }
 
+#[derive(Clone, Copy)]
+#[derive(Default)]
 pub struct SmallTriangle2D {
     pub pos: (u8, u8, u8, u8, u8, u8, u8),
     pub texture_id: u8,
