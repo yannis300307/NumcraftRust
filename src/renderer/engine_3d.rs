@@ -1,3 +1,5 @@
+use cbitmap::bitmap::BitsManage;
+
 use crate::{
     constants::get_quad_color_from_texture_id,
     eadk::{
@@ -573,7 +575,14 @@ impl Renderer {
                 self.clear_screen(Color::from_components(0b01110, 0b110110, 0b11111));
                 //self.draw_triangles(x, y);
                 //self.draw_flat_model_entities(world, &mat_view, x, y, &frustum);
-                ray_tracer::draw_terrain(&self.camera, &world.chunks_manager, &mut self.tile_frame_buffer, x, y);
+                ray_tracer::draw_terrain(
+                    &self.camera,
+                    &self.world_blocks_bitmap,
+                    &mut self.tile_frame_buffer,
+                    &world.chunks_manager,
+                    x,
+                    y,
+                );
 
                 if draw_hud {
                     self.draw_hud(hud, fps_count, x, y);

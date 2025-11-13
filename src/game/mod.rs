@@ -5,6 +5,7 @@ use alloc::{
     format,
     string::{String, ToString},
 };
+use cbitmap::bitmap::BitsManage;
 use nalgebra::{Vector2, Vector3};
 use serde::{Deserialize, Serialize};
 
@@ -67,7 +68,7 @@ impl Game {
             hud: Hud::new(),
             timing_manager: TimingManager::new(),
             physic_engine: PhysicEngine::new(),
-            crafting_manager: CraftingManager::new()
+            crafting_manager: CraftingManager::new(),
         }
     }
 
@@ -139,6 +140,25 @@ impl Game {
         );
 
         self.input_manager.wait_delay_or_ok(3000);
+
+        for x in 0..32 {
+            for y in 0..32 {
+                for z in 0..32 {
+                    let index = x + y * 32 + z * 32 * 32;
+                    if !self
+                        .world
+                        .chunks_manager
+                        .get_block_in_world_unchecked(Vector3::new(
+                            x as isize, y as isize, z as isize,
+                        ))
+                        .is_air()
+                    {
+                        self.renderer.world_blocks_bitmap.set(index);
+                    }
+                }
+            }
+        }
+
         GameState::InGame
     }
 

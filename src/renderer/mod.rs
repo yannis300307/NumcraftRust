@@ -4,6 +4,7 @@ use alloc::format;
 #[cfg(target_os = "none")]
 use alloc::vec::Vec;
 
+use cbitmap::bitmap::Bitmap;
 use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
 use core::{cmp::Ordering, f32, mem::swap};
@@ -65,6 +66,7 @@ pub struct Renderer {
     tile_frame_buffer: [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
     projection_matrix: Perspective3<f32>,
     pub enable_vsync: bool,
+    pub world_blocks_bitmap: Bitmap<BITMAP_SIZE>
 }
 
 impl Renderer {
@@ -75,6 +77,7 @@ impl Renderer {
             triangles_to_render: Vec::with_capacity(MAX_TRIANGLES),
             tile_frame_buffer: [Color { rgb565: 0 }; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
             enable_vsync: true,
+            world_blocks_bitmap: Bitmap::new(),
         };
 
         renderer

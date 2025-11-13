@@ -1,4 +1,10 @@
-use crate::{eadk::{display::{draw_string, pull_rect, push_rect, push_rect_uniform}, Point, Rect, SCREEN_RECT}, renderer::*};
+use crate::{
+    eadk::{
+        Point, Rect, SCREEN_RECT,
+        display::{draw_string, pull_rect, push_rect, push_rect_uniform},
+    },
+    renderer::*,
+};
 
 pub struct UnBoundedRect {
     pub x: isize,
@@ -83,7 +89,11 @@ impl Renderer {
         }
     }
 
-    pub fn push_unbounded_rect_uniform_on_frame_buffer(&mut self, rect: UnBoundedRect, color: Color) {
+    pub fn push_unbounded_rect_uniform_on_frame_buffer(
+        &mut self,
+        rect: UnBoundedRect,
+        color: Color,
+    ) {
         if rect.x + rect.width <= 0 || rect.y + rect.height <= 0 {
             return;
         }
@@ -96,7 +106,7 @@ impl Renderer {
 
     pub fn show_msg(message: &[&str], background_color: Color) {
         push_rect_uniform(SCREEN_RECT, background_color);
-        
+
         let mut y = (SCREEN_HEIGHT - message.len() * 20) / 2;
 
         for line in message {
@@ -113,4 +123,26 @@ impl Renderer {
             y += 20
         }
     }
+}
+
+#[inline(always)]
+pub fn inflate(n: u32) -> u32 {
+    let n = (n | (n << 16)) & 0xff0000ff;
+    let n = (n | (n << 8)) & 0x0f00f00f;
+    let n = (n | (n << 4)) & 0xc30c30c3;
+    let n = (n | (n << 2)) & 0x49249249;
+    n
+}
+
+#[inline(always)]
+pub fn interleave(x: u32, y: u32, z: u32) -> u32 {
+    let x = inflate(x);
+    let y = inflate(y) << 1;
+    let z = inflate(z) << 2;
+    x | y | z
+}
+
+#[inline(always)]
+pub fn flatten_zorder(p: Vector3<u32>) -> u32 {
+    interleave(p.x, p.y, p.z)
 }

@@ -24,6 +24,8 @@ pub mod rendering {
     pub const MAX_ENTITY_RENDER_DISTANCE: f32 = 10.;
 
     pub const ITEM_ENTITY_SPRITE_SIZE: f32 = 0.8;
+
+    pub const BITMAP_SIZE: usize = 4 * 8 * 4 * 8 * 4;
 }
 
 pub mod color_palette {
