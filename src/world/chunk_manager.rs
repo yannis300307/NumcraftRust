@@ -77,7 +77,7 @@ impl ChunksManager {
                 .get_pos()
                 .map(|x| (x * CHUNK_SIZE_I) as f32 + CHUNK_SIZE_I as f32 / 2.)
                 .metric_distance(&pos);
-            b_dist.total_cmp(&a_dist)
+            b_dist.total_cmp(&a_dist).reverse()
         });
 
         chunks

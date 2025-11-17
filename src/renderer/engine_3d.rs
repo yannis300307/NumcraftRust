@@ -459,6 +459,10 @@ impl Renderer {
                 }
 
                 for tri in clip_buffer {
+                    if self.triangles_to_render.len() >= MAX_TRIANGLES {
+                        // TODO : Find a proper fix for this
+                        break;
+                    }
                     self.triangles_to_render.push(tri.to_small()); // Do nothing if overflow
                 }
             };
@@ -477,7 +481,7 @@ impl Renderer {
             -((SCREEN_TILE_WIDTH * tile_x) as i16),
             -((SCREEN_TILE_HEIGHT * tile_y) as i16),
         );
-        for tri in self.triangles_to_render.iter_mut() {
+        for tri in self.triangles_to_render.iter_mut().rev() {
             let mut tri_copy = tri.to_tri_2d();
             tri_copy.p1 += tile_offset;
 
@@ -554,7 +558,7 @@ impl Renderer {
                     );
 
                     bvec.metric_distance(self.camera.get_pos())
-                        .total_cmp(&avec.metric_distance(self.camera.get_pos()))
+                        .total_cmp(&avec.metric_distance(self.camera.get_pos())).reverse()
                 });
             }
             for quad in quads {
