@@ -95,6 +95,10 @@ impl Camera {
         &self.pos
     }
 
+    pub fn set_rotation(&mut self, rot: Vector3<f32>) {
+        self.rotation = rot;
+    }
+
     pub fn get_has_moved(&self) -> bool {
         self.has_moved
     }

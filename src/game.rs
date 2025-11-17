@@ -117,6 +117,7 @@ impl Game {
             let player_entity = self.world.get_player_entity_mut();
             player_entity.pos = self.save_manager.get_player_pos();
             player_entity.rotation = self.save_manager.get_player_rot();
+            self.renderer.camera.set_rotation(player_entity.rotation);
 
             self.player
                 .set_inventory(self.save_manager.get_player_inventory());
