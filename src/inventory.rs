@@ -4,7 +4,7 @@ use core::{mem, usize};
 use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
-use crate::{constants::ItemType, entity::item};
+use crate::constants::ItemType;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ItemStack {

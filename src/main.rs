@@ -61,7 +61,7 @@ fn main() -> isize {
     // Init the heap
     #[cfg(target_os = "none")]
     {
-        let heap_size: usize = heap_size();
+        let heap_size: usize = 100_000;
         unsafe { HEAP.init(eadk::HEAP_START as usize, heap_size) }
     }
 
