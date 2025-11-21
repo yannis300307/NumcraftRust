@@ -14,7 +14,7 @@ use crate::{
         rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
     eadk::{self, Color},
-    game::crafting_manager::CraftingManager,
+    game::{crafting_manager::CraftingManager, game_menus::SettingsMenu},
     game_ui::GameUI,
     hud::Hud,
     input_manager::InputManager,
@@ -67,7 +67,7 @@ impl Game {
             hud: Hud::new(),
             timing_manager: TimingManager::new(),
             physic_engine: PhysicEngine::new(),
-            crafting_manager: CraftingManager::new()
+            crafting_manager: CraftingManager::new(),
         }
     }
 
@@ -171,13 +171,16 @@ impl Game {
                 self.save_manager.get_game_mode(),
                 &self.physic_engine,
                 self.timing_manager.get_delta_time(),
+                &self.settings,
             );
             self.hud.update(&self.input_manager, &self.player);
             self.hud.sync(&self.player);
 
-            self.renderer
-                .camera
-                .update(self.timing_manager.get_delta_time(), &self.input_manager);
+            self.renderer.camera.update(
+                self.timing_manager.get_delta_time(),
+                &self.input_manager,
+                &self.settings,
+            );
 
             self.world.chunks_manager.check_mesh_regeneration();
             self.world
@@ -223,7 +226,7 @@ impl Game {
         while !matches!(state, GameState::Quit) {
             state = match state {
                 GameState::GoMainMenu => self.main_menu_loop(),
-                GameState::GoSetting => self.settings_menu_loop(),
+                GameState::GoSetting(menu) => self.open_settings(menu),
                 GameState::GoSelectWorld => self.worlds_select_menu_loop(),
                 GameState::LoadWorld(filename, is_new) => self.load_world(&filename, is_new),
                 GameState::InGame => self.game_loop(),
@@ -238,7 +241,7 @@ impl Game {
 
 pub enum GameState {
     GoMainMenu,
-    GoSetting,
+    GoSetting(SettingsMenu),
     GoSelectWorld,
     InGame,
     OpenPlayerInventory(game_uis::PlayerInventoryPage),

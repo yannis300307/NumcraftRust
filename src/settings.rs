@@ -14,6 +14,7 @@ pub struct Settings {
     pub render_distance: usize,
     pub fov: f32,
     pub vsync: bool,
+    pub reverse_controls: bool,
 }
 
 impl Settings {
@@ -22,6 +23,7 @@ impl Settings {
             render_distance: MAX_RENDER_DISTANCE,
             fov: FOV,
             vsync: false,
+            reverse_controls: false
         }
     }
 
@@ -38,7 +40,7 @@ impl Settings {
         if storage_extapp_file_exists(SETTINGS_FILENAME) {
             let raw = storage_extapp_file_read(SETTINGS_FILENAME).unwrap();
 
-            let object: Settings = from_bytes(&raw).unwrap();
+            let object: Settings = from_bytes(&raw).unwrap_or(Settings::new());
 
             *self = object;
         }
