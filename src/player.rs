@@ -18,6 +18,7 @@ use crate::{
     inventory::{Inventory, ItemStack},
     physic::PhysicEngine,
     renderer::mesh::{Mesh, Quad, QuadDir},
+    settings::Settings,
     world::World,
 };
 
@@ -84,6 +85,7 @@ impl Player {
         game_mode: GameMode,
         physic_engine: &PhysicEngine,
         delta_time: f32,
+        settings: &Settings,
     ) {
         self.ray_cast_result = self.ray_cast(camera, world, 10);
 
@@ -93,7 +95,9 @@ impl Player {
         player_entity.rotation = *camera.get_rotation();
 
         // Movements
-        if input_manager.is_keydown(eadk::input::Key::Toolbox) {
+        if (input_manager.is_keydown(eadk::input::Key::Up) && settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::input::Key::Toolbox) && !settings.reverse_controls)
+        {
             // Forward
             let translation = sincosf(player_entity.rotation.y);
             if game_mode == GameMode::Creative {
@@ -104,7 +108,9 @@ impl Player {
                 player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
             }
         }
-        if input_manager.is_keydown(eadk::input::Key::Comma) {
+        if (input_manager.is_keydown(eadk::input::Key::Down) && settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::input::Key::Comma) && !settings.reverse_controls)
+        {
             // Backward
             let translation = sincosf(player_entity.rotation.y);
             if game_mode == GameMode::Creative {
@@ -115,7 +121,9 @@ impl Player {
                 player_entity.velocity.z -= translation.1 * delta * WALK_FORCE;
             }
         }
-        if input_manager.is_keydown(eadk::input::Key::Imaginary) {
+        if (input_manager.is_keydown(eadk::input::Key::Left) && settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::input::Key::Imaginary) && !settings.reverse_controls)
+        {
             // Left
             let translation = sincosf(player_entity.rotation.y + PI / 2.0);
             if game_mode == GameMode::Creative {
@@ -126,7 +134,9 @@ impl Player {
                 player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
             }
         }
-        if input_manager.is_keydown(eadk::input::Key::Power) {
+        if (input_manager.is_keydown(eadk::input::Key::Right) && settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::input::Key::Power) && !settings.reverse_controls)
+        {
             // Right
             let translation = sincosf(player_entity.rotation.y + PI / 2.0);
             if game_mode == GameMode::Creative {
