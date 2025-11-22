@@ -14,9 +14,11 @@ bench = false
 
 [lib]
 path = "src/main.rs"
-bench = false
 crate-type = ["cdylib"]
 name = "numcraft_sim"
+test = false
+doctest = false
+bench = false
 
 [features]
 
