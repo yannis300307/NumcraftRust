@@ -1,7 +1,7 @@
 use image::{self, GenericImageView, ImageReader};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use serde_json::Value;
 use std::{fs, process::Command};
 
 fn convert_image(file_name: &str) {
