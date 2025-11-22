@@ -51,7 +51,7 @@ fn compile_c_libs() {
 }
 
 fn patch_simulator() {
-    println!("cargo:rerun-if-changed=epsilon_simulator/ion/src/simulator/shared/keyboard.cpp");
+    println!("cargo:rerun-if-changed=simulator/ion/src/simulator/shared/keyboard.cpp");
     let remapped = "constexpr static KeySDLKeyPair sKeyPairs[] = {\
   KeySDLKeyPair(Key::OK,        SDL_SCANCODE_RETURN),\
   KeySDLKeyPair(Key::Back,      SDL_SCANCODE_BACKSPACE),\
@@ -72,7 +72,7 @@ fn patch_simulator() {
   KeySDLKeyPair(Key::Right,     SDL_SCANCODE_RIGHT),\
 };";
 
-    let file_content = fs::read_to_string("epsilon_simulator/ion/src/simulator/shared/keyboard.cpp")
+    let file_content = fs::read_to_string("simulator/ion/src/simulator/shared/keyboard.cpp")
         .expect("Cannot open keyboard.cpp file from emulator. Please check if the simulator is clonned properly.");
 
     if !file_content.contains(remapped) {
@@ -81,7 +81,7 @@ fn patch_simulator() {
         let result = re.replace(&file_content, remapped);
 
         fs::write(
-            "epsilon_simulator/ion/src/simulator/shared/keyboard.cpp",
+            "simulator/ion/src/simulator/shared/keyboard.cpp",
             result.as_bytes(),
         )
         .unwrap();

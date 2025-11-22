@@ -11,7 +11,7 @@ use core::{cmp::Ordering, f32, mem::swap};
 use crate::{
     camera::Camera,
     constants::{rendering::*, world::CHUNK_SIZE},
-    eadk::Color,
+    eadk::display::{COLOR_BLACK, Color565},
     renderer::mesh::SmallTriangle2D,
 };
 
@@ -61,7 +61,7 @@ static TILESET_DATA: &[u8] = include_bytes!("../target/assets/tileset.bin");
 pub struct Renderer {
     pub camera: Camera,
     triangles_to_render: Vec<SmallTriangle2D>,
-    tile_frame_buffer: [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    tile_frame_buffer: [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
     projection_matrix: Perspective3<f32>,
     pub enable_vsync: bool,
 }
@@ -72,7 +72,7 @@ impl Renderer {
             camera: Camera::new(),
             projection_matrix: Perspective3::new(ASPECT_RATIO, FOV, ZNEAR, ZFAR),
             triangles_to_render: Vec::with_capacity(MAX_TRIANGLES),
-            tile_frame_buffer: [Color { rgb565: 0 }; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+            tile_frame_buffer: [COLOR_BLACK; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
             enable_vsync: true,
         };
 

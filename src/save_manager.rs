@@ -11,16 +11,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     constants::{BlockType, save_manager::WORLD_VERSION, world::CHUNK_SIZE},
-    eadk::{self},
+    eadk::{self, display::Color565, storage::{file_erase, file_exists, file_list_with_extension, file_read, file_read_slice, file_write}},
     game::GameMode,
     inventory::Inventory,
     player::Player,
     renderer::Renderer,
-    storage_lib::{
-        storage_extapp_file_erase, storage_extapp_file_exists,
-        storage_extapp_file_list_with_extension, storage_extapp_file_read,
-        storage_extapp_file_read_header, storage_file_write,
-    },
     world::{World, chunk::Chunk},
 };
 
@@ -131,12 +126,12 @@ impl SaveManager {
     }
 
     pub fn get_existing_worlds(&self) -> Vec<String> {
-        storage_extapp_file_list_with_extension(4, "ncw")
+        file_list_with_extension(4, "ncw")
     }
 
     pub fn delete_world(&self, world_name: &String) {
-        if storage_extapp_file_exists(world_name) {
-            storage_extapp_file_erase(world_name);
+        if file_exists(world_name) {
+            file_erase(world_name);
         }
     }
 
@@ -144,23 +139,26 @@ impl SaveManager {
         let data = self.get_raw();
 
         if let Some(file_name) = &self.file_name {
-            if storage_extapp_file_exists(file_name) && !storage_extapp_file_erase(file_name) {
+            if file_exists(file_name) && file_erase(file_name).is_none() {
                 Renderer::show_msg(
-                    &["Unable to save.", "Cannot delete old save!"],
-                    eadk::Color::from_888(255, 100, 100),
+                    &["Unable to save.", "Cannot delete old save."],
+                    Color565::from_rgb888(255, 100, 100),
                 );
-                eadk::timing::msleep(3000);
+                eadk::time::wait_milliseconds(3000);
             }
-            if !storage_file_write(file_name, &data) {
+            if file_write(file_name, &data).is_none() {
                 Renderer::show_msg(
-                    &["Unable to save.", "Writing error!"],
-                    eadk::Color::from_888(255, 100, 100),
+                    &["Unable to save.", "Writing error."],
+                    Color565::from_rgb888(255, 100, 100),
                 );
-                eadk::timing::msleep(3000);
+                eadk::time::wait_milliseconds(3000);
             }
         } else {
-            Renderer::show_msg(&["Unable to save."], eadk::Color::from_888(255, 100, 100));
-            eadk::timing::msleep(3000);
+            Renderer::show_msg(
+                &["Unable to save."],
+                Color565::from_rgb888(255, 100, 100),
+            );
+            eadk::time::wait_milliseconds(3000);
         }
     }
 
@@ -221,24 +219,22 @@ impl SaveManager {
     }
 
     pub fn get_world_info(&self, filename: &String) -> Option<WorldInfo> {
-        let raw_data = storage_extapp_file_read_header(filename, 2)?;
+        let raw_data = file_read_slice(filename, 0, 2)?;
         let world_info_size = u16::from_be_bytes([raw_data[0], raw_data[1]]);
         let raw_data =
-            &storage_extapp_file_read_header(filename, world_info_size as usize + 2)?[2..];
+            &file_read_slice(filename, 2, world_info_size as usize)?;
 
         if let Ok(world_info) = from_bytes::<WorldInfo>(&raw_data) {
             Some(world_info)
         } else {
             None
         }
-
-        //Some(WorldInfo::new())
     }
 
     pub fn load_from_file(&mut self, filename: &str) -> Result<(), SaveFileLoadError> {
         self.file_name = Some(filename.to_owned());
         // Read file
-        if let Some(raw_data) = storage_extapp_file_read(filename) {
+        if let Some(raw_data) = file_read(filename) {
             if let Ok(world_data_offset) = self.read_world_info(&raw_data) {
                 // Decompress the entire file
                 if let Ok(data) = decompress_size_prepended(&raw_data[world_data_offset..]) {

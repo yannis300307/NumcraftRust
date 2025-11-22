@@ -27,7 +27,8 @@ impl Renderer {
 
             if let EntityType::Item { .. } = entity.get_type() {
                 // Extract the custom data of the entity
-                let item_data = ItemEntityCustomData::get_item_data(&entity).expect("Item Entity must have ItemData as custom data.");
+                let item_data = ItemEntityCustomData::get_item_data(&entity)
+                    .expect("Item Entity must have ItemData as custom data.");
 
                 let texture_id = item_data.item_stack.get_item_type().get_texture_id();
 
@@ -43,10 +44,9 @@ impl Renderer {
                 );
 
                 let default_size = ITEM_ENTITY_SPRITE_SIZE;
-                let sprite_size: isize = ((default_size
-                    / self.camera.get_pos().metric_distance(&pos))
-                    * (SCREEN_HEIGHTF / tanf(2.0 * (FOV / 2.0))))
-                    as isize;
+                let sprite_size: isize =
+                    ((default_size / self.camera.get_pos().metric_distance(&pos))
+                        * (SCREEN_HEIGHTF / tanf(2.0 * (FOV / 2.0)))) as isize;
 
                 let point = projected.map(|v| v as isize) + tile_offset;
 
@@ -100,7 +100,7 @@ impl Renderer {
                 ]);
 
                 self.tile_frame_buffer[dest_x as usize + dest_y as usize * SCREEN_TILE_WIDTH] =
-                    Color { rgb565: pixel };
+                    Color565 { value: pixel };
             }
         }
     }

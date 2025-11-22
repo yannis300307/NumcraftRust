@@ -1,9 +1,12 @@
 use enum_iterator::all;
 
-use crate::{eadk::{
-    self,
-    input::{Key, KeyboardState},
-}, timing::TimingManager};
+use crate::{
+    eadk::{
+        self,
+        keyboard::{Key, KeyboardState},
+    },
+    timing::TimingManager,
+};
 
 pub struct InputManager {
     keyboard_state: KeyboardState,
@@ -17,20 +20,20 @@ pub struct InputManager {
 impl InputManager {
     pub fn new() -> Self {
         InputManager {
-            keyboard_state: KeyboardState::new(),
-            last_keyboard_state: KeyboardState::new(),
-            just_pressed: KeyboardState::new(),
+            keyboard_state: KeyboardState::default(),
+            last_keyboard_state: KeyboardState::default(),
+            just_pressed: KeyboardState::default(),
 
             last_pressed: None,
             last_pressed_timer: 0.,
 
-            impulsed_key_buffer: None
+            impulsed_key_buffer: None,
         }
     }
 
     pub fn update(&mut self) {
         self.last_keyboard_state = self.keyboard_state;
-        self.keyboard_state = eadk::input::KeyboardState::scan();
+        self.keyboard_state = eadk::keyboard::KeyboardState::scan();
         self.just_pressed = self
             .keyboard_state
             .get_just_pressed(self.last_keyboard_state);
@@ -72,7 +75,7 @@ impl InputManager {
     }
 
     pub fn is_impulsed_key(&self, key: Key) -> bool {
-        return self.impulsed_key_buffer.is_some_and(|v| v == key)
+        return self.impulsed_key_buffer.is_some_and(|v| v == key);
     }
 
     pub fn is_just_pressed(&self, key: Key) -> bool {
@@ -84,16 +87,16 @@ impl InputManager {
     }
 
     pub fn wait_delay_or_ok(&mut self, delay_ms: usize) {
-        while self.is_keydown(eadk::input::Key::Ok) {
+        while self.is_keydown(eadk::keyboard::Key::Ok) {
             self.update();
-            eadk::timing::usleep(100);
+            eadk::time::wait_milliseconds(100);
         }
         for _ in 0..delay_ms / 50 {
             self.update();
-            if self.is_just_pressed(eadk::input::Key::Ok) {
+            if self.is_just_pressed(eadk::keyboard::Key::Ok) {
                 break;
             }
-            eadk::timing::msleep(50);
+            eadk::time::wait_milliseconds(50);
         }
     }
 }

@@ -8,7 +8,7 @@
 use cortex_m;
 
 #[cfg(target_os = "none")]
-use eadk::heap_size;
+use eadk::adresses::heap_size;
 #[cfg(target_os = "none")]
 use embedded_alloc::LlffHeap as Heap;
 
@@ -33,13 +33,12 @@ mod hud;
 mod input_manager;
 mod inventory;
 mod menu;
+pub mod misc;
 mod physic;
 mod player;
 mod save_manager;
 mod settings;
-mod storage_lib;
 mod timing;
-pub mod misc;
 
 #[used]
 #[cfg(target_os = "none")]
@@ -61,13 +60,13 @@ fn main() -> isize {
     // Init the heap
     #[cfg(target_os = "none")]
     {
-        let heap_size: usize = 100_000;
-        unsafe { HEAP.init(eadk::HEAP_START as usize, heap_size) }
+        let heap_size: usize = heap_size();
+        unsafe { HEAP.init(eadk::adresses::HEAP_START as usize, heap_size) }
     }
 
-    while eadk::input::KeyboardState::scan().key_down(eadk::input::Key::Ok) {
+    while eadk::keyboard::KeyboardState::scan().key_down(eadk::keyboard::Key::Ok) {
         // Avoid instant click on Ok
-        eadk::timing::msleep(50);
+        eadk::time::wait_milliseconds(50);
     }
 
     let mut game = Game::new();
