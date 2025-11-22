@@ -66,9 +66,9 @@ pub fn file_read_slice(filename: &str, start: usize, mut slice_lenght: usize) ->
         let mut lenght: usize = 0;
         let array_pointer = unsafe {
             extapp_fileRead(
-                c_string.as_ptr().offset(slice_lenght as isize),
+                c_string.as_ptr(),
                 &mut lenght as *mut usize,
-            )
+            ).offset(start as isize)
         };
 
         if array_pointer.is_null() {
