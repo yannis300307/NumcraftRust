@@ -1,6 +1,7 @@
 use core::f32::consts::PI;
 
 use libm::sincosf;
+
 #[allow(unused_imports)]
 use nalgebra::{ComplexField, Vector3};
 
@@ -22,8 +23,7 @@ use crate::{
     world::World,
 };
 
-#[cfg(target_os = "none")]
-use alloc::boxed::Box;
+calc_use!(alloc::boxed::Box);
 
 pub struct Player {
     ray_cast_result: Option<RaycastResult>,
@@ -95,8 +95,8 @@ impl Player {
         player_entity.rotation = *camera.get_rotation();
 
         // Movements
-        if (input_manager.is_keydown(eadk::input::Key::Up) && settings.reverse_controls)
-            || (input_manager.is_keydown(eadk::input::Key::Toolbox) && !settings.reverse_controls)
+        if (input_manager.is_keydown(eadk::keyboard::Key::Up) && settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::keyboard::Key::Toolbox) && !settings.reverse_controls)
         {
             // Forward
             let translation = sincosf(player_entity.rotation.y);
@@ -108,8 +108,8 @@ impl Player {
                 player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
             }
         }
-        if (input_manager.is_keydown(eadk::input::Key::Down) && settings.reverse_controls)
-            || (input_manager.is_keydown(eadk::input::Key::Comma) && !settings.reverse_controls)
+        if (input_manager.is_keydown(eadk::keyboard::Key::Down) && settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::keyboard::Key::Comma) && !settings.reverse_controls)
         {
             // Backward
             let translation = sincosf(player_entity.rotation.y);
@@ -121,8 +121,8 @@ impl Player {
                 player_entity.velocity.z -= translation.1 * delta * WALK_FORCE;
             }
         }
-        if (input_manager.is_keydown(eadk::input::Key::Left) && settings.reverse_controls)
-            || (input_manager.is_keydown(eadk::input::Key::Imaginary) && !settings.reverse_controls)
+        if (input_manager.is_keydown(eadk::keyboard::Key::Left) && settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::keyboard::Key::Imaginary) && !settings.reverse_controls)
         {
             // Left
             let translation = sincosf(player_entity.rotation.y + PI / 2.0);
@@ -134,8 +134,8 @@ impl Player {
                 player_entity.velocity.z += translation.1 * delta * WALK_FORCE;
             }
         }
-        if (input_manager.is_keydown(eadk::input::Key::Right) && settings.reverse_controls)
-            || (input_manager.is_keydown(eadk::input::Key::Power) && !settings.reverse_controls)
+        if (input_manager.is_keydown(eadk::keyboard::Key::Right) && settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::keyboard::Key::Power) && !settings.reverse_controls)
         {
             // Right
             let translation = sincosf(player_entity.rotation.y + PI / 2.0);
@@ -147,7 +147,7 @@ impl Player {
                 player_entity.velocity.z -= translation.1 * delta * WALK_FORCE;
             }
         }
-        if input_manager.is_keydown(eadk::input::Key::Shift) {
+        if input_manager.is_keydown(eadk::keyboard::Key::Shift) {
             // Up
             if game_mode == GameMode::Creative {
                 player_entity.pos.y += delta * FLY_SPEED;
@@ -155,7 +155,7 @@ impl Player {
                 player_entity.velocity.y += JUMP_FORCE;
             }
         }
-        if input_manager.is_keydown(eadk::input::Key::Exp) {
+        if input_manager.is_keydown(eadk::keyboard::Key::Exp) {
             // Down
             if game_mode == GameMode::Creative {
                 player_entity.pos.y -= delta * FLY_SPEED;
@@ -171,7 +171,7 @@ impl Player {
 
         // Break Block
         if game_mode == GameMode::Creative {
-            if input_manager.is_just_pressed(eadk::input::Key::Back) {
+            if input_manager.is_just_pressed(eadk::keyboard::Key::Back) {
                 if let Some(result) = &self.ray_cast_result {
                     world
                         .chunks_manager
@@ -179,7 +179,7 @@ impl Player {
                 }
             }
         } else {
-            if input_manager.is_keydown(eadk::input::Key::Back) {
+            if input_manager.is_keydown(eadk::keyboard::Key::Back) {
                 if let Some(ray_cast) = &self.ray_cast_result {
                     if self
                         .breaking_block_pos
@@ -208,7 +208,7 @@ impl Player {
             }
         }
 
-        if input_manager.is_just_pressed(eadk::input::Key::Ok) {
+        if input_manager.is_just_pressed(eadk::keyboard::Key::Ok) {
             // Place Block
             if let Some(result) = &self.ray_cast_result {
                 let block_pos = result.block_pos + result.face_dir.get_normal_vector();

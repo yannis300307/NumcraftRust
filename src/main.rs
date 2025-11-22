@@ -3,72 +3,38 @@
 #![feature(const_index)]
 #![feature(const_trait_impl)]
 
-#[allow(unused_imports)]
-#[cfg(target_os = "none")]
-use cortex_m;
+#[macro_use]
+mod eadk;
 
-#[cfg(target_os = "none")]
-use eadk::heap_size;
-#[cfg(target_os = "none")]
-use embedded_alloc::LlffHeap as Heap;
-
-#[global_allocator]
-#[cfg(target_os = "none")]
-static HEAP: Heap = Heap::empty();
-
-#[cfg(target_os = "none")]
-extern crate alloc;
-
-mod camera;
-pub mod constants;
-pub mod eadk;
 mod game;
 mod renderer;
 mod world;
-use game::Game;
-
+mod camera;
+mod constants;
 mod entity;
 mod game_ui;
 mod hud;
 mod input_manager;
 mod inventory;
 mod menu;
+mod misc;
 mod physic;
 mod player;
 mod save_manager;
 mod settings;
-mod storage_lib;
 mod timing;
-pub mod misc;
 
-#[used]
-#[cfg(target_os = "none")]
-#[unsafe(link_section = ".rodata.eadk_app_name")]
-pub static EADK_APP_NAME: [u8; 9] = *b"Numcraft\0";
+use game::Game;
 
-#[used]
-#[cfg(target_os = "none")]
-#[unsafe(link_section = ".rodata.eadk_api_level")]
-pub static EADK_APP_API_LEVEL: u32 = 0;
+setup_allocator!();
 
-#[used]
-#[cfg(target_os = "none")]
-#[unsafe(link_section = ".rodata.eadk_app_icon")]
-pub static EADK_APP_ICON: [u8; 3437] = *include_bytes!("../target/assets/icon.nwi");
+configure_app!(b"Numcraft\0", 9, "../target/assets/icon.nwi", 3437);
 
 #[unsafe(no_mangle)]
 fn main() -> isize {
-    // Init the heap
-    #[cfg(target_os = "none")]
-    {
-        let heap_size: usize = 100_000;
-        unsafe { HEAP.init(eadk::HEAP_START as usize, heap_size) }
-    }
+    init_heap!();
 
-    while eadk::input::KeyboardState::scan().key_down(eadk::input::Key::Ok) {
-        // Avoid instant click on Ok
-        eadk::timing::msleep(50);
-    }
+   eadk::utils::wait_ok_released();
 
     let mut game = Game::new();
 

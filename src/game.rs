@@ -1,10 +1,8 @@
-#[cfg(target_os = "none")]
-use alloc::{
-    borrow::ToOwned,
-    boxed::Box,
-    format,
-    string::{String, ToString},
-};
+calc_use!(alloc::borrow::ToOwned);
+calc_use!(alloc::format);
+calc_use!(alloc::string::String);
+calc_use!(alloc::string::ToString);
+
 use nalgebra::{Vector2, Vector3};
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +11,7 @@ use crate::{
         color_palette::MENU_BACKGROUND_COLOR,
         rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
-    eadk::{self, Color},
+    eadk::{self, display::Color565},
     game::{crafting_manager::CraftingManager, game_menus::SettingsMenu},
     game_ui::GameUI,
     hud::Hud,
@@ -94,7 +92,7 @@ impl Game {
                     "is no longer compatible.",
                     format!("{:?}", error).as_str(),
                 ],
-                Color::from_888(255, 100, 100),
+                Color565::from_rgb888(255, 100, 100),
             );
             self.input_manager.wait_delay_or_ok(15000);
             return GameState::GoMainMenu;
@@ -136,7 +134,7 @@ impl Game {
         // Show a warning message
         Renderer::show_msg(
             &["To exit, press [EXE]", "DON'T press [Home]"],
-            Color::from_888(255, 255, 255),
+            Color565::from_rgb888(255, 255, 255),
         );
 
         self.input_manager.wait_delay_or_ok(3000);
@@ -149,12 +147,12 @@ impl Game {
             self.input_manager.update();
             self.timing_manager.update();
 
-            if self.input_manager.is_just_pressed(eadk::input::Key::Exe) {
+            if self.input_manager.is_just_pressed(eadk::keyboard::Key::Exe) {
                 self.exit_world();
 
                 return GameState::GoMainMenu;
             }
-            if self.input_manager.is_just_pressed(eadk::input::Key::Var) {
+            if self.input_manager.is_just_pressed(eadk::keyboard::Key::Var) {
                 if self.save_manager.get_game_mode() == GameMode::Creative {
                     return GameState::OpenPlayerInventory(game_uis::PlayerInventoryPage::Creative);
                 } else {

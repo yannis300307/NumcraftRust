@@ -1,7 +1,6 @@
 use core::{mem, usize};
 
-#[cfg(target_os = "none")]
-use alloc::vec::Vec;
+calc_use!(alloc::vec::Vec);
 use serde::{Deserialize, Serialize};
 
 use crate::constants::ItemType;

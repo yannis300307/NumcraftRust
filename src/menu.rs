@@ -1,12 +1,10 @@
-#[cfg(target_os = "none")]
-use alloc::{
-    string::{String, ToString},
-    vec::Vec,
-};
+calc_use!(alloc::string::String);
+calc_use!(alloc::string::ToString);
+calc_use!(alloc::vec::Vec);
 
 use nalgebra::Vector2;
 
-use crate::{eadk::input::Key, input_manager::InputManager};
+use crate::{eadk::keyboard::Key, input_manager::InputManager};
 
 pub enum MenuElement {
     /// A simple button

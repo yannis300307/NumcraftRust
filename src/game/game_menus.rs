@@ -18,7 +18,7 @@ impl Game {
             })
             .with_element(MenuElement::Entry {
                 placeholder_text: "World seed".to_string(),
-                value: format!("{}", eadk::random() % 1_000_000_000),
+                value: format!("{}", eadk::random::get_random_u32() % 1_000_000_000),
                 allow_margin: true,
                 max_len: 9,
                 digits_only: true,
@@ -38,7 +38,7 @@ impl Game {
             });
 
         // Clear the screen
-        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         self.timing_manager.reset();
 
@@ -50,7 +50,7 @@ impl Game {
             self.input_manager.update_timing(&self.timing_manager);
 
             // Exit the menu when [Back] is pressed
-            if self.input_manager.is_keydown(eadk::input::Key::Back) {
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Back) {
                 return GameState::GoSelectWorld;
             }
 
@@ -79,7 +79,7 @@ impl Game {
                         }
 
                         if seed.is_empty() {
-                            seed = format!("{}", eadk::random() % 1_000_000_000);
+                            seed = format!("{}", eadk::random::get_random_u32() % 1_000_000_000);
                         }
 
                         let world_seed = seed.parse::<i32>().unwrap_or(1);
@@ -114,7 +114,7 @@ impl Game {
             menu.finish_buttons_handling();
 
             self.renderer.draw_menu(&mut menu);
-            eadk::timing::msleep(50);
+            eadk::time::wait_milliseconds(50);
         }
     }
 
@@ -144,7 +144,7 @@ impl Game {
             });
 
         // Clear the screen
-        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         self.timing_manager.reset();
 
@@ -154,7 +154,7 @@ impl Game {
             self.input_manager.update_timing(&self.timing_manager);
 
             // Exit the menu when [Back] is pressed
-            if self.input_manager.is_keydown(eadk::input::Key::Back) {
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Back) {
                 return GameState::GoSelectWorld;
             }
 
@@ -185,7 +185,7 @@ impl Game {
             menu.finish_buttons_handling();
 
             self.renderer.draw_menu(&mut menu);
-            eadk::timing::msleep(50);
+            eadk::time::wait_milliseconds(50);
         }
     }
 
@@ -232,7 +232,7 @@ impl Game {
         }
 
         // Clear the screen
-        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         self.timing_manager.reset();
 
@@ -245,7 +245,7 @@ impl Game {
             menu.check_inputs(&self.input_manager);
 
             // Exit the menu when [Back] is pressed
-            if self.input_manager.is_keydown(eadk::input::Key::Back) {
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Back) {
                 return GameState::GoMainMenu;
             }
 
@@ -286,7 +286,7 @@ impl Game {
             menu.finish_buttons_handling();
 
             self.renderer.draw_menu(&mut menu);
-            eadk::timing::msleep(50);
+            eadk::time::wait_milliseconds(50);
         }
     }
 
@@ -334,7 +334,7 @@ impl Game {
             });
 
         // Clear the screen
-        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         self.timing_manager.reset();
 
@@ -343,7 +343,7 @@ impl Game {
             self.timing_manager.update();
             self.input_manager.update_timing(&self.timing_manager);
 
-            if self.input_manager.is_keydown(eadk::input::Key::Back) {
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Back) {
                 self.update_settings();
                 self.settings.save();
                 return GameState::GoSetting(SettingsMenu::Hub);
@@ -388,7 +388,7 @@ impl Game {
             }
 
             self.renderer.draw_menu(&mut menu);
-            eadk::timing::msleep(50);
+            eadk::time::wait_milliseconds(50);
         }
     }
 
@@ -412,7 +412,7 @@ impl Game {
             });
 
         // Clear the screen
-        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         self.timing_manager.reset();
 
@@ -421,7 +421,7 @@ impl Game {
             self.timing_manager.update();
             self.input_manager.update_timing(&self.timing_manager);
 
-            if self.input_manager.is_keydown(eadk::input::Key::Back) {
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Back) {
                 self.update_settings();
                 self.settings.save();
                 return GameState::GoSetting(SettingsMenu::Hub);
@@ -459,7 +459,7 @@ impl Game {
             }
 
             self.renderer.draw_menu(&mut menu);
-            eadk::timing::msleep(50);
+            eadk::time::wait_milliseconds(50);
         }
     }
 
@@ -498,7 +498,7 @@ impl Game {
             });
 
         // Clear the screen
-        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         self.timing_manager.reset();
 
@@ -507,7 +507,7 @@ impl Game {
             self.timing_manager.update();
             self.input_manager.update_timing(&self.timing_manager);
 
-            if self.input_manager.is_keydown(eadk::input::Key::Back) {
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Back) {
                 return GameState::GoMainMenu;
             }
 
@@ -544,7 +544,7 @@ impl Game {
             }
 
             self.renderer.draw_menu(&mut menu);
-            eadk::timing::msleep(50);
+            eadk::time::wait_milliseconds(50);
         }
     }
 
@@ -574,7 +574,7 @@ impl Game {
                 allow_margin: true,
             });
 
-        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         self.timing_manager.reset();
 
@@ -585,7 +585,7 @@ impl Game {
 
             menu.check_inputs(&self.input_manager);
 
-            if self.input_manager.is_keydown(eadk::input::Key::Home) {
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Home) {
                 return GameState::Quit;
             }
 
@@ -610,7 +610,7 @@ impl Game {
             menu.finish_buttons_handling();
 
             self.renderer.draw_menu(&mut menu);
-            eadk::timing::msleep(50);
+            eadk::time::wait_milliseconds(50);
         }
     }
 }

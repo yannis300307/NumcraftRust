@@ -37,18 +37,18 @@ impl Camera {
 
     pub fn update(&mut self, delta: f32, input_manager: &InputManager, settings: &Settings) {
         // Rotation
-        if (input_manager.is_keydown(eadk::input::Key::Right) && !settings.reverse_controls)
-            || (input_manager.is_keydown(eadk::input::Key::Power) && settings.reverse_controls)
+        if (input_manager.is_keydown(eadk::keyboard::Key::Right) && !settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::keyboard::Key::Power) && settings.reverse_controls)
         {
             self.rotation.y -= delta * ROTATION_SPEED;
         }
-        if (input_manager.is_keydown(eadk::input::Key::Left) && !settings.reverse_controls)
-            || (input_manager.is_keydown(eadk::input::Key::Imaginary) && settings.reverse_controls)
+        if (input_manager.is_keydown(eadk::keyboard::Key::Left) && !settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::keyboard::Key::Imaginary) && settings.reverse_controls)
         {
             self.rotation.y += delta * ROTATION_SPEED;
         }
-        if (input_manager.is_keydown(eadk::input::Key::Up) && !settings.reverse_controls)
-            || (input_manager.is_keydown(eadk::input::Key::Toolbox) && settings.reverse_controls)
+        if (input_manager.is_keydown(eadk::keyboard::Key::Up) && !settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::keyboard::Key::Toolbox) && settings.reverse_controls)
         {
             self.rotation.x -= delta * ROTATION_SPEED;
 
@@ -56,8 +56,8 @@ impl Camera {
                 self.rotation.x = -PI / 2.0 + 0.0001
             }
         }
-        if (input_manager.is_keydown(eadk::input::Key::Down) && !settings.reverse_controls)
-            || (input_manager.is_keydown(eadk::input::Key::Comma) && settings.reverse_controls)
+        if (input_manager.is_keydown(eadk::keyboard::Key::Down) && !settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::keyboard::Key::Comma) && settings.reverse_controls)
         {
             self.rotation.x += delta * ROTATION_SPEED;
 

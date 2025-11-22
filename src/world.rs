@@ -10,15 +10,11 @@ use crate::inventory::{Inventory, ItemStack};
 use crate::world::chunk_manager::ChunksManager;
 use crate::world::world_generator::WorldGenerator;
 
-#[cfg(target_os = "none")]
-use alloc::vec;
-#[cfg(target_os = "none")]
-use alloc::vec::Vec;
+calc_use!(alloc::boxed::Box);
+calc_use!(alloc::vec::Vec);
+calc_use!(alloc::vec);
 
 use nalgebra::Vector3;
-
-#[cfg(target_os = "none")]
-use alloc::boxed::Box;
 
 pub mod chunk;
 pub mod chunk_manager;
