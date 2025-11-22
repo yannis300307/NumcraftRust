@@ -206,6 +206,7 @@ pub struct Triangle2D {
     pub p1: Vector2<i16>,
     pub p2: Vector2<i16>,
     pub p3: Vector2<i16>,
+	pub z: [f16; 3],
     pub texture_id: u8,
     pub light: u8,
 }
@@ -227,6 +228,9 @@ impl Triangle2D {
             ((value >> 16) & 0xFF) as u8,
             ((value >> 8) & 0xFF) as u8,
             (value & 0xFF) as u8,
+			self.z[0],
+			self.z[1],
+			self.z[2]
         );
 
         SmallTriangle2D {
@@ -238,7 +242,7 @@ impl Triangle2D {
 }
 
 pub struct SmallTriangle2D {
-    pub pos: (u8, u8, u8, u8, u8, u8, u8),
+    pub pos: (u8, u8, u8, u8, u8, u8, u8, f16, f16, f16),
     pub texture_id: u8,
     pub light: u8,
 }
@@ -266,6 +270,7 @@ impl SmallTriangle2D {
             p1: Vector2::new(p1x, p1y),
             p2: Vector2::new(p2x, p2y),
             p3: Vector2::new(p3x, p3y),
+			z: [self.pos.7, self.pos.8, self.pos.9],
             texture_id: self.texture_id,
             light: self.light,
         }

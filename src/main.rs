@@ -2,6 +2,7 @@
 #![no_main]
 #![feature(const_index)]
 #![feature(const_trait_impl)]
+#![feature(f16)]
 
 #[allow(unused_imports)]
 #[cfg(target_os = "none")]

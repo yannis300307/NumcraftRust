@@ -14,89 +14,99 @@ use crate::{
     world::World,
 };
 
+use nalgebra::{max, min};
+
+pub fn scanline_loop(
+	range: &mut [Vector2<f32>; 2], d_dy: [Vector2<f32>; 2],
+	y_start: u8, y_end: u8, color: Color,
+	frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+	depth_buffer: &mut [f32; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT]
+)
+{
+	let fwidth: i16 = SCREEN_TILE_WIDTH as i16;
+	let mut x_start: u8;
+	let mut x_end: u8;
+	let mut i_y: usize = SCREEN_TILE_WIDTH * y_start as usize;
+	let mut i: usize;
+
+	let mut dz_dx: f32;
+	let mut z: f32;
+
+	for _y in y_start..y_end
+	{
+		x_start = max(range[0].x.ceil() as i16, 0) as u8;
+		x_end = min(range[1].x.ceil() as i16, fwidth) as u8;
+
+		dz_dx = (range[1].y - range[0].y) / (range[1].x - range[0].x) as f32;
+		z = range[0].y + dz_dx * (x_start as f32 - range[0].x);
+		i = i_y + x_start as usize;
+		for _x in x_start..x_end
+		{
+			let safe_i = min(i, 4799);
+			if z >= depth_buffer[safe_i] || true {
+				frame_buffer[safe_i] = color;
+			}
+			i += 1;
+			z += dz_dx;
+		}
+
+		range[0] += d_dy[0];
+		range[1] += d_dy[1];
+		i_y += SCREEN_TILE_WIDTH;
+	} 
+}
+
 /// Fill a triangle in the frame buffer
 pub fn fill_triangle(
-    mut t0: Vector2<isize>,
-    mut t1: Vector2<isize>,
-    mut t2: Vector2<isize>,
+	tri: &Triangle2D,
     frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 	depth_buffer: &mut [f32; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
     color: Color,
 ) {
-    if t0.y > t1.y {
-        swap(&mut t0, &mut t1);
-    }
-    if t0.y > t2.y {
-        swap(&mut t0, &mut t2);
-    }
-    if t1.y > t2.y {
-        swap(&mut t1, &mut t2);
-    }
+	let mut t0 = (tri.p1.x, tri.p1.y, tri.z[0]);
+	let mut t1 = (tri.p2.x, tri.p2.y, tri.z[1]);
+	let mut t2 = (tri.p3.x, tri.p3.y, tri.z[2]);
 
-    let triangle_height = t2.y - t0.y;
-    let triangle_heightf = triangle_height as f32;
+    if t0.1 > t1.1 { swap(&mut t0, &mut t1); }
+    if t0.1 > t2.1 { swap(&mut t0, &mut t2); }
+    if t1.1 > t2.1 { swap(&mut t1, &mut t2); }
 
-    'height_iter: for i in 0..triangle_height {
-        let second_half = i > (t1.y - t0.y) || (t1.y == t0.y);
-        let segment_heightf = if second_half {
-            (t2.y - t1.y) as f32
-        } else {
-            (t1.y - t0.y) as f32
-        };
+	let mut d_dy:	[Vector2<f32>; 2] = [Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0)];
+	let mut range:	[Vector2<f32>; 2] = [Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0)];
+	let mut y_start:u8;
+	let mut y_end:	u8;
 
-        let alpha = i as f32 / triangle_heightf;
-        let beta = if second_half {
-            (i as f32 - (t1.y - t0.y) as f32) / segment_heightf
-        } else {
-            i as f32 / segment_heightf
-        };
+	if t0.1 < SCREEN_TILE_HEIGHT as i16 && t1.1 >= 0
+	{
+		y_start	= max(t0.1, 0) as u8;
+		y_end	= min(t1.1, SCREEN_TILE_HEIGHT as i16) as u8;
+		d_dy[0].x = (t1.0 - t0.0) as f32; d_dy[0].y = (t1.2 - t0.2) as f32;
+		d_dy[1].x = (t2.0 - t0.0) as f32; d_dy[1].y = (t2.2 - t0.2) as f32;
+		d_dy[0]  /= (t1.1 - t0.1) as f32; d_dy[1]  /= (t2.1 - t0.1) as f32;
+		range[0].x = t0.0 as f32 + d_dy[0].x * (y_start as i16 - t0.1) as f32;
+		range[1].x = t0.0 as f32 + d_dy[1].x * (y_start as i16 - t0.1) as f32;
+		range[0].y = t0.2 as f32 + d_dy[0].y * (y_start as i16 - t0.1) as f32;
+		range[1].y = t0.2 as f32 + d_dy[1].y * (y_start as i16 - t0.1) as f32;
 
-        let mut x_a = t0.x as f32 + ((t2 - t0).x as f32 * alpha);
-        let mut x_b = if second_half {
-            t1.x as f32 + ((t2 - t1).x as f32 * beta)
-        } else {
-            t0.x as f32 + ((t1 - t0).x as f32 * beta)
-        };
-		// Attention: calcule en affine
-		let mut z_a = t0.z as f32 + ((t2 - t0).z as f32 * alpha);
-        let mut z_b = if second_half {
-            t1.z as f32 + ((t2 - t1).z as f32 * beta)
-        } else {
-            t0.z as f32 + ((t1 - t0).z as f32 * beta)
-        };
+		if d_dy[0].x > d_dy[1].x { d_dy.swap(0, 1); }
+		scanline_loop(&mut range, d_dy, y_start, y_end, color, frame_buffer, depth_buffer);
+	}
 
-        if x_a > x_b {
-            swap(&mut x_a, &mut x_b);
-			swap(&mut z_a, &mut z_b);
-        }
+	if t1.1 < SCREEN_TILE_HEIGHT as i16 && t2.1 >= 0
+	{
+		y_start	= max(t1.1, 0) as u8;
+		y_end	= min(t2.1, SCREEN_TILE_HEIGHT as i16) as u8;
+		d_dy[0].x = (t2.0 - t0.0) as f32; d_dy[0].y = (t2.2 - t0.2) as f32;
+		d_dy[1].x = (t2.0 - t1.0) as f32; d_dy[1].y = (t2.2 - t1.2) as f32;
+		d_dy[0]  /= (t2.1 - t0.1) as f32; d_dy[1]  /= (t2.1 - t1.1) as f32;
+		range[0].x = t0.0 as f32 + d_dy[0].x * (y_start as i16 - t0.1) as f32;
+		range[1].x = t1.0 as f32 + d_dy[1].x * (y_start as i16 - t1.1) as f32;
+		range[0].y = t0.2 as f32 + d_dy[0].y * (y_start as i16 - t0.1) as f32;
+		range[1].y = t1.2 as f32 + d_dy[1].y * (y_start as i16 - t1.1) as f32;
 
-        let y = t0.y + i;
-        if y < 0 {
-            continue 'height_iter;
-        }
-        if y >= SCREEN_TILE_HEIGHT as isize {
-            break 'height_iter;
-        }
-
-        if (x_b as usize) < 1 {
-            // prevent line bug
-            continue;
-        }
-
-        for j in (x_a as usize)..=(x_b as usize) {
-            if j >= SCREEN_TILE_WIDTH {
-                continue 'height_iter;
-            }
-			let index = j + y as usize * SCREEN_TILE_WIDTH;
-			let gamma = (j as f32 - x_a) / (x_b - x_a);
-			let z = z_a + (z_b - z_a) * gamma;
-			if z >= depth_buffer[index] {
-				continue;
-			}
-			depth_buffer[index] = z;
-            frame_buffer[index] = color;
-        }
-    }
+		if d_dy[0].x < d_dy[1].x { d_dy.swap(0, 1); }
+		scanline_loop(&mut range, d_dy, y_start, y_end, color, frame_buffer, depth_buffer);
+	}
 }
 
 // Draw a line in the frame buffer
@@ -140,9 +150,7 @@ pub fn draw_2d_triangle(
     } else {
         // Normal Triangle
         fill_triangle(
-            Vector2::new(tri.p1.x as isize, tri.p1.y as isize),
-            Vector2::new(tri.p2.x as isize, tri.p2.y as isize),
-            Vector2::new(tri.p3.x as isize, tri.p3.y as isize),
+			tri,
             frame_buffer,
 			depth_buffer,
             get_quad_color_from_texture_id(tri.texture_id).apply_light(tri.light * 17),
@@ -199,18 +207,18 @@ pub fn vector_intersect_plane(
 pub fn vector_intersect_line(
     line_p: &Vector2<f32>,
     line_n: &Vector2<f32>,
-    line_start: &Vector2<f32>,
-    line_end: &Vector2<f32>,
-) -> Vector2<i16> {
+    line_start: &Vector3<f32>,
+    line_end: &Vector3<f32>,
+) -> Vector3<f32> {
     let line_n = line_n.normalize();
     let line_d = -line_n.dot(line_p);
-    let ad = line_start.dot(&line_n);
-    let bd = line_end.dot(&line_n);
+    let ad = line_start.xy().dot(&line_n);
+    let bd = line_end.xy().dot(&line_n);
     let t = (-line_d - ad) / (bd - ad);
     let line_start_to_end = line_end - line_start;
     let line_to_intersect = line_start_to_end * t;
     let coords = line_start + line_to_intersect;
-    coords.map(|x| x as i16)
+    coords
 }
 
 pub fn triangle_clip_against_line(
@@ -223,18 +231,18 @@ pub fn triangle_clip_against_line(
     let dist = |p: Vector2<f32>| line_n.x * p.x + line_n.y * p.y - line_n.dot(line_p);
 
     let binding = Default::default();
-    let mut inside_points: [&Vector2<f32>; 3] = [&binding; 3];
+    let mut inside_points: [&Vector3<f32>; 3] = [&binding; 3];
     let mut n_inside_point_count = 0;
-    let mut outside_points: [&Vector2<f32>; 3] = [&binding; 3];
+    let mut outside_points: [&Vector3<f32>; 3] = [&binding; 3];
     let mut n_outside_point_count = 0;
 
-    let p1 = in_tri.p1.map(|x| x as f32);
-    let p2 = in_tri.p2.map(|x| x as f32);
-    let p3 = in_tri.p3.map(|x| x as f32);
+    let p1 = Vector3::new(in_tri.p1.x as f32, in_tri.p1.y as f32, in_tri.z[0] as f32);
+    let p2 = Vector3::new(in_tri.p2.x as f32, in_tri.p2.y as f32, in_tri.z[1] as f32);
+    let p3 = Vector3::new(in_tri.p3.x as f32, in_tri.p3.y as f32, in_tri.z[2] as f32);
 
-    let d0 = dist(p1);
-    let d1 = dist(p2);
-    let d2 = dist(p3);
+    let d0 = dist(p1.xy());
+    let d1 = dist(p2.xy());
+    let d2 = dist(p3.xy());
 
     if d0 >= 0.0 {
         inside_points[n_inside_point_count] = &p1;
@@ -267,10 +275,14 @@ pub fn triangle_clip_against_line(
     }
 
     if n_inside_point_count == 1 && n_outside_point_count == 2 {
+		let p1t = inside_points[0];
+		let p2t = vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[0]);
+		let p3t = vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[1]);
         let out_tri = Triangle2D {
-            p1: inside_points[0].map(|x| x as i16),
-            p2: vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[0]),
-            p3: vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[1]),
+            p1: p1t.xy().map(|x| x as i16),
+            p2: p2t.xy().map(|x| x as i16),
+            p3: p3t.xy().map(|x| x as i16),
+			z: [p1t.z as f16, p2t.z as f16, p3t.z as f16],
             texture_id: in_tri.texture_id,
             light: in_tri.light,
         };
@@ -279,18 +291,24 @@ pub fn triangle_clip_against_line(
     }
 
     if n_inside_point_count == 2 && n_outside_point_count == 1 {
+		let p1t = inside_points[0];
+		let p2t = inside_points[1];
+		let p3t = vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[0]);
         let out_tri1 = Triangle2D {
-            p1: inside_points[0].map(|x| x as i16),
-            p2: inside_points[1].map(|x| x as i16),
-            p3: vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[0]),
+            p1: p1t.xy().map(|x| x as i16),
+            p2: p2t.xy().map(|x| x as i16),
+            p3: p3t.xy().map(|x| x as i16),
+			z: [p1t.z as f16, p2t.z as f16, p3t.z as f16],
             texture_id: in_tri.texture_id,
             light: in_tri.light,
         };
 
+		let pt = vector_intersect_line(line_p, &line_n, inside_points[1], outside_points[0]);
         let out_tri2 = Triangle2D {
-            p1: inside_points[1].map(|x| x as i16),
+            p1: p2t.xy().map(|x| x as i16),
             p2: out_tri1.p3,
-            p3: vector_intersect_line(line_p, &line_n, inside_points[1], outside_points[0]),
+            p3: pt.xy().map(|x| x as i16),
+			z: [p2t.z as f16, out_tri1.z[2], pt.z as f16],
             texture_id: in_tri.texture_id,
             light: in_tri.light,
         };
@@ -440,6 +458,7 @@ impl Renderer {
                     p3: ((self.project_point(to_project.p3) + Vector2::new(1., 1.))
                         .component_mul(&HALF_SCREEN))
                     .map(|x| x as i16),
+					z: [to_project.p1.z as f16, to_project.p2.z as f16, to_project.p3.z as f16],
                     texture_id: to_project.texture_id,
                     light: to_project.light,
                 };
@@ -589,6 +608,9 @@ impl Renderer {
         for x in 0..SCREEN_TILE_SUBDIVISION {
             for y in 0..SCREEN_TILE_SUBDIVISION {
                 self.clear_screen(Color::from_components(0b01110, 0b110110, 0b11111));
+				for i in 0..SCREEN_TILE_WIDTH*SCREEN_TILE_HEIGHT {
+					self.tile_depth_buffer[i] = f32::MAX;
+				}
                 self.draw_triangles(x, y);
                 self.draw_flat_model_entities(world, &mat_view, x, y, &frustum);
 
