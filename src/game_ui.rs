@@ -7,8 +7,8 @@ use crate::{
     inventory::{Inventory, ItemStack},
 };
 
-#[cfg(target_os = "none")]
-use alloc::{string::String, vec::Vec};
+calc_use!(alloc::string::String);
+calc_use!(alloc::vec::Vec);
 
 #[allow(unused)]
 pub enum GameUIElements {

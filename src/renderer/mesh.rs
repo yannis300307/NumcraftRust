@@ -1,5 +1,4 @@
-#[cfg(target_os = "none")]
-use alloc::vec::Vec;
+calc_use!(alloc::vec::Vec);
 
 use nalgebra::{Vector2, Vector3};
 

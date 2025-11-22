@@ -1,6 +1,7 @@
 use core::f32::consts::PI;
 
 use libm::sincosf;
+
 #[allow(unused_imports)]
 use nalgebra::{ComplexField, Vector3};
 
@@ -22,8 +23,7 @@ use crate::{
     world::World,
 };
 
-#[cfg(target_os = "none")]
-use alloc::boxed::Box;
+calc_use!(alloc::boxed::Box);
 
 pub struct Player {
     ray_cast_result: Option<RaycastResult>,

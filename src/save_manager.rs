@@ -1,8 +1,6 @@
-#[cfg(target_os = "none")]
-use alloc::{string::String, vec::Vec};
-
-#[cfg(target_os = "none")]
-use crate::alloc::borrow::ToOwned;
+calc_use!(alloc::borrow::ToOwned);
+calc_use!(alloc::string::String);
+calc_use!(alloc::vec::Vec);
 
 use lz4_flex::{compress, compress_prepend_size, decompress, decompress_size_prepended};
 use nalgebra::Vector3;

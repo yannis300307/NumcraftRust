@@ -1,9 +1,8 @@
-#[cfg(target_os = "none")]
-use alloc::{
-    borrow::ToOwned,
-    format,
-    string::{String, ToString},
-};
+calc_use!(alloc::borrow::ToOwned);
+calc_use!(alloc::format);
+calc_use!(alloc::string::String);
+calc_use!(alloc::string::ToString);
+
 use nalgebra::{Vector2, Vector3};
 use serde::{Deserialize, Serialize};
 

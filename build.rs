@@ -36,7 +36,7 @@ fn compile_c_libs() {
     .expect("Invalid UTF-8 in nwlink flags");
 
     let mut build = cc::Build::new();
-    build.file("src/libs/storage.c");
+    build.file("src/eadk/storage/storage.c");
     build.flag("-std=c99");
     build.flag("-Os");
     build.flag("-Wall");

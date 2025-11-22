@@ -1,8 +1,5 @@
-#[cfg(target_os = "none")]
-use alloc::format;
-
-#[cfg(target_os = "none")]
-use alloc::vec::Vec;
+calc_use!(alloc::format);
+calc_use!(alloc::vec::Vec);
 
 use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
 
