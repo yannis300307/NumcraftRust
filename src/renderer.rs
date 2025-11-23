@@ -36,7 +36,7 @@ const SCREEN_TILE_HEIGHT: usize = SCREEN_HEIGHT.div_ceil(SCREEN_TILE_SUBDIVISION
 // Projection parameters
 const ASPECT_RATIO: f32 = SCREEN_WIDTHF / SCREEN_HEIGHTF;
 
-const ZNEAR: f32 = 1.0;
+const ZNEAR: f32 = 0.1;
 const ZFAR: f32 = 1000.0;
 
 // Other
