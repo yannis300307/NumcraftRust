@@ -1,10 +1,8 @@
-#[cfg(target_os = "none")]
-use alloc::{
-    borrow::ToOwned,
-    boxed::Box,
-    format,
-    string::{String, ToString},
-};
+calc_use!(alloc::borrow::ToOwned);
+calc_use!(alloc::format);
+calc_use!(alloc::string::String);
+calc_use!(alloc::string::ToString);
+
 use nalgebra::{Vector2, Vector3};
 use serde::{Deserialize, Serialize};
 
@@ -13,8 +11,8 @@ use crate::{
         color_palette::MENU_BACKGROUND_COLOR,
         rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
-    eadk::{self, Color},
-    game::crafting_manager::CraftingManager,
+    eadk::{self, display::Color565},
+    game::{crafting_manager::CraftingManager, game_menus::SettingsMenu},
     game_ui::GameUI,
     hud::Hud,
     input_manager::InputManager,
@@ -67,7 +65,7 @@ impl Game {
             hud: Hud::new(),
             timing_manager: TimingManager::new(),
             physic_engine: PhysicEngine::new(),
-            crafting_manager: CraftingManager::new()
+            crafting_manager: CraftingManager::new(),
         }
     }
 
@@ -94,7 +92,7 @@ impl Game {
                     "is no longer compatible.",
                     format!("{:?}", error).as_str(),
                 ],
-                Color::from_888(255, 100, 100),
+                Color565::from_rgb888(255, 100, 100),
             );
             self.input_manager.wait_delay_or_ok(15000);
             return GameState::GoMainMenu;
@@ -117,6 +115,7 @@ impl Game {
             let player_entity = self.world.get_player_entity_mut();
             player_entity.pos = self.save_manager.get_player_pos();
             player_entity.rotation = self.save_manager.get_player_rot();
+            self.renderer.camera.set_rotation(player_entity.rotation);
 
             self.player
                 .set_inventory(self.save_manager.get_player_inventory());
@@ -135,7 +134,7 @@ impl Game {
         // Show a warning message
         Renderer::show_msg(
             &["To exit, press [EXE]", "DON'T press [Home]"],
-            Color::from_888(255, 255, 255),
+            Color565::from_rgb888(255, 255, 255),
         );
 
         self.input_manager.wait_delay_or_ok(3000);
@@ -148,12 +147,12 @@ impl Game {
             self.input_manager.update();
             self.timing_manager.update();
 
-            if self.input_manager.is_just_pressed(eadk::input::Key::Exe) {
+            if self.input_manager.is_just_pressed(eadk::keyboard::Key::Exe) {
                 self.exit_world();
 
                 return GameState::GoMainMenu;
             }
-            if self.input_manager.is_just_pressed(eadk::input::Key::Var) {
+            if self.input_manager.is_just_pressed(eadk::keyboard::Key::Var) {
                 if self.save_manager.get_game_mode() == GameMode::Creative {
                     return GameState::OpenPlayerInventory(game_uis::PlayerInventoryPage::Creative);
                 } else {
@@ -170,13 +169,16 @@ impl Game {
                 self.save_manager.get_game_mode(),
                 &self.physic_engine,
                 self.timing_manager.get_delta_time(),
+                &self.settings,
             );
             self.hud.update(&self.input_manager, &self.player);
             self.hud.sync(&self.player);
 
-            self.renderer
-                .camera
-                .update(self.timing_manager.get_delta_time(), &self.input_manager);
+            self.renderer.camera.update(
+                self.timing_manager.get_delta_time(),
+                &self.input_manager,
+                &self.settings,
+            );
 
             self.world.chunks_manager.check_mesh_regeneration();
             self.world
@@ -222,7 +224,7 @@ impl Game {
         while !matches!(state, GameState::Quit) {
             state = match state {
                 GameState::GoMainMenu => self.main_menu_loop(),
-                GameState::GoSetting => self.settings_menu_loop(),
+                GameState::GoSetting(menu) => self.open_settings(menu),
                 GameState::GoSelectWorld => self.worlds_select_menu_loop(),
                 GameState::LoadWorld(filename, is_new) => self.load_world(&filename, is_new),
                 GameState::InGame => self.game_loop(),
@@ -237,7 +239,7 @@ impl Game {
 
 pub enum GameState {
     GoMainMenu,
-    GoSetting,
+    GoSetting(SettingsMenu),
     GoSelectWorld,
     InGame,
     OpenPlayerInventory(game_uis::PlayerInventoryPage),

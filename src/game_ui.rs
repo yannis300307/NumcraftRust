@@ -2,13 +2,13 @@ use nalgebra::Vector2;
 
 use crate::{
     constants::ItemType,
-    eadk::input,
+    eadk::keyboard::Key,
     input_manager::InputManager,
     inventory::{Inventory, ItemStack},
 };
 
-#[cfg(target_os = "none")]
-use alloc::{string::String, vec::Vec};
+calc_use!(alloc::string::String);
+calc_use!(alloc::vec::Vec);
 
 #[allow(unused)]
 pub enum GameUIElements {
@@ -192,7 +192,7 @@ impl GameUI {
         self.elements.iter_mut().find(|elem| elem.id == id)
     }
 
-    fn move_cursor_if_possible(&mut self, input_manager: &InputManager, key: input::Key) {
+    fn move_cursor_if_possible(&mut self, input_manager: &InputManager, key: Key) {
         if !input_manager.is_impulsed_key(key) {
             return;
         }
@@ -200,10 +200,10 @@ impl GameUI {
         let elem_or_none = self.get_element_with_id(self.cursor_id);
         if let Some(elem) = elem_or_none {
             let neighbor = match key {
-                input::Key::Right => elem.neighbors.right_id,
-                input::Key::Left => elem.neighbors.left_id,
-                input::Key::Up => elem.neighbors.up_id,
-                input::Key::Down => elem.neighbors.down_id,
+                Key::Right => elem.neighbors.right_id,
+                Key::Left => elem.neighbors.left_id,
+                Key::Up => elem.neighbors.up_id,
+                Key::Down => elem.neighbors.down_id,
                 _ => None,
             };
 
@@ -226,16 +226,16 @@ impl GameUI {
         if self.is_selecting_amount
             && let Some(amount) = &mut self.selected_amount
         {
-            if input_manager.is_impulsed_key(input::Key::Right) {
+            if input_manager.is_impulsed_key(Key::Right) {
                 *amount += 1;
                 self.ask_redraw();
-            } else if input_manager.is_impulsed_key(input::Key::Left) {
+            } else if input_manager.is_impulsed_key(Key::Left) {
                 *amount -= 1;
                 self.ask_redraw();
-            } else if input_manager.is_impulsed_key(input::Key::Up) {
+            } else if input_manager.is_impulsed_key(Key::Up) {
                 *amount += 4;
                 self.ask_redraw();
-            } else if input_manager.is_impulsed_key(input::Key::Down) {
+            } else if input_manager.is_impulsed_key(Key::Down) {
                 if *amount > 4 {
                     *amount -= 4;
                 } else {
@@ -244,10 +244,10 @@ impl GameUI {
                 self.ask_redraw();
             }
         } else {
-            self.move_cursor_if_possible(input_manager, input::Key::Right);
-            self.move_cursor_if_possible(input_manager, input::Key::Left);
-            self.move_cursor_if_possible(input_manager, input::Key::Up);
-            self.move_cursor_if_possible(input_manager, input::Key::Down);
+            self.move_cursor_if_possible(input_manager, Key::Right);
+            self.move_cursor_if_possible(input_manager, Key::Left);
+            self.move_cursor_if_possible(input_manager, Key::Up);
+            self.move_cursor_if_possible(input_manager, Key::Down);
         }
 
         // Check for stack overflow
@@ -278,7 +278,7 @@ impl GameUI {
             inventory.modified = false;
         }
 
-        if input_manager.is_just_pressed(input::Key::Ok) {
+        if input_manager.is_just_pressed(Key::Ok) {
             // If the selected element is the same as the one at the position of the cursor and that the user is not currently selecting an item amount
             if self
                 .selected_id
@@ -371,7 +371,7 @@ impl GameUI {
                 }
             }
         }
-        if input_manager.is_just_pressed(input::Key::Back) {
+        if input_manager.is_just_pressed(Key::Back) {
             if self.selected_id.is_some() {
                 self.selected_id = None;
                 self.selected_amount = None;
@@ -381,7 +381,7 @@ impl GameUI {
             }
         }
 
-        if input_manager.is_just_pressed(input::Key::Var) {
+        if input_manager.is_just_pressed(Key::Var) {
             return false;
         }
         

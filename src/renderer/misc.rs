@@ -1,6 +1,12 @@
-use crate::{eadk::{display::{draw_string, pull_rect, push_rect, push_rect_uniform}, Point, Rect, SCREEN_RECT}, renderer::*};
+use crate::{
+    eadk::display::{
+        Color565, SCREEN_RECT, ScreenPoint, ScreenRect, draw_string, pull_rect, push_rect,
+        push_rect_uniform,
+    },
+    renderer::*,
+};
 
-pub struct UnBoundedRect {
+pub struct UnBoundedScreenRect {
     pub x: isize,
     pub y: isize,
     pub width: isize,
@@ -20,8 +26,11 @@ impl Renderer {
                 for y in 0..FONT_HEIGHT {
                     let pixel_value = FONT_DATA[(font_pixel_index + x) + y * FONT_WIDTH];
 
-                    let rgb565 =
-                        Color::from_888(pixel_value as u16, pixel_value as u16, pixel_value as u16);
+                    let rgb565 = Color565::from_rgb888(
+                        pixel_value as u16,
+                        pixel_value as u16,
+                        pixel_value as u16,
+                    );
 
                     let pix_x = pos.x + x + text_cursor;
 
@@ -40,7 +49,7 @@ impl Renderer {
         let mut text_cursor: usize = 0;
 
         let rect_width = FONT_CHAR_WIDTH * text.len();
-        let rect = Rect {
+        let rect = ScreenRect {
             x: pos.x as u16,
             y: pos.y as u16,
             width: rect_width as u16,
@@ -75,8 +84,7 @@ impl Renderer {
         push_rect(rect, &bg_pixels);
     }
 
-    pub fn push_rect_uniform_on_frame_buffer(&mut self, rect: Rect, color: Color) {
-        return;
+    pub fn push_rect_uniform_on_frame_buffer(&mut self, rect: ScreenRect, color: Color565) {
         for x in rect.x..(rect.x + rect.width) {
             for y in rect.y..(rect.y + rect.height) {
                 self.tile_frame_buffer[x as usize + y as usize * SCREEN_TILE_WIDTH] = color;
@@ -84,7 +92,11 @@ impl Renderer {
         }
     }
 
-    pub fn push_unbounded_rect_uniform_on_frame_buffer(&mut self, rect: UnBoundedRect, color: Color) {
+    pub fn push_unbounded_rect_uniform_on_frame_buffer(
+        &mut self,
+        rect: UnBoundedScreenRect,
+        color: Color565,
+    ) {
         if rect.x + rect.width <= 0 || rect.y + rect.height <= 0 {
             return;
         }
@@ -95,23 +107,35 @@ impl Renderer {
         }
     }
 
-    pub fn show_msg(message: &[&str], background_color: Color) {
+    pub fn show_msg(message: &[&str], background_color: Color565) {
         push_rect_uniform(SCREEN_RECT, background_color);
-        
+
         let mut y = (SCREEN_HEIGHT - message.len() * 20) / 2;
 
         for line in message {
             draw_string(
                 line,
-                Point {
+                ScreenPoint {
                     x: ((320 - line.len() * 10) / 2) as u16,
                     y: y as u16,
                 },
                 true,
-                Color::from_888(0, 0, 0),
+                Color565::from_rgb888(0, 0, 0),
                 background_color,
             );
             y += 20
         }
+    }
+}
+
+impl Color565 {
+    pub fn apply_light(&self, light_level: u8) -> Self {
+        let light_level = light_level as u16;
+        let rgb = self.get_components();
+        Color565::new(
+            rgb.0 * light_level / 255,
+            rgb.1 * light_level / 255,
+            rgb.2 * light_level / 255,
+        )
     }
 }

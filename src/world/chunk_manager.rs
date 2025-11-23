@@ -8,9 +8,7 @@ use crate::{
     world::{CHUNK_SIZE_I, chunk::Chunk, world_generator::WorldGenerator},
 };
 
-#[cfg(target_os = "none")]
-use alloc::vec::Vec;
-
+calc_use!(alloc::vec::Vec);
 /// Convert the block position from world space to chunk space
 pub fn get_chunk_local_coords(pos: Vector3<isize>) -> Vector3<isize> {
     Vector3::new(
@@ -77,7 +75,7 @@ impl ChunksManager {
                 .get_pos()
                 .map(|x| (x * CHUNK_SIZE_I) as f32 + CHUNK_SIZE_I as f32 / 2.)
                 .metric_distance(&pos);
-            b_dist.total_cmp(&a_dist)
+            b_dist.total_cmp(&a_dist).reverse()
         });
 
         chunks

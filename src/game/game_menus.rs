@@ -18,7 +18,7 @@ impl Game {
             })
             .with_element(MenuElement::Entry {
                 placeholder_text: "World seed".to_string(),
-                value: format!("{}", eadk::random() % 1_000_000_000),
+                value: format!("{}", eadk::random::get_random_u32() % 1_000_000_000),
                 allow_margin: true,
                 max_len: 9,
                 digits_only: true,
@@ -38,7 +38,7 @@ impl Game {
             });
 
         // Clear the screen
-        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         self.timing_manager.reset();
 
@@ -50,7 +50,7 @@ impl Game {
             self.input_manager.update_timing(&self.timing_manager);
 
             // Exit the menu when [Back] is pressed
-            if self.input_manager.is_keydown(eadk::input::Key::Back) {
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Back) {
                 return GameState::GoSelectWorld;
             }
 
@@ -79,7 +79,7 @@ impl Game {
                         }
 
                         if seed.is_empty() {
-                            seed = format!("{}", eadk::random() % 1_000_000_000);
+                            seed = format!("{}", eadk::random::get_random_u32() % 1_000_000_000);
                         }
 
                         let world_seed = seed.parse::<i32>().unwrap_or(1);
@@ -114,7 +114,7 @@ impl Game {
             menu.finish_buttons_handling();
 
             self.renderer.draw_menu(&mut menu);
-            eadk::timing::msleep(50);
+            eadk::time::wait_milliseconds(50);
         }
     }
 
@@ -144,7 +144,7 @@ impl Game {
             });
 
         // Clear the screen
-        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         self.timing_manager.reset();
 
@@ -154,7 +154,7 @@ impl Game {
             self.input_manager.update_timing(&self.timing_manager);
 
             // Exit the menu when [Back] is pressed
-            if self.input_manager.is_keydown(eadk::input::Key::Back) {
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Back) {
                 return GameState::GoSelectWorld;
             }
 
@@ -185,7 +185,7 @@ impl Game {
             menu.finish_buttons_handling();
 
             self.renderer.draw_menu(&mut menu);
-            eadk::timing::msleep(50);
+            eadk::time::wait_milliseconds(50);
         }
     }
 
@@ -232,7 +232,7 @@ impl Game {
         }
 
         // Clear the screen
-        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         self.timing_manager.reset();
 
@@ -245,7 +245,7 @@ impl Game {
             menu.check_inputs(&self.input_manager);
 
             // Exit the menu when [Back] is pressed
-            if self.input_manager.is_keydown(eadk::input::Key::Back) {
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Back) {
                 return GameState::GoMainMenu;
             }
 
@@ -286,20 +286,15 @@ impl Game {
             menu.finish_buttons_handling();
 
             self.renderer.draw_menu(&mut menu);
-            eadk::timing::msleep(50);
+            eadk::time::wait_milliseconds(50);
         }
     }
 
-    pub fn settings_menu_loop(&mut self) -> GameState {
-        // Temporary variables used to store settings
-        let mut vsync_enabled = self.settings.vsync;
-        let mut fov: f32 = self.settings.fov;
-        let mut render_distance: usize = self.settings.render_distance;
-
+    pub fn graphics_settings_menu_loop(&mut self) -> GameState {
         // Create the menu.
         let mut menu = Menu::new(Vector2::new(10, 20), 300, 1)
             .with_element(MenuElement::Label {
-                text: "Settings".to_string(),
+                text: "Graphics settings".to_string(),
                 text_anchor: TextAnchor::Center,
                 allow_margin: true,
             })
@@ -310,7 +305,7 @@ impl Game {
                         libm::roundf(value * MAX_RENDER_DISTANCE as f32) as usize
                     )
                 },
-                value: render_distance as f32 / MAX_RENDER_DISTANCE as f32,
+                value: self.settings.render_distance as f32 / MAX_RENDER_DISTANCE as f32,
                 step_size: 0.5,
                 allow_margin: false,
                 id: 1,
@@ -322,13 +317,13 @@ impl Game {
                         libm::roundf(MIN_FOV + (MAX_FOV - MIN_FOV) * value)
                     )
                 },
-                value: (fov - MIN_FOV) / (MAX_FOV - MIN_FOV), // The opposite of the above calculation
+                value: (self.settings.fov - MIN_FOV) / (MAX_FOV - MIN_FOV), // The opposite of the above calculation
                 step_size: 0.04,
                 allow_margin: false,
                 id: 2,
             })
             .with_element(MenuElement::Button {
-                text: if vsync_enabled {
+                text: if self.settings.vsync {
                     "Vsync: Enabled".to_string()
                 } else {
                     "Vsync: Disabled".to_string()
@@ -336,21 +331,10 @@ impl Game {
                 is_pressed: false,
                 allow_margin: true,
                 id: 3,
-            })
-            .with_element(MenuElement::Button {
-                text: "Save".to_string(),
-                is_pressed: false,
-                allow_margin: true,
-                id: 4,
-            })
-            .with_element(MenuElement::Label {
-                text: format!("Numcraft v{} by Yannis", env!("CARGO_PKG_VERSION")),
-                text_anchor: TextAnchor::Left,
-                allow_margin: false,
             });
 
         // Clear the screen
-        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         self.timing_manager.reset();
 
@@ -359,8 +343,10 @@ impl Game {
             self.timing_manager.update();
             self.input_manager.update_timing(&self.timing_manager);
 
-            if self.input_manager.is_keydown(eadk::input::Key::Back) {
-                return GameState::GoMainMenu;
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Back) {
+                self.update_settings();
+                self.settings.save();
+                return GameState::GoSetting(SettingsMenu::Hub);
             }
 
             menu.check_inputs(&self.input_manager);
@@ -370,29 +356,14 @@ impl Game {
             for element in menu.get_elements_mut() {
                 match element {
                     MenuElement::Button {
-                        // Save
-                        id: 4,
-                        is_pressed: true,
-                        ..
-                    } => {
-                        // Save settings
-                        self.settings.fov = fov;
-                        self.settings.render_distance = render_distance;
-                        self.settings.vsync = vsync_enabled;
-                        self.update_settings();
-                        self.settings.save();
-
-                        return GameState::GoMainMenu;
-                    }
-                    MenuElement::Button {
                         // Enable / Disable Vsync
                         text,
                         is_pressed: true,
                         id: 3,
                         ..
                     } => {
-                        vsync_enabled = !vsync_enabled;
-                        *text = if vsync_enabled {
+                        self.settings.vsync = !self.settings.vsync;
+                        *text = if self.settings.vsync {
                             "Vsync: Enabled".to_string()
                         } else {
                             "Vsync: Disabled".to_string()
@@ -400,10 +371,11 @@ impl Game {
                         need_redraw = true;
                     }
                     MenuElement::Slider { value, id: 2, .. } => {
-                        fov = libm::roundf(MIN_FOV + (MAX_FOV - MIN_FOV) * *value)
+                        self.settings.fov = libm::roundf(MIN_FOV + (MAX_FOV - MIN_FOV) * *value)
                     }
                     MenuElement::Slider { value, id: 1, .. } => {
-                        render_distance = libm::roundf(*value * MAX_RENDER_DISTANCE as f32) as usize
+                        self.settings.render_distance =
+                            libm::roundf(*value * MAX_RENDER_DISTANCE as f32) as usize
                     }
                     _ => (),
                 }
@@ -416,7 +388,163 @@ impl Game {
             }
 
             self.renderer.draw_menu(&mut menu);
-            eadk::timing::msleep(50);
+            eadk::time::wait_milliseconds(50);
+        }
+    }
+
+    pub fn controls_settings_menu_loop(&mut self) -> GameState {
+        // Create the menu.
+        let mut menu = Menu::new(Vector2::new(10, 20), 300, 1)
+            .with_element(MenuElement::Label {
+                text: "Controls settings".to_string(),
+                text_anchor: TextAnchor::Center,
+                allow_margin: true,
+            })
+            .with_element(MenuElement::Button {
+                text: if self.settings.reverse_controls {
+                    "Inverted controls".to_string()
+                } else {
+                    "Default controls".to_string()
+                },
+                is_pressed: false,
+                allow_margin: true,
+                id: 0,
+            });
+
+        // Clear the screen
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+
+        self.timing_manager.reset();
+
+        loop {
+            self.input_manager.update();
+            self.timing_manager.update();
+            self.input_manager.update_timing(&self.timing_manager);
+
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Back) {
+                self.update_settings();
+                self.settings.save();
+                return GameState::GoSetting(SettingsMenu::Hub);
+            }
+
+            menu.check_inputs(&self.input_manager);
+
+            let mut need_redraw = false;
+
+            for element in menu.get_elements_mut() {
+                match element {
+                    MenuElement::Button {
+                        // Enable / Disable Vsync
+                        text,
+                        is_pressed: true,
+                        id: 0,
+                        ..
+                    } => {
+                        self.settings.reverse_controls = !self.settings.reverse_controls;
+                        *text = if self.settings.reverse_controls {
+                            "Inverted controls".to_string()
+                        } else {
+                            "Default controls".to_string()
+                        };
+                        need_redraw = true;
+                    }
+                    _ => (),
+                }
+            }
+
+            menu.finish_buttons_handling();
+
+            if need_redraw {
+                menu.need_redraw = true;
+            }
+
+            self.renderer.draw_menu(&mut menu);
+            eadk::time::wait_milliseconds(50);
+        }
+    }
+
+    pub fn open_settings(&mut self, menu: SettingsMenu) -> GameState {
+        match menu {
+            SettingsMenu::Hub => self.settings_hub_menu_loop(),
+            SettingsMenu::Graphics => self.graphics_settings_menu_loop(),
+            SettingsMenu::Controls => self.controls_settings_menu_loop(),
+        }
+    }
+
+    pub fn settings_hub_menu_loop(&mut self) -> GameState {
+        // Create the menu.
+        let mut menu = Menu::new(Vector2::new(10, 20), 300, 1)
+            .with_element(MenuElement::Label {
+                text: "Settings".to_string(),
+                text_anchor: TextAnchor::Center,
+                allow_margin: true,
+            })
+            .with_element(MenuElement::Button {
+                text: "Graphics".to_string(),
+                is_pressed: false,
+                allow_margin: true,
+                id: 0,
+            })
+            .with_element(MenuElement::Button {
+                text: "Controls".to_string(),
+                is_pressed: false,
+                allow_margin: true,
+                id: 1,
+            })
+            .with_element(MenuElement::Label {
+                text: format!("Numcraft v{} by Yannis", env!("CARGO_PKG_VERSION")),
+                text_anchor: TextAnchor::Left,
+                allow_margin: false,
+            });
+
+        // Clear the screen
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+
+        self.timing_manager.reset();
+
+        loop {
+            self.input_manager.update();
+            self.timing_manager.update();
+            self.input_manager.update_timing(&self.timing_manager);
+
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Back) {
+                return GameState::GoMainMenu;
+            }
+
+            menu.check_inputs(&self.input_manager);
+
+            let mut need_redraw = false;
+
+            for element in menu.get_elements_mut() {
+                match element {
+                    MenuElement::Button {
+                        // Graphics
+                        id: 0,
+                        is_pressed: true,
+                        ..
+                    } => {
+                        return GameState::GoSetting(SettingsMenu::Graphics);
+                    }
+                    MenuElement::Button {
+                        // Controls
+                        id: 1,
+                        is_pressed: true,
+                        ..
+                    } => {
+                        return GameState::GoSetting(SettingsMenu::Controls);
+                    }
+                    _ => (),
+                }
+            }
+
+            menu.finish_buttons_handling();
+
+            if need_redraw {
+                menu.need_redraw = true;
+            }
+
+            self.renderer.draw_menu(&mut menu);
+            eadk::time::wait_milliseconds(50);
         }
     }
 
@@ -446,7 +574,7 @@ impl Game {
                 allow_margin: true,
             });
 
-        eadk::display::push_rect_uniform(eadk::SCREEN_RECT, MENU_BACKGROUND_COLOR);
+        eadk::display::push_rect_uniform(eadk::display::SCREEN_RECT, MENU_BACKGROUND_COLOR);
 
         self.timing_manager.reset();
 
@@ -457,7 +585,7 @@ impl Game {
 
             menu.check_inputs(&self.input_manager);
 
-            if self.input_manager.is_keydown(eadk::input::Key::Home) {
+            if self.input_manager.is_keydown(eadk::keyboard::Key::Home) {
                 return GameState::Quit;
             }
 
@@ -468,7 +596,7 @@ impl Game {
                         is_pressed: true,
                         ..
                     } => {
-                        return GameState::GoSetting;
+                        return GameState::GoSetting(SettingsMenu::Hub);
                     }
                     MenuElement::Button {
                         id: 0,
@@ -482,7 +610,14 @@ impl Game {
             menu.finish_buttons_handling();
 
             self.renderer.draw_menu(&mut menu);
-            eadk::timing::msleep(50);
+            eadk::time::wait_milliseconds(50);
         }
     }
+}
+
+#[derive(Clone, Copy)]
+pub enum SettingsMenu {
+    Hub,
+    Graphics,
+    Controls,
 }

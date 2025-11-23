@@ -1,9 +1,6 @@
 use crate::{
     constants::get_quad_color_from_texture_id,
-    eadk::{
-        Rect,
-        display::{push_rect, wait_for_vblank},
-    },
+    eadk::display::{ScreenRect, push_rect, wait_for_vblank},
     hud::Hud,
     player::Player,
     renderer::{
@@ -15,11 +12,12 @@ use crate::{
 };
 
 use nalgebra::{max, min};
+use libm::ceilf;
 
 pub fn scanline_loop(
 	range: &mut [Vector2<f32>; 2], d_dy: [Vector2<f32>; 2],
-	y_start: u8, y_end: u8, color: Color,
-	frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+	y_start: u8, y_end: u8, color: Color565,
+	frame_buffer: &mut [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 	depth_buffer: &mut [f32; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT]
 )
 {
@@ -34,19 +32,17 @@ pub fn scanline_loop(
 
 	for _y in y_start..y_end
 	{
-		if range[0].x >= SCREEN_TILE_WIDTH as f32 || range[1].x < 0.0 {continue ;}
-		x_start = max(range[0].x as i16 + 1, 0) as u16;
-		x_end = min(range[1].x as i16 + 1, fwidth) as u16;
+		x_start = min(max(range[0].x as i16, 0), fwidth) as u16;
+		x_end = max(min(ceilf(range[1].x) as i16, fwidth), 0) as u16;
 
 		dz_dx = (range[1].y - range[0].y) / (range[1].x - range[0].x) as f32;
 		z = range[0].y + dz_dx * (x_start as f32 - range[0].x);
 		i = i_y + x_start as usize;
 		for _x in x_start..x_end
 		{
-			let safe_i = min(i, 4799);
-			if z < depth_buffer[safe_i] {
-				frame_buffer[safe_i] = color;
-				depth_buffer[safe_i] = z;
+			if z < depth_buffer[i] {
+				frame_buffer[i] = color;
+				depth_buffer[i] = z;
 			}
 			i += 1;
 			z += dz_dx;
@@ -61,9 +57,9 @@ pub fn scanline_loop(
 /// Fill a triangle in the frame buffer
 pub fn fill_triangle(
 	tri: &Triangle2D,
-    frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    frame_buffer: &mut [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 	depth_buffer: &mut [f32; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
-    color: Color,
+    color: Color565,
 ) {
 	let mut t0 = (tri.p1.x, tri.p1.y, tri.z[0]);
 	let mut t1 = (tri.p2.x, tri.p2.y, tri.z[1]);
@@ -115,8 +111,8 @@ pub fn fill_triangle(
 pub fn draw_line(
     pos1: (isize, isize),
     pos2: (isize, isize),
-    frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
-    color: Color,
+    frame_buffer: &mut [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    color: Color565,
 ) {
     for point in bresenham::Bresenham::new(pos1, pos2) {
         if point.0 >= 0
@@ -132,7 +128,7 @@ pub fn draw_line(
 // Takes a Triangle2D and draw it as a filled triangle or lines depending of the texture_id
 pub fn draw_2d_triangle(
     tri: &Triangle2D,
-    frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    frame_buffer: &mut [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 	depth_buffer: &mut [f32; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 ) {
     if tri.texture_id == 255 {
@@ -141,13 +137,13 @@ pub fn draw_2d_triangle(
             (tri.p1.x as isize, tri.p1.y as isize),
             (tri.p2.x as isize, tri.p2.y as isize),
             frame_buffer,
-            Color::from_components(0b11111, 0b0, 0b0),
+            Color565::new(0b11111, 0b0, 0b0),
         );
         draw_line(
             (tri.p2.x as isize, tri.p2.y as isize),
             (tri.p3.x as isize, tri.p3.y as isize),
             frame_buffer,
-            Color::from_components(0b11111, 0b0, 0b0),
+            Color565::new(0b11111, 0b0, 0b0),
         );
     } else {
         // Normal Triangle
@@ -414,7 +410,7 @@ impl Renderer {
         self.projection_matrix.project_vector(&point).xy()
     }
 
-    pub fn clear_screen(&mut self, color: Color) {
+    pub fn clear_screen(&mut self, color: Color565) {
         self.tile_frame_buffer.fill(color);
     }
 
@@ -498,6 +494,10 @@ impl Renderer {
                 }
 
                 for tri in clip_buffer {
+                    if self.triangles_to_render.len() >= MAX_TRIANGLES {
+                        // TODO : Find a proper fix for this
+                        break;
+                    }
                     self.triangles_to_render.push(tri.to_small()); // Do nothing if overflow
                 }
             };
@@ -516,7 +516,7 @@ impl Renderer {
             -((SCREEN_TILE_WIDTH * tile_x) as i16),
             -((SCREEN_TILE_HEIGHT * tile_y) as i16),
         );
-        for tri in self.triangles_to_render.iter_mut() {
+        for tri in self.triangles_to_render.iter_mut().rev() {
             let mut tri_copy = tri.to_tri_2d();
             tri_copy.p1 += tile_offset;
 
@@ -594,6 +594,7 @@ impl Renderer {
 
                     bvec.metric_distance(self.camera.get_pos())
                         .total_cmp(&avec.metric_distance(self.camera.get_pos()))
+                        .reverse()
                 });
             }
             for quad in quads {
@@ -609,7 +610,7 @@ impl Renderer {
 
         for x in 0..SCREEN_TILE_SUBDIVISION {
             for y in 0..SCREEN_TILE_SUBDIVISION {
-                self.clear_screen(Color::from_components(0b01110, 0b110110, 0b11111));
+                self.clear_screen(Color565::new(0b01110, 0b110110, 0b11111));
 				for i in 0..SCREEN_TILE_WIDTH*SCREEN_TILE_HEIGHT {
 					self.tile_depth_buffer[i] = f32::MAX;
 				}
@@ -621,7 +622,7 @@ impl Renderer {
                 }
 
                 push_rect(
-                    Rect {
+                    ScreenRect {
                         x: (SCREEN_TILE_WIDTH * x) as u16,
                         y: (SCREEN_TILE_HEIGHT * y) as u16,
                         width: SCREEN_TILE_WIDTH as u16,
