@@ -24,8 +24,8 @@ pub fn scanline_loop(
 )
 {
 	let fwidth: i16 = SCREEN_TILE_WIDTH as i16;
-	let mut x_start: u8;
-	let mut x_end: u8;
+	let mut x_start: u16;
+	let mut x_end: u16;
 	let mut i_y: usize = SCREEN_TILE_WIDTH * y_start as usize;
 	let mut i: usize;
 
@@ -34,8 +34,9 @@ pub fn scanline_loop(
 
 	for _y in y_start..y_end
 	{
-		x_start = max(range[0].x.ceil() as i16, 0) as u8;
-		x_end = min(range[1].x.ceil() as i16, fwidth) as u8;
+		if range[0].x >= SCREEN_TILE_WIDTH as f32 || range[1].x < 0.0 {continue ;}
+		x_start = max(range[0].x as i16 + 1, 0) as u16;
+		x_end = min(range[1].x as i16 + 1, fwidth) as u16;
 
 		dz_dx = (range[1].y - range[0].y) / (range[1].x - range[0].x) as f32;
 		z = range[0].y + dz_dx * (x_start as f32 - range[0].x);
@@ -43,8 +44,9 @@ pub fn scanline_loop(
 		for _x in x_start..x_end
 		{
 			let safe_i = min(i, 4799);
-			if z >= depth_buffer[safe_i] || true {
+			if z < depth_buffer[safe_i] {
 				frame_buffer[safe_i] = color;
+				depth_buffer[safe_i] = z;
 			}
 			i += 1;
 			z += dz_dx;
@@ -88,7 +90,7 @@ pub fn fill_triangle(
 		range[0].y = t0.2 as f32 + d_dy[0].y * (y_start as i16 - t0.1) as f32;
 		range[1].y = t0.2 as f32 + d_dy[1].y * (y_start as i16 - t0.1) as f32;
 
-		if d_dy[0].x > d_dy[1].x { d_dy.swap(0, 1); }
+		if d_dy[0].x > d_dy[1].x { d_dy.swap(0, 1); range.swap(0, 1); }
 		scanline_loop(&mut range, d_dy, y_start, y_end, color, frame_buffer, depth_buffer);
 	}
 
@@ -104,7 +106,7 @@ pub fn fill_triangle(
 		range[0].y = t0.2 as f32 + d_dy[0].y * (y_start as i16 - t0.1) as f32;
 		range[1].y = t1.2 as f32 + d_dy[1].y * (y_start as i16 - t1.1) as f32;
 
-		if d_dy[0].x < d_dy[1].x { d_dy.swap(0, 1); }
+		if d_dy[0].x < d_dy[1].x { d_dy.swap(0, 1); range.swap(0, 1);}
 		scanline_loop(&mut range, d_dy, y_start, y_end, color, frame_buffer, depth_buffer);
 	}
 }
