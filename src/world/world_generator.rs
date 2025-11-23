@@ -51,7 +51,7 @@ impl WorldGenerator {
                     (x as isize + chunk_block_pos.x) as f32,
                     (z as isize + chunk_block_pos.z) as f32,
                 );
-                let height = roundf((negative_1_to_1 + 1.) / 2. * 14.0 - 2.0) as isize;
+                let height = roundf((negative_1_to_1 + 1.) / 2. * 14.0 + 8.0) as isize;
 
                 height_map[x + z * CHUNK_SIZE] = height;
             }
