@@ -1,7 +1,7 @@
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 
-use crate::{eadk::Color, physic::BoundingBox, renderer::mesh::QuadDir};
+use crate::{eadk::display::Color565, physic::BoundingBox, renderer::mesh::QuadDir};
 
 pub mod rendering {
     pub const SCREEN_WIDTH: usize = 320;
@@ -14,7 +14,7 @@ pub mod rendering {
 
     pub const FOV: f32 = 45.;
 
-    pub const MAX_TRIANGLES: usize = 1300;
+    pub const MAX_TRIANGLES: usize = 1500;
 
     pub const MAX_RENDER_DISTANCE: usize = 2; // You shouldn't go higher
 
@@ -29,16 +29,16 @@ pub mod rendering {
 }
 
 pub mod color_palette {
-    use crate::eadk::Color;
+    use crate::eadk::display::Color565;
 
-    pub const MENU_OUTLINE_COLOR: Color = Color::from_888(150, 150, 150);
-    pub const MENU_ELEMENT_BACKGROUND_COLOR: Color = Color::from_888(230, 230, 230);
-    pub const MENU_ELEMENT_BACKGROUND_COLOR_HOVER: Color = Color::from_888(190, 190, 190);
-    pub const MENU_TEXT_COLOR: Color = Color::from_888(0, 0, 0);
-    pub const MENU_BACKGROUND_COLOR: Color = Color::from_888(255, 255, 255);
+    pub const MENU_OUTLINE_COLOR: Color565 = Color565::from_rgb888(150, 150, 150);
+    pub const MENU_ELEMENT_BACKGROUND_COLOR: Color565 = Color565::from_rgb888(230, 230, 230);
+    pub const MENU_ELEMENT_BACKGROUND_COLOR_HOVER: Color565 = Color565::from_rgb888(190, 190, 190);
+    pub const MENU_TEXT_COLOR: Color565 = Color565::from_rgb888(0, 0, 0);
+    pub const MENU_BACKGROUND_COLOR: Color565 = Color565::from_rgb888(255, 255, 255);
 
-    pub const GAMEUI_SLOT_COLOR: Color = Color::from_888(80, 80, 80);
-    pub const GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR: Color = Color::from_888(120, 120, 120);
+    pub const GAMEUI_SLOT_COLOR: Color565 = Color565::from_rgb888(80, 80, 80);
+    pub const GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR: Color565 = Color565::from_rgb888(120, 120, 120);
 }
 
 pub mod save_manager {
@@ -265,19 +265,19 @@ impl BlockType {
     }
 }
 
-pub fn get_quad_color_from_texture_id(id: u8) -> Color {
+pub fn get_quad_color_from_texture_id(id: u8) -> Color565 {
     match id {
-        1 => Color::from_888(160, 160, 160),
-        2 => Color::from_888(21, 147, 0),
-        3 => Color::from_888(120, 77, 49),
-        5 => Color::from_888(208, 199, 6),
-        6 => Color::from_888(178, 178, 178),
-        7 => Color::from_888(19, 19, 19),
-        8 => Color::from_888(79, 53, 30),
-        9 => Color::from_888(36, 75, 37),
-        10 => Color::from_888(152, 124, 61),
+        1 => Color565::from_rgb888(160, 160, 160),
+        2 => Color565::from_rgb888(21, 147, 0),
+        3 => Color565::from_rgb888(120, 77, 49),
+        5 => Color565::from_rgb888(208, 199, 6),
+        6 => Color565::from_rgb888(178, 178, 178),
+        7 => Color565::from_rgb888(19, 19, 19),
+        8 => Color565::from_rgb888(79, 53, 30),
+        9 => Color565::from_rgb888(36, 75, 37),
+        10 => Color565::from_rgb888(152, 124, 61),
 
-        _ => Color::from_888(0, 0, 0),
+        _ => Color565::from_rgb888(0, 0, 0),
         // 255 is reserved for block outline
     }
 }

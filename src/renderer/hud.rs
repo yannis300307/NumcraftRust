@@ -1,6 +1,6 @@
 use crate::{
     constants::{ItemType, color_palette::GAMEUI_SLOT_COLOR},
-    eadk::Rect,
+    eadk::display::ScreenRect,
     hud::Hud,
     renderer::*,
 };
@@ -31,7 +31,7 @@ impl Renderer {
                 );
             }
         }
-        
+
         let mut draw_cross = |x, y| {
             self.draw_image_negate(
                 CROSS_DATA,
@@ -82,43 +82,43 @@ impl Renderer {
             let bar_len = (40. * progress) as u16;
             if tile_x == 0 && tile_y == 1 {
                 self.push_rect_uniform_on_frame_buffer(
-                    Rect {
+                    ScreenRect {
                         x: 138,
                         y: 18,
                         width: 22,
                         height: 9,
                     },
-                    Color::from_888(100, 100, 100),
+                    Color565::from_rgb888(100, 100, 100),
                 );
                 self.push_rect_uniform_on_frame_buffer(
-                    Rect {
+                    ScreenRect {
                         x: 140,
                         y: 20,
                         width: bar_len.min(20),
                         height: 5,
                     },
-                    Color::from_888(200, 200, 200),
+                    Color565::from_rgb888(200, 200, 200),
                 );
             }
             if tile_x == 1 && tile_y == 1 {
                 self.push_rect_uniform_on_frame_buffer(
-                    Rect {
+                    ScreenRect {
                         x: 0,
                         y: 18,
                         width: 22,
                         height: 9,
                     },
-                    Color::from_888(100, 100, 100),
+                    Color565::from_rgb888(100, 100, 100),
                 );
                 if bar_len > 20 {
                     self.push_rect_uniform_on_frame_buffer(
-                        Rect {
+                        ScreenRect {
                             x: 0,
                             y: 20,
                             width: (bar_len - 20),
                             height: 5,
                         },
-                        Color::from_888(200, 200, 200),
+                        Color565::from_rgb888(200, 200, 200),
                     );
                 }
             }
@@ -148,7 +148,7 @@ impl Renderer {
                     let frame_buff_index = (dest.x + dest.y * SCREEN_TILE_WIDTH as isize) as usize;
                     let components = self.tile_frame_buffer[frame_buff_index].get_components();
 
-                    let inverted_color = Color::from_components(
+                    let inverted_color = Color565::new(
                         0b11111 - components.0,
                         0b111111 - components.1,
                         0b11111 - components.2,
@@ -177,13 +177,13 @@ impl Renderer {
                 ]);
 
                 self.push_rect_uniform_on_frame_buffer(
-                    Rect {
+                    ScreenRect {
                         x: pos.x + (x * scale) as u16,
                         y: pos.y + (y * scale) as u16,
                         width: scale as u16,
                         height: scale as u16,
                     },
-                    Color { rgb565: pixel },
+                    Color565 { value: pixel },
                 );
             }
         }
@@ -191,14 +191,14 @@ impl Renderer {
 
     fn draw_slot_frame_buffer(&mut self, pos: Vector2<u16>, hud: &Hud, slot_index: usize) {
         self.push_rect_uniform_on_frame_buffer(
-            Rect {
+            ScreenRect {
                 x: pos.x,
                 y: pos.y,
                 width: 30,
                 height: 30,
             },
             if hud.selected_slot == slot_index {
-                Color::from_888(200, 50, 50)
+                Color565::from_rgb888(200, 50, 50)
             } else {
                 GAMEUI_SLOT_COLOR
             },
@@ -216,22 +216,22 @@ impl Renderer {
         if item_type != ItemType::Air && item_type.get_max_stack_amount() > 1 {
             let item_bar_lenght = 24 * item_stack.get_amount() as u16 / max_item_count as u16;
             self.push_rect_uniform_on_frame_buffer(
-                Rect {
+                ScreenRect {
                     x: pos.x + 3,
                     y: pos.y + 24,
                     width: item_bar_lenght,
                     height: 3,
                 },
-                Color::from_888(100, 150, 255),
+                Color565::from_rgb888(100, 150, 255),
             );
             self.push_rect_uniform_on_frame_buffer(
-                Rect {
+                ScreenRect {
                     x: pos.x + 3 + item_bar_lenght,
                     y: pos.y + 24,
                     width: 24 - item_bar_lenght,
                     height: 3,
                 },
-                Color::from_888(200, 200, 200),
+                Color565::from_rgb888(200, 200, 200),
             );
         }
     }

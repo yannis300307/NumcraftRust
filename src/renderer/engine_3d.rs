@@ -2,10 +2,7 @@ use cbitmap::bitmap::BitsManage;
 
 use crate::{
     constants::get_quad_color_from_texture_id,
-    eadk::{
-        Rect,
-        display::{push_rect, wait_for_vblank},
-    },
+    eadk::display::{ScreenRect, push_rect, wait_for_vblank},
     hud::Hud,
     player::Player,
     renderer::{
@@ -21,8 +18,8 @@ pub fn fill_triangle(
     mut t0: Vector2<isize>,
     mut t1: Vector2<isize>,
     mut t2: Vector2<isize>,
-    frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
-    color: Color,
+    frame_buffer: &mut [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    color: Color565,
 ) {
     if t0.y > t1.y {
         swap(&mut t0, &mut t1);
@@ -89,8 +86,8 @@ pub fn fill_triangle(
 pub fn draw_line(
     pos1: (isize, isize),
     pos2: (isize, isize),
-    frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
-    color: Color,
+    frame_buffer: &mut [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    color: Color565,
 ) {
     for point in bresenham::Bresenham::new(pos1, pos2) {
         if point.0 >= 0
@@ -106,7 +103,7 @@ pub fn draw_line(
 // Takes a Triangle2D and draw it as a filled triangle or lines depending of the texture_id
 pub fn draw_2d_triangle(
     tri: &Triangle2D,
-    frame_buffer: &mut [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    frame_buffer: &mut [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 ) {
     if tri.texture_id == 255 {
         // Block marker
@@ -114,13 +111,13 @@ pub fn draw_2d_triangle(
             (tri.p1.x as isize, tri.p1.y as isize),
             (tri.p2.x as isize, tri.p2.y as isize),
             frame_buffer,
-            Color::from_components(0b11111, 0b0, 0b0),
+            Color565::new(0b11111, 0b0, 0b0),
         );
         draw_line(
             (tri.p2.x as isize, tri.p2.y as isize),
             (tri.p3.x as isize, tri.p3.y as isize),
             frame_buffer,
-            Color::from_components(0b11111, 0b0, 0b0),
+            Color565::new(0b11111, 0b0, 0b0),
         );
     } else {
         // Normal Triangle
@@ -378,7 +375,7 @@ impl Renderer {
         self.projection_matrix.project_vector(&point).xy()
     }
 
-    pub fn clear_screen(&mut self, color: Color) {
+    pub fn clear_screen(&mut self, color: Color565) {
         self.tile_frame_buffer.fill(color);
     }
 
@@ -461,6 +458,10 @@ impl Renderer {
                 }
 
                 for tri in clip_buffer {
+                    if self.triangles_to_render.len() >= MAX_TRIANGLES {
+                        // TODO : Find a proper fix for this
+                        break;
+                    }
                     self.triangles_to_render.push(tri.to_small()); // Do nothing if overflow
                 }
             };
@@ -479,7 +480,7 @@ impl Renderer {
             -((SCREEN_TILE_WIDTH * tile_x) as i16),
             -((SCREEN_TILE_HEIGHT * tile_y) as i16),
         );
-        for tri in self.triangles_to_render.iter_mut() {
+        for tri in self.triangles_to_render.iter_mut().rev() {
             let mut tri_copy = tri.to_tri_2d();
             tri_copy.p1 += tile_offset;
 
@@ -557,6 +558,7 @@ impl Renderer {
 
                     bvec.metric_distance(self.camera.get_pos())
                         .total_cmp(&avec.metric_distance(self.camera.get_pos()))
+                        .reverse()
                 });
             }
             for quad in quads {
@@ -572,7 +574,7 @@ impl Renderer {
 
         for x in 0..SCREEN_TILE_SUBDIVISION {
             for y in 0..SCREEN_TILE_SUBDIVISION {
-                self.clear_screen(Color::from_components(0b01110, 0b110110, 0b11111));
+                self.clear_screen(Color565::new(0b01110, 0b110110, 0b11111));
                 //self.draw_triangles(x, y);
                 //self.draw_flat_model_entities(world, &mat_view, x, y, &frustum);
                 ray_tracer::draw_terrain(
@@ -589,7 +591,7 @@ impl Renderer {
                 }
 
                 push_rect(
-                    Rect {
+                    ScreenRect {
                         x: (SCREEN_TILE_WIDTH * x) as u16,
                         y: (SCREEN_TILE_HEIGHT * y) as u16,
                         width: SCREEN_TILE_WIDTH as u16,

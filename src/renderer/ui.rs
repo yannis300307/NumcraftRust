@@ -4,8 +4,11 @@ use crate::{
         color_palette::{GAMEUI_SLOT_COLOR, GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR},
     },
     eadk::{
-        self, COLOR_BLACK, Point, Rect,
-        display::{draw_string, pull_rect, push_rect, push_rect_uniform},
+        self,
+        display::{
+            COLOR_BLACK, ScreenPoint, ScreenRect, draw_string, pull_rect, push_rect,
+            push_rect_uniform,
+        },
     },
     game_ui::{GameUI, GameUIElements},
     renderer::*,
@@ -20,7 +23,7 @@ impl Renderer {
             for y in 0..BLURING_SCREEN_SUBDIVISION {
                 let tile_x = BLURING_TILE_WIDTH * x;
                 let tile_y = BLURING_TILE_HEIGHT * y;
-                let rect = Rect {
+                let rect = ScreenRect {
                     x: tile_x as u16,
                     y: tile_y as u16,
                     width: BLURING_TILE_WIDTH as u16,
@@ -52,7 +55,7 @@ impl Renderer {
                             }
                         }
 
-                        new_pixels[p_x + p_y * BLURING_TILE_WIDTH] = Color::from_components(
+                        new_pixels[p_x + p_y * BLURING_TILE_WIDTH] = Color565::new(
                             (total_color.0 / pixels_count) as u16,
                             (total_color.1 / pixels_count) as u16,
                             (total_color.2 / pixels_count) as u16,
@@ -81,13 +84,13 @@ impl Renderer {
                 ]);
 
                 push_rect_uniform(
-                    Rect {
+                    ScreenRect {
                         x: pos.x + (x * scale) as u16,
                         y: pos.y + (y * scale) as u16,
                         width: scale as u16,
                         height: scale as u16,
                     },
-                    Color { rgb565: pixel },
+                    Color565 { value: pixel },
                 );
             }
         }
@@ -108,7 +111,7 @@ impl Renderer {
                 // Background
                 if item_stack.get_item_type() == ItemType::Air {
                     push_rect_uniform(
-                        Rect {
+                        ScreenRect {
                             x: x + 3,
                             y: y + 3,
                             width: 24,
@@ -119,15 +122,15 @@ impl Renderer {
                 }
 
                 let color = if game_ui.selected_id.is_some_and(|id| id == element.id) {
-                    Color::from_888(255, 242, 0)
+                    Color565::from_rgb888(255, 242, 0)
                 } else if game_ui.cursor_id == element.id {
-                    Color::from_888(255, 0, 0)
+                    Color565::from_rgb888(255, 0, 0)
                 } else {
                     GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR
                 };
                 // Outline
                 push_rect_uniform(
-                    Rect {
+                    ScreenRect {
                         x: x,
                         y: y,
                         width: 3,
@@ -136,7 +139,7 @@ impl Renderer {
                     color,
                 );
                 push_rect_uniform(
-                    Rect {
+                    ScreenRect {
                         x: x,
                         y: y,
                         width: 30,
@@ -145,7 +148,7 @@ impl Renderer {
                     color,
                 );
                 push_rect_uniform(
-                    Rect {
+                    ScreenRect {
                         x: x,
                         y: y + 27,
                         width: 30,
@@ -154,7 +157,7 @@ impl Renderer {
                     color,
                 );
                 push_rect_uniform(
-                    Rect {
+                    ScreenRect {
                         x: x + 27,
                         y: y,
                         width: 3,
@@ -185,12 +188,12 @@ impl Renderer {
 
                         draw_string(
                             amount_text.as_str(),
-                            Point {
+                            ScreenPoint {
                                 x: (30 - 7 * amount_text.len() + x as usize) as u16,
                                 y: y,
                             },
                             false,
-                            Color::from_888(255, 255, 255),
+                            Color565::from_rgb888(255, 255, 255),
                             GAMEUI_SLOT_COLOR,
                         );
                     }
@@ -204,26 +207,26 @@ impl Renderer {
                     let amount_bar_lenght = 30 * amount / item_stack.get_amount() as usize;
 
                     push_rect_uniform(
-                        Rect {
+                        ScreenRect {
                             x: x,
                             y: y + 27,
                             width: amount_bar_lenght as u16,
                             height: 3,
                         },
                         if game_ui.is_selecting_amount {
-                            Color::from_888(100, 150, 255)
+                            Color565::from_rgb888(100, 150, 255)
                         } else {
-                            Color::from_888(50, 100, 255)
+                            Color565::from_rgb888(50, 100, 255)
                         },
                     );
                     push_rect_uniform(
-                        Rect {
+                        ScreenRect {
                             x: x + amount_bar_lenght as u16,
                             y: y + 27,
                             width: (30 - amount_bar_lenght) as u16,
                             height: 3,
                         },
-                        Color::from_888(100, 100, 100),
+                        Color565::from_rgb888(100, 100, 100),
                     );
                 }
             }
@@ -231,32 +234,32 @@ impl Renderer {
             GameUIElements::Label { text } => {
                 eadk::display::draw_string(
                     text,
-                    Point { x, y },
+                    ScreenPoint { x, y },
                     false,
-                    Color::from_888(0, 0, 0),
-                    Color::from_888(255, 255, 255),
+                    Color565::from_rgb888(0, 0, 0),
+                    Color565::from_rgb888(255, 255, 255),
                 );
             }
             GameUIElements::Arrow { filling } => {
                 eadk::display::push_rect_uniform(
-                    Rect {
+                    ScreenRect {
                         x: element.pos.x + 2,
                         y: element.pos.y + 12,
                         width: 16,
                         height: 6,
                     },
-                    Color::from_888(150, 150, 150),
+                    Color565::from_rgb888(150, 150, 150),
                 );
 
                 for i in 0..=10 {
                     eadk::display::push_rect_uniform(
-                        Rect {
+                        ScreenRect {
                             x: element.pos.x + 18 + i,
                             y: element.pos.y - (10 - i) + 2 + 12,
                             width: 1,
                             height: (10 - i) * 2 + 2,
                         },
-                        Color::from_888(150, 150, 150),
+                        Color565::from_rgb888(150, 150, 150),
                     );
                 }
             }
@@ -264,7 +267,7 @@ impl Renderer {
                 // Background
                 if item_stack.get_item_type() == ItemType::Air {
                     push_rect_uniform(
-                        Rect {
+                        ScreenRect {
                             x: x + 3,
                             y: y + 3,
                             width: 24,
@@ -275,15 +278,15 @@ impl Renderer {
                 }
 
                 let color = if game_ui.selected_id.is_some_and(|id| id == element.id) {
-                    Color::from_888(255, 242, 0)
+                    Color565::from_rgb888(255, 242, 0)
                 } else if game_ui.cursor_id == element.id {
-                    Color::from_888(255, 0, 0)
+                    Color565::from_rgb888(255, 0, 0)
                 } else {
                     GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR
                 };
                 // Outline
                 push_rect_uniform(
-                    Rect {
+                    ScreenRect {
                         x: x,
                         y: y,
                         width: 3,
@@ -292,7 +295,7 @@ impl Renderer {
                     color,
                 );
                 push_rect_uniform(
-                    Rect {
+                    ScreenRect {
                         x: x,
                         y: y,
                         width: 30,
@@ -301,7 +304,7 @@ impl Renderer {
                     color,
                 );
                 push_rect_uniform(
-                    Rect {
+                    ScreenRect {
                         x: x,
                         y: y + 27,
                         width: 30,
@@ -310,7 +313,7 @@ impl Renderer {
                     color,
                 );
                 push_rect_uniform(
-                    Rect {
+                    ScreenRect {
                         x: x + 27,
                         y: y,
                         width: 3,
@@ -334,12 +337,12 @@ impl Renderer {
 
                         draw_string(
                             amount_text.as_str(),
-                            Point {
+                            ScreenPoint {
                                 x: (30 - 7 * amount_text.len() + x as usize) as u16,
                                 y: y,
                             },
                             false,
-                            Color::from_888(255, 255, 255),
+                            Color565::from_rgb888(255, 255, 255),
                             GAMEUI_SLOT_COLOR,
                         );
                     }
@@ -353,8 +356,8 @@ impl Renderer {
                 format!("{}", element_id).as_str(),
                 Point { x: x + 2, y: y + 2 },
                 false,
-                Color::from_888(0, 0, 0),
-                Color::from_888(255, 255, 255),
+                Color565::from_rgb888(0, 0, 0),
+                Color565::from_rgb888(255, 255, 255),
             );
         }
     }

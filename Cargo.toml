@@ -1,7 +1,7 @@
 cargo-features = ["profile-rustflags"]
 [package]
 name = "Numcraft"
-version = "0.1.3"
+version = "0.1.5"
 authors = ["Yannis300307"]
 edition = "2024"
 
@@ -14,9 +14,11 @@ bench = false
 
 [lib]
 path = "src/main.rs"
-bench = false
 crate-type = ["cdylib"]
 name = "numcraft_sim"
+test = false
+doctest = false
+bench = false
 
 [features]
 

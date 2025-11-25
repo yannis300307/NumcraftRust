@@ -63,6 +63,12 @@ Good ideas but I will never have the time to do that :
 
 ## Setup the build environment
 
+### For Debian based Linux distros
+
+You can use the new installer. Run `bash ./setup.sh` and the installer should install everything for you. (Not widely tested. Use it at your own risk.)
+
+### Other distros and Macos
+
 To build this app, you will need to install an embedded ARM rust compiler, the [Arm GCC compiler](https://developer.arm.com/downloads/-/gnu-rm) as well as [Node.js](https://nodejs.org/en/). 
 The SDK for Epsilon apps is shipped as a npm module called [nwlink](https://www.npmjs.com/package/nwlink) that will automatically be installed at compile time.
 **Make sure that `arm-none-eabi-gcc`is in your path.**
@@ -107,3 +113,4 @@ just sim 5
 
 ## Legal info
 NumWorks is a registered trademark.
+This project is not associated or affiliated with Mojang Studios.

@@ -7,6 +7,7 @@ use crate::{
     constants::{player::ROTATION_SPEED, rendering::FOV},
     eadk,
     input_manager::InputManager,
+    settings::Settings,
 };
 
 pub struct Camera {
@@ -34,22 +35,30 @@ impl Camera {
         self.fov = degrees * PI / 180.0;
     }
 
-    pub fn update(&mut self, delta: f32, input_manager: &InputManager) {
+    pub fn update(&mut self, delta: f32, input_manager: &InputManager, settings: &Settings) {
         // Rotation
-        if input_manager.is_keydown(eadk::input::Key::Right) {
+        if (input_manager.is_keydown(eadk::keyboard::Key::Right) && !settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::keyboard::Key::Power) && settings.reverse_controls)
+        {
             self.rotation.y -= delta * ROTATION_SPEED;
         }
-        if input_manager.is_keydown(eadk::input::Key::Left) {
+        if (input_manager.is_keydown(eadk::keyboard::Key::Left) && !settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::keyboard::Key::Imaginary) && settings.reverse_controls)
+        {
             self.rotation.y += delta * ROTATION_SPEED;
         }
-        if input_manager.is_keydown(eadk::input::Key::Up) {
+        if (input_manager.is_keydown(eadk::keyboard::Key::Up) && !settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::keyboard::Key::Toolbox) && settings.reverse_controls)
+        {
             self.rotation.x -= delta * ROTATION_SPEED;
 
             if self.rotation.x <= -PI / 2.0 + 0.0001 {
                 self.rotation.x = -PI / 2.0 + 0.0001
             }
         }
-        if input_manager.is_keydown(eadk::input::Key::Down) {
+        if (input_manager.is_keydown(eadk::keyboard::Key::Down) && !settings.reverse_controls)
+            || (input_manager.is_keydown(eadk::keyboard::Key::Comma) && settings.reverse_controls)
+        {
             self.rotation.x += delta * ROTATION_SPEED;
 
             if self.rotation.x >= PI / 2.0 - 0.0001 {
@@ -93,6 +102,10 @@ impl Camera {
 
     pub fn get_pos(&self) -> &Vector3<f32> {
         &self.pos
+    }
+
+    pub fn set_rotation(&mut self, rot: Vector3<f32>) {
+        self.rotation = rot;
     }
 
     pub fn get_has_moved(&self) -> bool {

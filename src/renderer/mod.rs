@@ -1,8 +1,5 @@
-#[cfg(target_os = "none")]
-use alloc::format;
-
-#[cfg(target_os = "none")]
-use alloc::vec::Vec;
+calc_use!(alloc::format);
+calc_use!(alloc::vec::Vec);
 
 use cbitmap::bitmap::Bitmap;
 use nalgebra::{Matrix4, Perspective3, Vector2, Vector3, Vector4};
@@ -12,7 +9,7 @@ use core::{cmp::Ordering, f32, mem::swap};
 use crate::{
     camera::Camera,
     constants::{rendering::*, world::CHUNK_SIZE},
-    eadk::Color,
+    eadk::display::{COLOR_BLACK, Color565},
     renderer::mesh::SmallTriangle2D,
 };
 
@@ -41,7 +38,7 @@ const SCREEN_TILE_HEIGHT: usize = SCREEN_HEIGHT.div_ceil(SCREEN_TILE_SUBDIVISION
 // Projection parameters
 const ASPECT_RATIO: f32 = SCREEN_WIDTHF / SCREEN_HEIGHTF;
 
-const ZNEAR: f32 = 1.0;
+const ZNEAR: f32 = 0.1;
 const ZFAR: f32 = 1000.0;
 
 // Other
@@ -63,7 +60,7 @@ static TILESET_DATA: &[u8] = include_bytes!("../../target/assets/tileset.bin");
 pub struct Renderer {
     pub camera: Camera,
     triangles_to_render: Vec<SmallTriangle2D>,
-    tile_frame_buffer: [Color; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    tile_frame_buffer: [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
     projection_matrix: Perspective3<f32>,
     pub enable_vsync: bool,
     pub world_blocks_bitmap: Bitmap<BITMAP_SIZE>
@@ -75,7 +72,7 @@ impl Renderer {
             camera: Camera::new(),
             projection_matrix: Perspective3::new(ASPECT_RATIO, FOV, ZNEAR, ZFAR),
             triangles_to_render: Vec::with_capacity(MAX_TRIANGLES),
-            tile_frame_buffer: [Color { rgb565: 0 }; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+            tile_frame_buffer: [COLOR_BLACK; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
             enable_vsync: true,
             world_blocks_bitmap: Bitmap::new(),
         };

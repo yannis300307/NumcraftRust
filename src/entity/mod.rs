@@ -4,8 +4,7 @@ use nalgebra::Vector3;
 
 use crate::{constants::EntityType, physic::BoundingBox};
 
-#[cfg(target_os = "none")]
-use alloc::boxed::Box;
+calc_use!(alloc::boxed::Box);
 
 pub mod item;
 
