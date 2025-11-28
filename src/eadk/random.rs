@@ -25,7 +25,7 @@ pub fn get_random_decimal() -> f32 {
 
 /// Give a random number between start (included) and end (excluded).
 pub fn get_random_in_range(start: u32, stop: u32) -> u32 {
-    assert!(start <= stop, "Start must be smaller than stop");
+    assert!(start < stop, "Start must be smaller than stop");
     let mut random_u32 = unsafe { eadk_random() };
     random_u32 %= stop - start;
     random_u32 += start;
