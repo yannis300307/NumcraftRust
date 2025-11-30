@@ -3,16 +3,22 @@ calc_use!(alloc::ffi);
 calc_use!(alloc::string::String);
 calc_use!(alloc::vec::Vec);
 
-#[cfg(not(target_os = "none"))]
-use std::fs;
+sim_use!(std::fs);
 
 /// Write a binary file to the records.
 pub fn file_write(filename: &str, content: &[u8]) -> Option<()> {
     #[cfg(target_os = "none")]
     {
         let c_string = ffi::CString::new(filename).unwrap();
+
+        #[cfg(feature = "epsilon")]
         let result =
             unsafe { extapp_fileWrite(c_string.as_ptr(), content.as_ptr(), content.len()) };
+
+        #[cfg(feature = "upsilon")]
+        let result =
+            unsafe { extapp_fileWrite(c_string.as_ptr(), content.as_ptr(), content.len(), 0) };
+
         if result { Some(()) } else { None }
     }
     #[cfg(not(target_os = "none"))]
@@ -29,7 +35,15 @@ pub fn file_exists(filename: &str) -> bool {
     #[cfg(target_os = "none")]
     {
         let c_string = ffi::CString::new(filename).unwrap();
-        unsafe { extapp_fileExists(c_string.as_ptr()) }
+        #[cfg(feature = "epsilon")]
+        unsafe {
+            extapp_fileExists(c_string.as_ptr())
+        }
+
+        #[cfg(feature = "upsilon")]
+        unsafe {
+            extapp_fileExists(c_string.as_ptr(), 0)
+        }
     }
     #[cfg(not(target_os = "none"))]
     {
@@ -43,8 +57,14 @@ pub fn file_read(filename: &str) -> Option<Vec<u8>> {
     {
         let c_string = ffi::CString::new(filename).unwrap();
         let mut lenght: usize = 0;
+
+        #[cfg(feature = "epsilon")]
         let array_pointer =
             unsafe { extapp_fileRead(c_string.as_ptr(), &mut lenght as *mut usize) };
+
+        #[cfg(feature = "upsilon")]
+        let array_pointer =
+            unsafe { extapp_fileRead(c_string.as_ptr(), &mut lenght as *mut usize, 0) };
 
         if array_pointer.is_null() {
             return None;
@@ -64,11 +84,15 @@ pub fn file_read_slice(filename: &str, start: usize, mut slice_lenght: usize) ->
     {
         let c_string = ffi::CString::new(filename).unwrap();
         let mut lenght: usize = 0;
+
+        #[cfg(feature = "epsilon")]
         let array_pointer = unsafe {
-            extapp_fileRead(
-                c_string.as_ptr(),
-                &mut lenght as *mut usize,
-            ).offset(start as isize)
+            extapp_fileRead(c_string.as_ptr(), &mut lenght as *mut usize).offset(start as isize)
+        };
+
+        #[cfg(feature = "upsilon")]
+        let array_pointer = unsafe {
+            extapp_fileRead(c_string.as_ptr(), &mut lenght as *mut usize, 0).offset(start as isize)
         };
 
         if array_pointer.is_null() {
@@ -94,7 +118,13 @@ pub fn file_erase(filename: &str) -> Option<()> {
     #[cfg(target_os = "none")]
     {
         let c_string = ffi::CString::new(filename).unwrap();
+
+        #[cfg(feature = "epsilon")]
         let result = unsafe { extapp_fileErase(c_string.as_ptr()) };
+
+        #[cfg(feature = "upsilon")]
+        let result = unsafe { extapp_fileErase(c_string.as_ptr(), 0) };
+
         if result { Some(()) } else { None }
     }
     #[cfg(not(target_os = "none"))]
@@ -111,11 +141,20 @@ pub fn file_list_with_extension(max_records: usize, extension: &str) -> Vec<Stri
         let c_string = ffi::CString::new(extension).unwrap();
 
         unsafe {
+            #[cfg(feature = "epsilon")]
             let final_len = extapp_fileListWithExtension(
                 filenames.as_mut_slice().as_mut_ptr(),
                 max_records as isize,
                 c_string.as_ptr(),
             );
+            #[cfg(feature = "upsilon")]
+            let final_len = extapp_fileListWithExtension(
+                filenames.as_mut_slice().as_mut_ptr(),
+                max_records as isize,
+                c_string.as_ptr(),
+                0,
+            );
+
             filenames.set_len(final_len as usize);
 
             let mut files: Vec<String> = Vec::new();
@@ -132,40 +171,43 @@ pub fn file_list_with_extension(max_records: usize, extension: &str) -> Vec<Stri
     #[cfg(not(target_os = "none"))]
     {
         let mut files: Vec<String> = Vec::new();
-        if let Ok(entries) = fs::read_dir("simulator/storage") {
-            for entry in entries {
-                if files.len() < max_records {
-                    let entry = entry.unwrap();
-                    let name = entry.file_name().into_string().unwrap();
-                    if name.ends_with(extension) {
-                        files.push(name);
-                    }
+        for entry in fs::read_dir("simulator/storage").unwrap() {
+            if files.len() < max_records {
+                let entry = entry.unwrap();
+                let name = entry.file_name().into_string().unwrap();
+                if name.ends_with(extension) {
+                    files.push(name);
                 }
             }
-
-            files
-        } else {
-            Vec::new()
         }
+
+        files
     }
 }
 
 pub enum CalculatorModel {
     Unknown,
-    N0110N0115,
-    N0120,
+    EpsilonN0110N0115,
+    EpsilonN0120,
+    Upsilon,
     Simulator,
 }
 
 /// Return the model name of the calculator or Simulator on the Simulator.
 pub fn get_calculator_model() -> CalculatorModel {
     #[cfg(target_os = "none")]
+    #[cfg(feature = "epsilon")]
     {
         match unsafe { extapp_calculatorModel() } {
             _ => CalculatorModel::Unknown,
-            1 => CalculatorModel::N0110N0115,
-            2 => CalculatorModel::N0120,
+            1 => CalculatorModel::EpsilonN0110N0115,
+            2 => CalculatorModel::EpsilonN0120,
         }
+    }
+    #[cfg(target_os = "none")]
+    #[cfg(feature = "upsilon")]
+    {
+        CalculatorModel::Upsilon
     }
     #[cfg(not(target_os = "none"))]
     {
@@ -174,6 +216,7 @@ pub fn get_calculator_model() -> CalculatorModel {
 }
 
 #[cfg(target_os = "none")]
+#[cfg(feature = "epsilon")]
 unsafe extern "C" {
     fn extapp_fileWrite(filename: *const u8, content: *const u8, len: usize) -> bool;
     fn extapp_fileExists(filename: *const u8) -> bool;
@@ -185,4 +228,24 @@ unsafe extern "C" {
         extension: *const u8,
     ) -> isize;
     fn extapp_calculatorModel() -> u8;
+}
+
+#[cfg(target_os = "none")]
+#[cfg(feature = "upsilon")]
+unsafe extern "C" {
+    fn extapp_fileWrite(
+        filename: *const u8,
+        content: *const u8,
+        len: usize,
+        storage: isize,
+    ) -> bool;
+    fn extapp_fileExists(filename: *const u8, storage: isize) -> bool;
+    fn extapp_fileRead(filename: *const u8, len: *mut usize, storage: isize) -> *const u8;
+    fn extapp_fileErase(filename: *const u8, storage: isize) -> bool;
+    fn extapp_fileListWithExtension(
+        filename: *mut *mut u8,
+        maxrecord: isize,
+        extension: *const u8,
+        storage: isize,
+    ) -> isize;
 }

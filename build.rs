@@ -278,7 +278,16 @@ fn main() {
 
     // Compile storage.c
     if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "none" {
-        compile_c_libs();
+        println!("cargo:rustc-link-arg=--relocatable");
+        println!("cargo:rustc-link-arg=-no-gc-sections");
+
+        if std::env::var("CARGO_FEATURE_UPSILON").is_ok() {
+            println!("cargo:rustc-link-arg=-L../../api");
+            println!("cargo:rustc-link-arg=-lapi");
+        } else {
+            compile_c_libs();
+            println!("cargo:rustc-link-arg=-lstorage_c");
+        }
     } else {
         patch_simulator();
     }

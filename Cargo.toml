@@ -21,8 +21,10 @@ doctest = false
 bench = false
 
 [features]
-
+default = ["upsilon"]
 debug_ui = []
+upsilon = []
+epsilon = []
 
 [profile.dev]
 panic="abort"

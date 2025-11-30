@@ -257,8 +257,8 @@ impl World {
 
     pub fn clear_entities(&mut self) {
         if self.loaded_entities.len() > 1 {
-            for i in 1..self.loaded_entities.len() {
-                self.loaded_entities.remove(i);
+            for _ in 1..self.loaded_entities.len() {
+                self.loaded_entities.remove(1);
             }
         }
     }

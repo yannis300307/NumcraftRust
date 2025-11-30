@@ -505,7 +505,7 @@ impl Renderer {
         &mut self,
         world: &mut World,
         player: &Player,
-        fps_count: f32,
+        frame_time: u64,
         hud: &Hud,
         draw_hud: bool,
     ) {
@@ -577,7 +577,7 @@ impl Renderer {
                 self.draw_flat_model_entities(world, &mat_view, x, y, &frustum);
 
                 if draw_hud {
-                    self.draw_hud(hud, fps_count, x, y);
+                    self.draw_hud(hud, frame_time, x, y);
                 }
 
                 push_rect(

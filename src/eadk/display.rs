@@ -90,8 +90,14 @@ impl ScreenPoint {
 
 /// Fill the screen rect defined by `rect` with the given pixels.
 pub fn push_rect(rect: ScreenRect, pixels: &[Color565]) {
+    #[cfg(feature = "epsilon")]
     unsafe {
         eadk_display_push_rect(rect, pixels.as_ptr());
+    }
+
+    #[cfg(feature = "upsilon")]
+    unsafe {
+        extapp_pushRect(rect.x, rect.y, rect.width, rect.height, pixels.as_ptr());
     }
 }
 
@@ -103,23 +109,47 @@ pub fn pull_rect(rect: ScreenRect) -> Vec<Color565> {
         vec.push(COLOR_BLACK);
     }
 
+    #[cfg(feature = "epsilon")]
     unsafe {
         eadk_display_pull_rect(rect, vec.as_mut_slice().as_mut_ptr());
+    }
+
+    #[cfg(feature = "upsilon")]
+    unsafe {
+        extapp_pullRect(
+            rect.x,
+            rect.y,
+            rect.width,
+            rect.height,
+            vec.as_mut_slice().as_mut_ptr(),
+        );
     }
     vec
 }
 
 /// Fill the screen rect defined by `rect` with the given color.
 pub fn push_rect_uniform(rect: ScreenRect, color: Color565) {
+    #[cfg(feature = "epsilon")]
     unsafe {
         eadk_display_push_rect_uniform(rect, color);
     }
+
+    #[cfg(feature = "upsilon")]
+    unsafe {
+        extapp_pushRectUniform(rect.x, rect.y, rect.width, rect.height, color);
+    }
 }
 
-/// Wait until the screen is refreshed. The maximum FPS is 40 on actual hardware.
+/// Wait until the screen is ed. The maximum FPS is 40 on actual hardware.
 pub fn wait_for_vblank() {
+    #[cfg(feature = "epsilon")]
     unsafe {
         eadk_display_wait_for_vblank();
+    }
+
+    #[cfg(feature = "upsilon")]
+    unsafe {
+        extapp_waitForVBlank();
     }
 }
 
@@ -132,6 +162,7 @@ pub fn draw_string(
     background_color: Color565,
 ) -> Option<()> {
     let c_string = CString::new(text).ok()?;
+    #[cfg(feature = "epsilon")]
     unsafe {
         eadk_display_draw_string(
             c_string.as_ptr(),
@@ -141,9 +172,34 @@ pub fn draw_string(
             background_color,
         )
     }
+
+    #[cfg(feature = "upsilon")]
+    unsafe {
+        if large_font {
+            extapp_drawTextLarge(
+                c_string.as_ptr(),
+                point.x,
+                point.y,
+                text_color,
+                background_color,
+                false,
+            )
+        } else {
+            extapp_drawTextSmall(
+                c_string.as_ptr(),
+                point.x,
+                point.y,
+                text_color,
+                background_color,
+                false,
+            )
+        }
+    }
+
     Some(())
 }
 
+#[cfg(feature = "epsilon")]
 unsafe extern "C" {
     fn eadk_display_push_rect_uniform(rect: ScreenRect, color: Color565);
     fn eadk_display_push_rect(rect: ScreenRect, color: *const Color565);
@@ -155,5 +211,28 @@ unsafe extern "C" {
         large_font: bool,
         text_color: Color565,
         background_color: Color565,
+    );
+}
+
+unsafe extern "C" {
+    fn extapp_pushRectUniform(x: u16, y: u16, w: u16, h: u16, color: Color565);
+    fn extapp_pushRect(x: u16, y: u16, w: u16, h: u16, color: *const Color565);
+    fn extapp_waitForVBlank() -> bool;
+    fn extapp_pullRect(x: u16, y: u16, w: u16, h: u16, color: *mut Color565);
+    fn extapp_drawTextLarge(
+        text: *const c_char,
+        x: u16,
+        y: u16,
+        text_color: Color565,
+        background_color: Color565,
+        fake: bool,
+    );
+    fn extapp_drawTextSmall(
+        text: *const c_char,
+        x: u16,
+        y: u16,
+        text_color: Color565,
+        background_color: Color565,
+        fake: bool,
     );
 }

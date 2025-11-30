@@ -189,7 +189,7 @@ impl Game {
             self.renderer.draw_game(
                 &mut self.world,
                 &self.player,
-                self.timing_manager.get_fps(),
+                self.timing_manager.get_frame_time(),
                 &self.hud,
                 true,
             );

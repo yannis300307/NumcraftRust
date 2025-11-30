@@ -6,12 +6,10 @@
 #[macro_use]
 mod eadk;
 
-mod game;
-mod renderer;
-mod world;
 mod camera;
 mod constants;
 mod entity;
+mod game;
 mod game_ui;
 mod hud;
 mod input_manager;
@@ -20,10 +18,13 @@ mod menu;
 mod misc;
 mod physic;
 mod player;
+mod renderer;
 mod save_manager;
 mod settings;
 mod timing;
+mod world;
 
+use alloc::format;
 use game::Game;
 
 setup_allocator!();
@@ -34,7 +35,7 @@ configure_app!(b"Numcraft\0", 9, "../target/assets/icon.nwi", 3437);
 fn main() -> isize {
     init_heap!();
 
-   eadk::utils::wait_ok_released();
+    eadk::utils::wait_ok_released();
 
     let mut game = Game::new();
 
