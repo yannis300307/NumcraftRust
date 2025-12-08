@@ -4,7 +4,7 @@
 #![feature(const_trait_impl)]
 
 #[macro_use]
-mod eadk;
+mod nadk;
 
 mod camera;
 mod constants;
@@ -34,7 +34,7 @@ configure_app!(b"Numcraft\0", 9, "../target/assets/icon.nwi", 3437);
 fn main() {
     init_heap!();
 
-    eadk::utils::wait_ok_released();
+    nadk::utils::wait_ok_released();
 
     let mut game = Game::new();
 

@@ -11,7 +11,7 @@ use crate::{
         color_palette::MENU_BACKGROUND_COLOR,
         rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
-    eadk::{self, display::Color565},
+    nadk::{self, display::Color565},
     game::{crafting_manager::CraftingManager, game_menus::SettingsMenu},
     game_ui::GameUI,
     hud::Hud,
@@ -147,12 +147,12 @@ impl Game {
             self.input_manager.update();
             self.timing_manager.update();
 
-            if self.input_manager.is_just_pressed(eadk::keyboard::Key::Exe) {
+            if self.input_manager.is_just_pressed(nadk::keyboard::Key::Exe) {
                 self.exit_world();
 
                 return GameState::GoMainMenu;
             }
-            if self.input_manager.is_just_pressed(eadk::keyboard::Key::Var) {
+            if self.input_manager.is_just_pressed(nadk::keyboard::Key::Var) {
                 if self.save_manager.get_game_mode() == GameMode::Creative {
                     return GameState::OpenPlayerInventory(game_uis::PlayerInventoryPage::Creative);
                 } else {

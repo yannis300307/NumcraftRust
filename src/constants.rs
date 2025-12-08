@@ -1,7 +1,7 @@
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 
-use crate::{eadk::display::Color565, physic::BoundingBox, renderer::mesh::QuadDir};
+use crate::{nadk::display::Color565, physic::BoundingBox, renderer::mesh::QuadDir};
 
 pub mod rendering {
     pub const SCREEN_WIDTH: usize = 320;
@@ -30,7 +30,7 @@ pub mod rendering {
 }
 
 pub mod color_palette {
-    use crate::eadk::display::Color565;
+    use crate::nadk::display::Color565;
 
     pub const MENU_OUTLINE_COLOR: Color565 = Color565::from_rgb888(150, 150, 150);
     pub const MENU_ELEMENT_BACKGROUND_COLOR: Color565 = Color565::from_rgb888(230, 230, 230);

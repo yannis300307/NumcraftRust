@@ -1,6 +1,6 @@
 use crate::{
     constants::get_quad_color_from_texture_id,
-    eadk::display::{ScreenRect, push_rect, wait_for_vblank},
+    nadk::display::{ScreenRect, push_rect, wait_for_vblank},
     hud::Hud,
     player::Player,
     renderer::{

@@ -4,7 +4,7 @@ calc_use!(alloc::vec::Vec);
 
 use nalgebra::Vector2;
 
-use crate::{eadk::keyboard::Key, input_manager::InputManager};
+use crate::{nadk::keyboard::Key, input_manager::InputManager};
 
 pub enum MenuElement {
     /// A simple button

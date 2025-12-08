@@ -1,6 +1,6 @@
 use crate::{
     constants::{ItemType, color_palette::GAMEUI_SLOT_COLOR},
-    eadk::display::ScreenRect,
+    nadk::display::ScreenRect,
     hud::Hud,
     renderer::{misc::UnBoundedScreenRect, *},
 };

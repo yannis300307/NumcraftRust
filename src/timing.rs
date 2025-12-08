@@ -1,4 +1,4 @@
-use crate::eadk;
+use crate::nadk;
 
 pub struct TimingManager {
     last_timer: u64,
@@ -9,14 +9,14 @@ pub struct TimingManager {
 impl TimingManager {
     pub fn new() -> Self {
         TimingManager {
-            last_timer: eadk::time::get_current_time_millis(),
+            last_timer: nadk::time::get_current_time_millis(),
             delta_time: 0.1,
             frame_time: 1,
         }
     }
 
     pub fn update(&mut self) {
-        let current = eadk::time::get_current_time_millis();
+        let current = nadk::time::get_current_time_millis();
         self.frame_time = current - self.last_timer;
         self.delta_time = self.frame_time as f32 / 1000.0;
         self.last_timer = current;
@@ -33,7 +33,7 @@ impl TimingManager {
         return 1. / self.delta_time;
     }
     pub fn reset(&mut self) {
-        self.last_timer = eadk::time::get_current_time_millis();
+        self.last_timer = nadk::time::get_current_time_millis();
         self.frame_time = 1;
         self.delta_time = 0.1;
     }

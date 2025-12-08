@@ -102,8 +102,8 @@ impl Game {
 
             self.renderer.draw_game_ui(&mut ui);
 
-            eadk::display::wait_for_vblank();
-            eadk::time::wait_milliseconds(50);
+            nadk::display::wait_for_vblank();
+            nadk::time::wait_milliseconds(50);
         }
     }
 
@@ -188,8 +188,8 @@ impl Game {
 
             self.renderer.draw_game_ui(&mut ui);
 
-            eadk::display::wait_for_vblank();
-            eadk::time::wait_milliseconds(50);
+            nadk::display::wait_for_vblank();
+            nadk::time::wait_milliseconds(50);
         }
     }
 }

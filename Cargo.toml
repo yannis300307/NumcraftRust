@@ -4,6 +4,7 @@ name = "Numcraft"
 version = "0.1.5"
 authors = ["Yannis300307"]
 edition = "2024"
+build="build/build.rs"
 
 [[bin]]
 name = "Numcraft"

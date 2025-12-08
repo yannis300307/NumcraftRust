@@ -1,6 +1,6 @@
 use enum_iterator::Sequence;
 
-use crate::eadk::time;
+use crate::nadk::time;
 
 /// A key of the calculator's keyboard.
 #[derive(Clone, Copy, PartialEq, Eq, Sequence, Debug)]

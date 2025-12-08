@@ -3,3 +3,6 @@
 .DS_store
 /epsilon_simulator
 /.vscode
+.venv
+*.elf
+*.icon

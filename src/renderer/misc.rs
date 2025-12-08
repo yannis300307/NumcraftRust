@@ -1,5 +1,5 @@
 use crate::{
-    eadk::display::{
+    nadk::display::{
         Color565, SCREEN_RECT, ScreenPoint, ScreenRect, draw_string, pull_rect, push_rect,
         push_rect_uniform,
     },

@@ -1,6 +1,6 @@
 use crate::{
     constants::color_palette::*,
-    eadk::{
+    nadk::{
         display::ScreenPoint,
         display::ScreenRect,
         display::{draw_string, push_rect_uniform, wait_for_vblank},

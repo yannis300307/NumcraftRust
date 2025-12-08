@@ -42,7 +42,7 @@ macro_rules! init_heap {
     () => {
         #[cfg(target_os = "none")]
         {
-            unsafe { HEAP.init(eadk::adresses::heap_start(), eadk::adresses::heap_size()) }
+            unsafe { HEAP.init(nadk::adresses::heap_start(), nadk::adresses::heap_size()) }
         }
     };
 }
