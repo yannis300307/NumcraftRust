@@ -509,8 +509,6 @@ impl Renderer {
         hud: &Hud,
         draw_hud: bool,
     ) {
-        self.triangles_to_render.clear();
-
         let mat_view = self.get_mat_view();
 
         let frustum = Frustum::new(
@@ -594,5 +592,6 @@ impl Renderer {
         if self.enable_vsync {
             wait_for_vblank();
         }
+        self.triangles_to_render.clear();
     }
 }

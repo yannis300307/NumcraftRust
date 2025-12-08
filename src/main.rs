@@ -24,7 +24,6 @@ mod settings;
 mod timing;
 mod world;
 
-use alloc::format;
 use game::Game;
 
 setup_allocator!();
@@ -32,7 +31,7 @@ setup_allocator!();
 configure_app!(b"Numcraft\0", 9, "../target/assets/icon.nwi", 3437);
 
 #[unsafe(no_mangle)]
-fn main() -> isize {
+fn main() {
     init_heap!();
 
     eadk::utils::wait_ok_released();
@@ -40,6 +39,4 @@ fn main() -> isize {
     let mut game = Game::new();
 
     game.main_loop();
-
-    0
 }
