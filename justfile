@@ -66,9 +66,8 @@ sim jobs="1" features="": setup_target
     fi
     just run_nwb
 
-[confirm("This will clean the built app AND the simulator. Do you want to continue ?")]
+[confirm("This will clean the built app. Do you want to continue ?")]
 clean:
-    cd ./simulator && make clean
     rm -f ./app.elf ./app.icon
     cargo clean
 
