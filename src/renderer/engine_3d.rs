@@ -1,6 +1,6 @@
 use crate::{
     constants::get_quad_color_from_texture_id,
-    eadk::display::{ScreenRect, push_rect, wait_for_vblank},
+    nadk::display::{ScreenRect, push_rect, wait_for_vblank},
     hud::Hud,
     player::Player,
     renderer::{
@@ -505,12 +505,10 @@ impl Renderer {
         &mut self,
         world: &mut World,
         player: &Player,
-        fps_count: f32,
+        frame_time: u64,
         hud: &Hud,
         draw_hud: bool,
     ) {
-        self.triangles_to_render.clear();
-
         let mat_view = self.get_mat_view();
 
         let frustum = Frustum::new(
@@ -577,7 +575,7 @@ impl Renderer {
                 self.draw_flat_model_entities(world, &mat_view, x, y, &frustum);
 
                 if draw_hud {
-                    self.draw_hud(hud, fps_count, x, y);
+                    self.draw_hud(hud, frame_time, x, y);
                 }
 
                 push_rect(
@@ -594,5 +592,6 @@ impl Renderer {
         if self.enable_vsync {
             wait_for_vblank();
         }
+        self.triangles_to_render.clear();
     }
 }

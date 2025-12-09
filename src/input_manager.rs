@@ -1,7 +1,7 @@
 use enum_iterator::all;
 
 use crate::{
-    eadk::{
+    nadk::{
         self,
         keyboard::{Key, KeyboardState},
     },
@@ -33,7 +33,7 @@ impl InputManager {
 
     pub fn update(&mut self) {
         self.last_keyboard_state = self.keyboard_state;
-        self.keyboard_state = eadk::keyboard::KeyboardState::scan();
+        self.keyboard_state = nadk::keyboard::KeyboardState::scan();
         self.just_pressed = self
             .keyboard_state
             .get_just_pressed(self.last_keyboard_state);
@@ -87,16 +87,16 @@ impl InputManager {
     }
 
     pub fn wait_delay_or_ok(&mut self, delay_ms: usize) {
-        while self.is_keydown(eadk::keyboard::Key::Ok) {
+        while self.is_keydown(nadk::keyboard::Key::Ok) {
             self.update();
-            eadk::time::wait_milliseconds(100);
+            nadk::time::wait_milliseconds(100);
         }
         for _ in 0..delay_ms / 50 {
             self.update();
-            if self.is_just_pressed(eadk::keyboard::Key::Ok) {
+            if self.is_just_pressed(nadk::keyboard::Key::Ok) {
                 break;
             }
-            eadk::time::wait_milliseconds(50);
+            nadk::time::wait_milliseconds(50);
         }
     }
 }

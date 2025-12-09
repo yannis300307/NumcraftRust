@@ -23,7 +23,7 @@ impl Game {
     fn player_inventory_survival_loop(&mut self) {
         // Clear the hud
         self.renderer
-            .draw_game(&mut self.world, &self.player, 0., &self.hud, false);
+            .draw_game(&mut self.world, &self.player, 0, &self.hud, false);
 
         let inventories = [
             &mut self.player.inventory,
@@ -102,15 +102,15 @@ impl Game {
 
             self.renderer.draw_game_ui(&mut ui);
 
-            eadk::display::wait_for_vblank();
-            eadk::time::wait_milliseconds(50);
+            nadk::display::wait_for_vblank();
+            nadk::time::wait_milliseconds(50);
         }
     }
 
     fn player_inventory_creative_loop(&mut self) {
         // Clear the hud
         self.renderer
-            .draw_game(&mut self.world, &self.player, 0., &self.hud, false);
+            .draw_game(&mut self.world, &self.player, 0, &self.hud, false);
 
         let mut creative_inventory = Inventory::new(21);
 
@@ -188,8 +188,8 @@ impl Game {
 
             self.renderer.draw_game_ui(&mut ui);
 
-            eadk::display::wait_for_vblank();
-            eadk::time::wait_milliseconds(50);
+            nadk::display::wait_for_vblank();
+            nadk::time::wait_milliseconds(50);
         }
     }
 }

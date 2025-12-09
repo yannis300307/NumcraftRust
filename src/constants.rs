@@ -1,20 +1,23 @@
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 
-use crate::{eadk::display::Color565, physic::BoundingBox, renderer::mesh::QuadDir};
+use crate::{nadk::display::Color565, physic::BoundingBox, renderer::mesh::QuadDir};
 
 pub mod rendering {
     pub const SCREEN_WIDTH: usize = 320;
     pub const SCREEN_HEIGHT: usize = 240;
 
-    pub const SCREEN_TILE_SUBDIVISION: usize = 2; // Minimum 2
+    pub const SCREEN_TILE_SUBDIVISION: usize = 4; // Minimum 2
 
     pub const MIN_FOV: f32 = 30.;
     pub const MAX_FOV: f32 = 110.;
 
     pub const FOV: f32 = 45.;
 
+    #[cfg(feature = "epsilon")]
     pub const MAX_TRIANGLES: usize = 1500;
+    #[cfg(feature = "upsilon")]
+    pub const MAX_TRIANGLES: usize = 1200; // Sorry Upsilon users
 
     pub const MAX_RENDER_DISTANCE: usize = 2; // You shouldn't go higher
 
@@ -27,7 +30,7 @@ pub mod rendering {
 }
 
 pub mod color_palette {
-    use crate::eadk::display::Color565;
+    use crate::nadk::display::Color565;
 
     pub const MENU_OUTLINE_COLOR: Color565 = Color565::from_rgb888(150, 150, 150);
     pub const MENU_ELEMENT_BACKGROUND_COLOR: Color565 = Color565::from_rgb888(230, 230, 230);

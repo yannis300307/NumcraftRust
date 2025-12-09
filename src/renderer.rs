@@ -8,18 +8,18 @@ use core::{cmp::Ordering, f32, mem::swap};
 use crate::{
     camera::Camera,
     constants::{rendering::*, world::CHUNK_SIZE},
-    eadk::display::{COLOR_BLACK, Color565},
+    nadk::display::{COLOR_BLACK, Color565},
     renderer::mesh::SmallTriangle2D,
 };
 
 mod engine_3d;
+mod entity;
+mod frustum;
 mod hud;
 mod menus;
-mod ui;
-mod frustum;
 pub mod mesh;
 mod misc;
-mod entity;
+mod ui;
 
 // Screen size related constants
 

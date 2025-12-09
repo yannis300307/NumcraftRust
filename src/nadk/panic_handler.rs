@@ -3,7 +3,7 @@ use core::panic::PanicInfo;
 calc_use!(alloc::string::String);
 calc_use!(alloc::format);
 
-use crate::eadk::display::{Color565, ScreenPoint, ScreenRect, draw_string, push_rect_uniform};
+use crate::nadk::display::{Color565, ScreenPoint, ScreenRect, draw_string, push_rect_uniform};
 
 #[cfg(target_os = "none")]
 fn write_wrapped(text: &str, limit: usize) {
@@ -46,6 +46,6 @@ fn panic(panic: &PanicInfo<'_>) -> ! {
     write_wrapped(format!("{}", panic).as_str(), 42);
 
     loop {
-        crate::eadk::time::wait_milliseconds(50);
+        crate::nadk::time::wait_milliseconds(50);
     }
 }

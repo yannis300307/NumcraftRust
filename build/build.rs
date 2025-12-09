@@ -36,7 +36,7 @@ fn compile_c_libs() {
     .expect("Invalid UTF-8 in nwlink flags");
 
     let mut build = cc::Build::new();
-    build.file("src/eadk/storage/storage.c");
+    build.file("src/nadk/storage/storage.c");
     build.flag("-std=c99");
     build.flag("-Os");
     build.flag("-Wall");
@@ -278,7 +278,16 @@ fn main() {
 
     // Compile storage.c
     if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "none" {
-        compile_c_libs();
+        println!("cargo:rustc-link-arg=--relocatable");
+        println!("cargo:rustc-link-arg=-no-gc-sections");
+
+        if std::env::var("CARGO_FEATURE_UPSILON").is_ok() {
+            println!("cargo:rustc-link-arg=-Ltarget/upsilon_api");
+            println!("cargo:rustc-link-arg=-lapi");
+        } else {
+            compile_c_libs();
+            println!("cargo:rustc-link-arg=-lstorage_c");
+        }
     } else {
         patch_simulator();
     }
