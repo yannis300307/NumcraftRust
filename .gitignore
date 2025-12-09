@@ -6,3 +6,4 @@
 .venv
 *.elf
 *.icon
+/icon.png

@@ -31,7 +31,7 @@ release-upsilon:
     just build-upsilon
     . ./.venv/bin/activate && python3 ./build/png2icon.py {{icon_file}} app.icon
     cp ./target/thumbv7em-none-eabihf/release/{{app_name}} ./app.elf
-
+    cp ./assets/icon.png ./icon.png
 
 check: setup_target
     cargo check --release --bin {{app_name}} --target=thumbv7em-none-eabihf --features "epsilon" --no-default-features
@@ -74,5 +74,5 @@ clean:
 [confirm("This will clean the built app AND DELETE the simulator. Do you want to continue ?")]
 clear:
     rm -rf ./simulator
-    rm -f ./app.elf ./app.icon
+    rm -f ./app.elf ./app.icon ./icon.png
     cargo clean
