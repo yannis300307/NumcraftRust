@@ -1,0 +1,14 @@
+name: Full check
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - uses: carlosperate/arm-none-eabi-gcc-action@v1
+      - name: Install dependencies
+        run: bash ./setup.sh <<< y
+      - name: Build app
+        run: just check
