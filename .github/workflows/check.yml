@@ -1,5 +1,5 @@
-name: Build
-on: [pull_request, push]
+name: Full check
+on: [pull_request]
 
 jobs:
   build:
