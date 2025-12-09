@@ -61,6 +61,7 @@ sim jobs="1" features="": setup_target
 
     if [ ! -f "target/simulator_patched" ]; then \
         cd simulator && make PLATFORM=simulator -j {{jobs}}; \
+        mkdir -p storage; \
         cd ..; \
         echo "yes it is" >> target/simulator_patched; \
     fi

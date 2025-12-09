@@ -304,6 +304,29 @@ impl World {
         false
     }
 
+    pub fn get_highest_block(&self, x: isize, z: isize) -> isize {
+        let mut highest_chunk_y = self.chunks_manager.chunks[0].get_pos().y;
+        for chunk in self.chunks_manager.chunks.iter() {
+            if chunk.get_pos().y > highest_chunk_y {
+                highest_chunk_y = chunk.get_pos().y;
+            }
+        }
+        let max_block = (highest_chunk_y + 1) * CHUNK_SIZE_I;
+        let mut highest_block = max_block-1;
+
+        for y in (0..max_block).rev() {
+            if !self
+                .chunks_manager
+                .get_block_in_world(Vector3::new(x, y, z))
+                .is_some_and(|b| b.is_air())
+            {
+                highest_block = y + 1;
+                break;
+            }
+        }
+        highest_block
+    }
+
     /// Clear all the chunks and entities
     pub fn clear(&mut self) {
         self.chunks_manager.clear();
