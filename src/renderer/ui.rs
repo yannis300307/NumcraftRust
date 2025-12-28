@@ -3,7 +3,7 @@ use crate::{
         ItemType,
         color_palette::{GAMEUI_SLOT_COLOR, GAMEUI_SLOT_DEFAULT_OUTLINE_COLOR},
     },
-    eadk::{
+    nadk::{
         self,
         display::{
             COLOR_BLACK, ScreenPoint, ScreenRect, draw_string, pull_rect, push_rect,
@@ -232,7 +232,7 @@ impl Renderer {
             }
             GameUIElements::Button { text, is_pressed } => todo!(),
             GameUIElements::Label { text } => {
-                eadk::display::draw_string(
+                nadk::display::draw_string(
                     text,
                     ScreenPoint { x, y },
                     false,
@@ -241,7 +241,7 @@ impl Renderer {
                 );
             }
             GameUIElements::Arrow { filling } => {
-                eadk::display::push_rect_uniform(
+                nadk::display::push_rect_uniform(
                     ScreenRect {
                         x: element.pos.x + 2,
                         y: element.pos.y + 12,
@@ -252,7 +252,7 @@ impl Renderer {
                 );
 
                 for i in 0..=10 {
-                    eadk::display::push_rect_uniform(
+                    nadk::display::push_rect_uniform(
                         ScreenRect {
                             x: element.pos.x + 18 + i,
                             y: element.pos.y - (10 - i) + 2 + 12,
@@ -352,7 +352,7 @@ impl Renderer {
 
         #[cfg(feature = "debug_ui")]
         {
-            eadk::display::draw_string(
+            nadk::display::draw_string(
                 format!("{}", element_id).as_str(),
                 Point { x: x + 2, y: y + 2 },
                 false,

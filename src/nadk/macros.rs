@@ -3,16 +3,19 @@ macro_rules! configure_app {
         #[used]
         #[cfg(target_os = "none")]
         #[unsafe(link_section = ".rodata.eadk_app_name")]
+        #[cfg(feature = "epsilon")]
         pub static EADK_APP_NAME: [u8; $app_name_size] = *$app_name;
 
         #[used]
         #[cfg(target_os = "none")]
         #[unsafe(link_section = ".rodata.eadk_api_level")]
+        #[cfg(feature = "epsilon")]
         pub static EADK_APP_API_LEVEL: u32 = 0;
 
         #[used]
         #[cfg(target_os = "none")]
         #[unsafe(link_section = ".rodata.eadk_app_icon")]
+        #[cfg(feature = "epsilon")]
         pub static EADK_APP_ICON: [u8; $icon_size] = *include_bytes!($icon_path);
     };
 }
@@ -23,10 +26,6 @@ macro_rules! setup_allocator {
         #[cfg(target_os = "none")]
         use cortex_m;
 
-        #[cfg(target_os = "none")]
-        use crate::eadk::adresses::HEAP_START;
-        #[cfg(target_os = "none")]
-        use eadk::adresses::heap_size;
         #[cfg(target_os = "none")]
         use embedded_alloc::LlffHeap as Heap;
 
@@ -43,8 +42,7 @@ macro_rules! init_heap {
     () => {
         #[cfg(target_os = "none")]
         {
-            let heap_size: usize = heap_size();
-            unsafe { HEAP.init(HEAP_START as usize, heap_size) }
+            unsafe { HEAP.init(nadk::adresses::heap_start(), nadk::adresses::heap_size()) }
         }
     };
 }

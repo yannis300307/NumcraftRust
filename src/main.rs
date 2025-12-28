@@ -5,14 +5,12 @@
 #![feature(f16)]
 
 #[macro_use]
-mod eadk;
+mod nadk;
 
-mod game;
-mod renderer;
-mod world;
 mod camera;
 mod constants;
 mod entity;
+mod game;
 mod game_ui;
 mod hud;
 mod input_manager;
@@ -21,9 +19,11 @@ mod menu;
 mod misc;
 mod physic;
 mod player;
+mod renderer;
 mod save_manager;
 mod settings;
 mod timing;
+mod world;
 
 use game::Game;
 
@@ -32,14 +32,12 @@ setup_allocator!();
 configure_app!(b"Numcraft\0", 9, "../target/assets/icon.nwi", 3437);
 
 #[unsafe(no_mangle)]
-fn main() -> isize {
+fn main() {
     init_heap!();
 
-   eadk::utils::wait_ok_released();
+    nadk::utils::wait_ok_released();
 
     let mut game = Game::new();
 
     game.main_loop();
-
-    0
 }

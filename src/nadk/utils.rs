@@ -1,4 +1,4 @@
-use crate::eadk::{display, keyboard, time};
+use crate::nadk::{display, keyboard, time};
 calc_use!(alloc::string::String);
 calc_use!(alloc::vec::Vec);
 
@@ -28,5 +28,5 @@ pub fn log(text: &[&str]) {
 #[inline(always)]
 pub fn refresh_simulator() {
     #[cfg(not(target_os = "none"))]
-    crate::eadk::keyboard::KeyboardState::scan();
+    crate::nadk::keyboard::KeyboardState::scan();
 }

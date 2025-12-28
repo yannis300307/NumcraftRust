@@ -1,27 +1,22 @@
 use crate::{
     constants::{ItemType, color_palette::GAMEUI_SLOT_COLOR},
-    eadk::display::ScreenRect,
+    nadk::display::ScreenRect,
     hud::Hud,
-    renderer::*,
+    renderer::{misc::UnBoundedScreenRect, *},
 };
 
 impl Renderer {
-    pub fn draw_hud(&mut self, hud: &Hud, fps_count: f32, tile_x: usize, tile_y: usize) {
+    pub fn draw_hud(&mut self, hud: &Hud, frame_time: u64, tile_x: usize, tile_y: usize) {
         if tile_x == 0 && tile_y == 0 {
             if hud.show_debug {
-				let dt = 1000.0 / fps_count;
-				self.draw_string(format!("ms{dt:.0}").as_str(), &Vector2::new(0, 0));
+                self.draw_string(format!("f:{frame_time}").as_str(), &Vector2::new(2, 2));
+
+                self.draw_string(
+                    format!("t:{}", self.triangles_to_render.len()).as_str(),
+                    &Vector2::new(2, 22),
+                );
+
                 /*self.draw_string(
-                    format!("FPS:{fps_count:.2}").as_str(),
-                    &Vector2::new(0, 0),
-                );
-
-                self.draw_string(
-                    format!("Tris:{}", self.triangles_to_render.len()).as_str(),
-                    &Vector2::new(0, 20),
-                );
-
-                self.draw_string(
                     format!(
                         "{:.1},{:.1},{:.1}",
                         self.camera.get_pos().x,
@@ -65,16 +60,31 @@ impl Renderer {
                 (SCREEN_TILE_WIDTH - CROSS_WIDTH / 2) as isize,
                 -((CROSS_HEIGHT / 2) as isize),
             );
-			return ;
-            self.draw_slot_frame_buffer(Vector2::new(60, 85), hud, 0);
-            self.draw_slot_frame_buffer(Vector2::new(94, 85), hud, 1);
-            self.draw_slot_frame_buffer(Vector2::new(128, 85), hud, 2);
+
+            //self.draw_slot_frame_buffer(Vector2::new(94, 85), hud, 1);
+            //self.draw_slot_frame_buffer(Vector2::new(128, 85), hud, 2);
         }
-		return ;
-        if tile_x == 1 && tile_y == 1 {
-            self.draw_slot_frame_buffer(Vector2::new(2, 85), hud, 3);
-            self.draw_slot_frame_buffer(Vector2::new(36, 85), hud, 4);
-            self.draw_slot_frame_buffer(Vector2::new(70, 85), hud, 5);
+
+        if tile_x == 0 && tile_y == 3 {
+            self.draw_slot_frame_buffer(Vector2::new(60, 20), hud, 0);
+        }
+
+        if tile_x == 1 && tile_y == 3 {
+            self.draw_slot_frame_buffer(Vector2::new(-20, 20), hud, 0);
+            self.draw_slot_frame_buffer(Vector2::new(14, 20), hud, 1);
+            self.draw_slot_frame_buffer(Vector2::new(48, 20), hud, 2);
+        }
+        if tile_x == 2 && tile_y == 3 {
+            self.draw_slot_frame_buffer(Vector2::new(2, 20), hud, 3);
+            self.draw_slot_frame_buffer(Vector2::new(36, 20), hud, 4);
+        }
+
+        if tile_x == 2 && tile_y == 3 {
+            self.draw_slot_frame_buffer(Vector2::new(70, 20), hud, 5);
+        }
+
+        if tile_x == 3 && tile_y == 3 {
+            self.draw_slot_frame_buffer(Vector2::new(-10, 20), hud, 5);
         }
         self.draw_breaking_indicator(tile_x, tile_y, hud);
     }
@@ -82,10 +92,10 @@ impl Renderer {
     pub fn draw_breaking_indicator(&mut self, tile_x: usize, tile_y: usize, hud: &Hud) {
         if let Some(progress) = hud.breaking_progress {
             let bar_len = (40. * progress) as u16;
-            if tile_x == 0 && tile_y == 1 {
+            if tile_x == 1 && tile_y == 2 {
                 self.push_rect_uniform_on_frame_buffer(
                     ScreenRect {
-                        x: 138,
+                        x: 58,
                         y: 18,
                         width: 22,
                         height: 9,
@@ -94,7 +104,7 @@ impl Renderer {
                 );
                 self.push_rect_uniform_on_frame_buffer(
                     ScreenRect {
-                        x: 140,
+                        x: 60,
                         y: 20,
                         width: bar_len.min(20),
                         height: 5,
@@ -102,7 +112,7 @@ impl Renderer {
                     Color565::from_rgb888(200, 200, 200),
                 );
             }
-            if tile_x == 1 && tile_y == 1 {
+            if tile_x == 2 && tile_y == 2 {
                 self.push_rect_uniform_on_frame_buffer(
                     ScreenRect {
                         x: 0,
@@ -164,8 +174,8 @@ impl Renderer {
     fn draw_scalled_tile_on_frame_buffer(
         &mut self,
         texture_id: u8,
-        pos: Vector2<u16>,
-        scale: usize,
+        pos: Vector2<isize>,
+        scale: isize,
     ) {
         let tileset_x = (texture_id % 16) as usize * 8;
         let tileset_y = (texture_id / 16) as usize * 8;
@@ -178,12 +188,12 @@ impl Renderer {
                     TILESET_DATA[texture_pixel_index + 1],
                 ]);
 
-                self.push_rect_uniform_on_frame_buffer(
-                    ScreenRect {
-                        x: pos.x + (x * scale) as u16,
-                        y: pos.y + (y * scale) as u16,
-                        width: scale as u16,
-                        height: scale as u16,
+                self.push_unbounded_rect_uniform_on_frame_buffer(
+                    UnBoundedScreenRect {
+                        x: pos.x + (x as isize * scale),
+                        y: pos.y + (y as isize * scale),
+                        width: scale,
+                        height: scale,
                     },
                     Color565 { value: pixel },
                 );
@@ -191,9 +201,9 @@ impl Renderer {
         }
     }
 
-    fn draw_slot_frame_buffer(&mut self, pos: Vector2<u16>, hud: &Hud, slot_index: usize) {
-        self.push_rect_uniform_on_frame_buffer(
-            ScreenRect {
+    fn draw_slot_frame_buffer(&mut self, pos: Vector2<isize>, hud: &Hud, slot_index: usize) {
+        self.push_unbounded_rect_uniform_on_frame_buffer(
+            UnBoundedScreenRect {
                 x: pos.x,
                 y: pos.y,
                 width: 30,
@@ -216,9 +226,9 @@ impl Renderer {
         let max_item_count = item_type.get_max_stack_amount();
 
         if item_type != ItemType::Air && item_type.get_max_stack_amount() > 1 {
-            let item_bar_lenght = 24 * item_stack.get_amount() as u16 / max_item_count as u16;
-            self.push_rect_uniform_on_frame_buffer(
-                ScreenRect {
+            let item_bar_lenght = 24 * item_stack.get_amount() as isize / max_item_count as isize;
+            self.push_unbounded_rect_uniform_on_frame_buffer(
+                UnBoundedScreenRect {
                     x: pos.x + 3,
                     y: pos.y + 24,
                     width: item_bar_lenght,
@@ -226,8 +236,8 @@ impl Renderer {
                 },
                 Color565::from_rgb888(100, 150, 255),
             );
-            self.push_rect_uniform_on_frame_buffer(
-                ScreenRect {
+            self.push_unbounded_rect_uniform_on_frame_buffer(
+                UnBoundedScreenRect {
                     x: pos.x + 3 + item_bar_lenght,
                     y: pos.y + 24,
                     width: 24 - item_bar_lenght,

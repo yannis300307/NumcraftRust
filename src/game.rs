@@ -11,13 +11,13 @@ use crate::{
         color_palette::MENU_BACKGROUND_COLOR,
         rendering::{MAX_FOV, MAX_RENDER_DISTANCE, MIN_FOV},
     },
-    eadk::{self, display::Color565},
     game::{crafting_manager::CraftingManager, game_menus::SettingsMenu},
     game_ui::GameUI,
     hud::Hud,
     input_manager::InputManager,
     inventory::ItemStack,
     menu::{Menu, MenuElement, TextAnchor},
+    nadk::{self, display::Color565},
     physic::PhysicEngine,
     player::Player,
     renderer::Renderer,
@@ -76,7 +76,11 @@ impl Game {
 
             self.world.load_area(0, 4, 0, 4, 0, 4);
 
-            let player_spawn_pos = Vector3::new(16.5, 20., 16.5);
+            let player_spawn_pos = Vector3::new(
+                16.5,
+                (self.world.get_highest_block(16, 16) + 1) as f32,
+                16.5,
+            );
 
             self.player.inventory.fill(ItemStack::void());
 
@@ -147,12 +151,12 @@ impl Game {
             self.input_manager.update();
             self.timing_manager.update();
 
-            if self.input_manager.is_just_pressed(eadk::keyboard::Key::Exe) {
+            if self.input_manager.is_just_pressed(nadk::keyboard::Key::Exe) {
                 self.exit_world();
 
                 return GameState::GoMainMenu;
             }
-            if self.input_manager.is_just_pressed(eadk::keyboard::Key::Var) {
+            if self.input_manager.is_just_pressed(nadk::keyboard::Key::Var) {
                 if self.save_manager.get_game_mode() == GameMode::Creative {
                     return GameState::OpenPlayerInventory(game_uis::PlayerInventoryPage::Creative);
                 } else {
@@ -189,7 +193,7 @@ impl Game {
             self.renderer.draw_game(
                 &mut self.world,
                 &self.player,
-                self.timing_manager.get_fps(),
+                self.timing_manager.get_frame_time(),
                 &self.hud,
                 true,
             );

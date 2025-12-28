@@ -1,8 +1,8 @@
 <img src="https://github.com/user-attachments/assets/1eeccc90-342c-4f45-a444-7acc9cb9112a" width="128" alt="logo">
 
-# [WIP] Numcraft Rust
+# Numcraft Rust
 
-Numcraft Rust is a (WIP) cube sandbox game running natively on Numworks calculators.
+Numcraft Rust is a (WIP) cube sandbox game running natively on Numworks calculators on both Epsilon and Upsilon firmwares.
 
 ## Screenshot
 
@@ -13,7 +13,7 @@ Numcraft Rust is a (WIP) cube sandbox game running natively on Numworks calculat
 
 
 
-Numcraft running on actual N0110 Numworks on latest Epsilon (more than 40 FPS on N120) and on the simulator.
+Numcraft running on actual N0110 Numworks on latest Epsilon (more than 40 FPS on N120) and on the Epsilon simulator.
 
 Note that this is not the final result but the current state of the project.
 
@@ -25,6 +25,7 @@ The program runs at 10-20 FPS on N0110 and 30-50 FPS on N0120. It runs perfectly
 ## Support
 
 NumcraftRust should run on both N120, N115 and N110 models. You will get better performances with the N120 model (N110 and N115 have the same CPU clock speed and same RAM).
+It can run on both Upsilon and Epsilon.
 
 ## Roadmap
 **Here is the current roadmap for the project :**
@@ -48,7 +49,7 @@ If I have the time:
 - [ ] Commands support
 - [ ] Make a tool to convert Minecraft schematics to Numcraft structures
 - [ ] Structures such as Villages
-- [ ] Upsilon / Omega compatibility
+- [X] Upsilon / ~~Omega~~ compatibility
 - [ ] Mini games
 
 Good ideas but I will never have the time to do that :
@@ -94,8 +95,13 @@ just build
 
 Connect the calculator to your computer and run
 ```shell
-just send
+just send-epsilon
 ```
+for Epsilon or
+```shell
+just send-upsilon
+```
+for Upsilon.
 
 ## Run the app on the simulator
 

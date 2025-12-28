@@ -8,18 +8,18 @@ use core::{cmp::Ordering, f32, mem::swap};
 use crate::{
     camera::Camera,
     constants::{rendering::*, world::CHUNK_SIZE},
-    eadk::display::{COLOR_BLACK, Color565},
+    nadk::display::{COLOR_BLACK, Color565},
     renderer::mesh::SmallTriangle2D,
 };
 
 mod engine_3d;
+mod entity;
+mod frustum;
 mod hud;
 mod menus;
-mod ui;
-mod frustum;
 pub mod mesh;
 mod misc;
-mod entity;
+mod ui;
 
 // Screen size related constants
 
@@ -36,7 +36,7 @@ const SCREEN_TILE_HEIGHT: usize = SCREEN_HEIGHT.div_ceil(SCREEN_TILE_SUBDIVISION
 // Projection parameters
 const ASPECT_RATIO: f32 = SCREEN_WIDTHF / SCREEN_HEIGHTF;
 
-const ZNEAR: f32 = 1.0;
+const ZNEAR: f32 = 0.1;
 const ZFAR: f32 = 1000.0;
 
 // Other

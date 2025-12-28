@@ -1,6 +1,6 @@
 use enum_iterator::Sequence;
 
-use crate::eadk::time;
+use crate::nadk::time;
 
 /// A key of the calculator's keyboard.
 #[derive(Clone, Copy, PartialEq, Eq, Sequence, Debug)]
@@ -60,7 +60,7 @@ impl Key {
     /// With alpha active and shift inactive, you will get uppercase letters.
     /// With only shift active, you will get special characters.
     /// If none of alpha and shift are active, you will get digits.
-    /// You should expect the same behavior as the Epsilon's Python app. 
+    /// You should expect the same behavior as the Epsilon's Python app.
     pub fn get_matching_char(&self, shift_active: bool, alpha_active: bool) -> Option<char> {
         if alpha_active && !shift_active {
             match *self {
@@ -173,7 +173,15 @@ pub struct KeyboardState(u64);
 impl KeyboardState {
     /// Scan the keyboard.
     pub fn scan() -> Self {
-        KeyboardState(unsafe { eadk_keyboard_scan() })
+        #[cfg(feature = "epsilon")]
+        {
+            KeyboardState(unsafe { eadk_keyboard_scan() })
+        }
+
+        #[cfg(feature = "upsilon")]
+        {
+            KeyboardState(unsafe { extapp_scanKeyboard() })
+        }
     }
 
     /// Return true if the given key was pressed when scan was called.
@@ -265,6 +273,12 @@ pub fn wait_until_pressed(key: Key) {
     }
 }
 
+#[cfg(feature = "epsilon")]
 unsafe extern "C" {
     fn eadk_keyboard_scan() -> u64;
+}
+
+#[cfg(feature = "upsilon")]
+unsafe extern "C" {
+    fn extapp_scanKeyboard() -> u64;
 }

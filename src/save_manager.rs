@@ -9,9 +9,16 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     constants::{BlockType, save_manager::WORLD_VERSION, world::CHUNK_SIZE},
-    eadk::{self, display::Color565, storage::{file_erase, file_exists, file_list_with_extension, file_read, file_read_slice, file_write}},
     game::GameMode,
     inventory::Inventory,
+    nadk::{
+        self,
+        display::Color565,
+        storage::{
+            file_erase, file_exists, file_list_with_extension, file_read, file_read_slice,
+            file_write,
+        },
+    },
     player::Player,
     renderer::Renderer,
     world::{World, chunk::Chunk},
@@ -142,21 +149,18 @@ impl SaveManager {
                     &["Unable to save.", "Cannot delete old save."],
                     Color565::from_rgb888(255, 100, 100),
                 );
-                eadk::time::wait_milliseconds(3000);
+                nadk::time::wait_milliseconds(3000);
             }
             if file_write(file_name, &data).is_none() {
                 Renderer::show_msg(
                     &["Unable to save.", "Writing error."],
                     Color565::from_rgb888(255, 100, 100),
                 );
-                eadk::time::wait_milliseconds(3000);
+                nadk::time::wait_milliseconds(3000);
             }
         } else {
-            Renderer::show_msg(
-                &["Unable to save."],
-                Color565::from_rgb888(255, 100, 100),
-            );
-            eadk::time::wait_milliseconds(3000);
+            Renderer::show_msg(&["Unable to save."], Color565::from_rgb888(255, 100, 100));
+            nadk::time::wait_milliseconds(3000);
         }
     }
 
@@ -219,8 +223,7 @@ impl SaveManager {
     pub fn get_world_info(&self, filename: &String) -> Option<WorldInfo> {
         let raw_data = file_read_slice(filename, 0, 2)?;
         let world_info_size = u16::from_be_bytes([raw_data[0], raw_data[1]]);
-        let raw_data =
-            &file_read_slice(filename, 2, world_info_size as usize)?;
+        let raw_data = &file_read_slice(filename, 2, world_info_size as usize)?;
 
         if let Ok(world_info) = from_bytes::<WorldInfo>(&raw_data) {
             Some(world_info)

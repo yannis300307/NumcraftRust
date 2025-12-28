@@ -24,7 +24,7 @@ pub struct ChunksManager {
 
 impl ChunksManager {
     pub fn new() -> Self {
-        ChunksManager { chunks: Vec::new() }
+        ChunksManager { chunks: Vec::with_capacity(4*4*4) }
     }
 
     /// Return the chunk at the given position. Return an Option containing a MUTABLE reference to the chunk

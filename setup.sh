@@ -49,13 +49,13 @@ if [ ! -d "simulator" ]; then
     fi
 fi
 
-python3 -m venv ./simulator/.venv
+python3 -m venv ./.venv
 if [ $? -ne 0 ]; then
     echo "Cannot create the Python venv. Installation aborted."
     [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1
 fi
 
-source ./simulator/.venv/bin/activate
+source ./.venv/bin/activate
 if [ $? -ne 0 ]; then
     echo "Cannot activate the Python venv. Installation aborted."
     [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1

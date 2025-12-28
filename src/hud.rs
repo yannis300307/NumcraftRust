@@ -17,14 +17,14 @@ impl Hud {
         }
     }
     pub fn update(&mut self, input_manager: &InputManager, player: &Player) {
-        if input_manager.is_just_pressed(crate::eadk::keyboard::Key::LeftParenthesis) {
+        if input_manager.is_just_pressed(crate::nadk::keyboard::Key::LeftParenthesis) {
             if self.selected_slot == 0 {
                 self.selected_slot = 5;
             } else {
                 self.selected_slot -= 1;
             }
         }
-        if input_manager.is_just_pressed(crate::eadk::keyboard::Key::RightParenthesis) {
+        if input_manager.is_just_pressed(crate::nadk::keyboard::Key::RightParenthesis) {
             if self.selected_slot == 5 {
                 self.selected_slot = 0;
             } else {
@@ -32,7 +32,7 @@ impl Hud {
             }
         }
 
-        if input_manager.is_just_pressed(crate::eadk::keyboard::Key::Dot) {
+        if input_manager.is_just_pressed(crate::nadk::keyboard::Key::Dot) {
             self.show_debug = !self.show_debug;
         }
 

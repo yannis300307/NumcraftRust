@@ -2,7 +2,7 @@ use nalgebra::Vector2;
 
 use crate::{
     constants::ItemType,
-    eadk::keyboard::Key,
+    nadk::keyboard::Key,
     input_manager::InputManager,
     inventory::{Inventory, ItemStack},
 };

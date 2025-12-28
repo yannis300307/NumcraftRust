@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+# MIT License
+
+# Copyright (c) 2025 Damien Nicolet
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+set -e
+
+LD=arm-none-eabi-ld
+OBJCOPY=arm-none-eabi-objcopy
+
+echo "Building archive..."
+echo "  - ld: $LD"
+echo "  - objcopy: $OBJCOPY"
+echo "  - arguments: $@"
+
+OUTPUT="$1"
+rm -f "target/${OUTPUT}"
+shift 1
+
+POS=0
+
+FILENAME="target/thumbv7em-none-eabihf/release/$1"
+NAME="$1"
+echo "  - $FILENAME"
+sed "s/\+ (0)/+ (${POS})/" build/external.ld > target/temp.ld
+"${LD}" "$FILENAME" -o "target/${NAME}_linked.elf" -Ttarget/temp.ld
+"${OBJCOPY}" -O binary "target/${NAME}_linked.elf" "target/${NAME}"
+cd target
+tar -rf "${OUTPUT}" "${NAME}"
+cd ..
+POS=$(( ${POS} + (($(stat --printf="%s" "target/${NAME}") + 1023)/512)*512 ))
+rm -f target/temp.ld "target/${NAME}" "target/${NAME}_linked.elf"

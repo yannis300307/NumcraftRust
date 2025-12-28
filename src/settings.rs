@@ -2,7 +2,7 @@ use postcard::from_bytes;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    constants::{rendering::*, save_manager::*}, eadk::storage::{file_erase, file_exists, file_read, file_write},
+    constants::{rendering::*, save_manager::*}, nadk::storage::{file_erase, file_exists, file_read, file_write},
 };
 
 #[derive(Serialize, Deserialize)]
