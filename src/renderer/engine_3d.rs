@@ -1,7 +1,7 @@
 use crate::{
     constants::get_quad_color_from_texture_id,
-    nadk::display::{ScreenRect, push_rect, wait_for_vblank},
     hud::Hud,
+    nadk::display::{ScreenRect, push_rect, wait_for_vblank},
     player::Player,
     renderer::{
         frustum::Frustum,
@@ -519,6 +519,12 @@ impl Renderer {
             ZFAR,
         );
 
+        // Add the player block marker
+        let mut block_marker = player.get_block_marker();
+        for quad in block_marker.0.get_reference_vec() {
+            self.add_quad_to_render(quad, &mat_view, block_marker.1);
+        }
+
         for chunk in world
             .chunks_manager
             .get_chunks_sorted_by_distance(*self.camera.get_pos())
@@ -560,12 +566,6 @@ impl Renderer {
             for quad in quads {
                 self.add_quad_to_render(quad, &mat_view, chunk_blocks_pos);
             }
-        }
-
-        // Finally add the player block marker
-        let mut block_marker = player.get_block_marker();
-        for quad in block_marker.0.get_reference_vec() {
-            self.add_quad_to_render(quad, &mat_view, block_marker.1);
         }
 
         for x in 0..SCREEN_TILE_SUBDIVISION {
