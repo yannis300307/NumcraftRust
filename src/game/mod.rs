@@ -6,6 +6,8 @@ calc_use!(alloc::string::ToString);
 use nalgebra::{Vector2, Vector3};
 use serde::{Deserialize, Serialize};
 
+use cbitmap::bitmap::BitsManage;
+
 use crate::{
     constants::{
         color_palette::MENU_BACKGROUND_COLOR,
