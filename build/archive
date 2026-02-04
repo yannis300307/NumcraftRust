@@ -47,5 +47,9 @@ sed "s/\+ (0)/+ (${POS})/" build/external.ld > target/temp.ld
 cd target
 tar -rf "${OUTPUT}" "${NAME}"
 cd ..
-POS=$(( ${POS} + (($(stat --printf="%s" "target/${NAME}") + 1023)/512)*512 ))
+if [ "$(uname)" == "Darwin" ]; then
+    POS=$(( ${POS} + (($(stat -n -f "%z" "target/${NAME}") + 1023)/512)*512 ))
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+    POS=$(( ${POS} + (($(stat --printf="%s" "target/${NAME}") + 1023)/512)*512 ))
+fi
 rm -f target/temp.ld "target/${NAME}" "target/${NAME}_linked.elf"
