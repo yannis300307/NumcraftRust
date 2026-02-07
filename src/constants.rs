@@ -15,9 +15,9 @@ pub mod rendering {
     pub const FOV: f32 = 45.;
 
     #[cfg(feature = "epsilon")]
-    pub const MAX_TRIANGLES: usize = 1500;
+    pub const MAX_TRIANGLES: usize = 800;
     #[cfg(feature = "upsilon")]
-    pub const MAX_TRIANGLES: usize = 1200; // Sorry Upsilon users
+    pub const MAX_TRIANGLES: usize = 600; // Sorry Upsilon users
 
     pub const MAX_RENDER_DISTANCE: usize = 2; // You shouldn't go higher
 

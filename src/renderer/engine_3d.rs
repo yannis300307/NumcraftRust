@@ -191,7 +191,7 @@ pub fn vector_intersect_plane(
     plane_n: &Vector3<f32>,
     line_start: &Vector3<f32>,
     line_end: &Vector3<f32>,
-) -> Vector3<f32> {
+) -> (Vector3<f32>, f32) {
     let plane_n = plane_n.normalize();
     let plane_d = -plane_n.dot(plane_p);
     let ad = line_start.dot(&plane_n);
@@ -199,7 +199,7 @@ pub fn vector_intersect_plane(
     let t = (-plane_d - ad) / (bd - ad);
     let line_start_to_end = line_end - line_start;
     let line_to_intersect = line_start_to_end * t;
-    line_start + line_to_intersect
+    (line_start + line_to_intersect, t)
 }
 
 pub fn vector_intersect_line(
@@ -207,7 +207,7 @@ pub fn vector_intersect_line(
     line_n: &Vector2<f32>,
     line_start: &Vector3<f32>,
     line_end: &Vector3<f32>,
-) -> Vector3<f32> {
+) -> (Vector3<f32>, f32) {
     let line_n = line_n.normalize();
     let line_d = -line_n.dot(line_p);
     let ad = line_start.xy().dot(&line_n);
@@ -216,7 +216,7 @@ pub fn vector_intersect_line(
     let line_start_to_end = line_end - line_start;
     let line_to_intersect = line_start_to_end * t;
     let coords = line_start + line_to_intersect;
-    coords
+    (coords, t)
 }
 
 pub fn triangle_clip_against_line(
@@ -228,11 +228,17 @@ pub fn triangle_clip_against_line(
 
     let dist = |p: Vector2<f32>| line_n.x * p.x + line_n.y * p.y - line_n.dot(line_p);
 
-    let binding = Default::default();
-    let mut inside_points: [&Vector3<f32>; 3] = [&binding; 3];
+    let default = Default::default();
+    let mut inside_points: [&Vector3<f32>; 3] = [&default; 3];
     let mut n_inside_point_count = 0;
-    let mut outside_points: [&Vector3<f32>; 3] = [&binding; 3];
+    let mut outside_points: [&Vector3<f32>; 3] = [&default; 3];
     let mut n_outside_point_count = 0;
+
+    let default = Default::default();
+    let mut inside_tex: [&Vector2<f32>; 3] = [&default; 3];
+    let mut n_inside_tex_count = 0;
+    let mut outside_tex: [&Vector2<f32>; 3] = [&default; 3];
+    let mut n_outside_tex_count = 0;
 
     let p1 = Vector3::new(in_tri.p1.x as f32, in_tri.p1.y as f32, in_tri.z[0] as f32);
     let p2 = Vector3::new(in_tri.p2.x as f32, in_tri.p2.y as f32, in_tri.z[1] as f32);
@@ -244,23 +250,35 @@ pub fn triangle_clip_against_line(
 
     if d0 >= 0.0 {
         inside_points[n_inside_point_count] = &p1;
+        inside_tex[n_inside_tex_count] = &in_tri.t1;
+        n_inside_tex_count += 1;
         n_inside_point_count += 1;
     } else {
         outside_points[n_outside_point_count] = &p1;
+        outside_tex[n_outside_tex_count] = &in_tri.t1;
+        n_outside_tex_count += 1;
         n_outside_point_count += 1;
     }
     if d1 >= 0.0 {
         inside_points[n_inside_point_count] = &p2;
+        inside_tex[n_inside_tex_count] = &in_tri.t2;
+        n_inside_tex_count += 1;
         n_inside_point_count += 1;
     } else {
         outside_points[n_outside_point_count] = &p2;
+        outside_tex[n_outside_tex_count] = &in_tri.t2;
+        n_outside_tex_count += 1;
         n_outside_point_count += 1;
     }
     if d2 >= 0.0 {
         inside_points[n_inside_point_count] = &p3;
+        inside_tex[n_inside_tex_count] = &in_tri.t3;
+        n_inside_tex_count += 1;
         n_inside_point_count += 1;
     } else {
         outside_points[n_outside_point_count] = &p3;
+        outside_tex[n_outside_tex_count] = &in_tri.t3;
+        n_outside_tex_count += 1;
         n_outside_point_count += 1;
     }
 
@@ -273,14 +291,19 @@ pub fn triangle_clip_against_line(
     }
 
     if n_inside_point_count == 1 && n_outside_point_count == 2 {
-		let p1t = inside_points[0];
-		let p2t = vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[0]);
-		let p3t = vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[1]);
+		let p1 = inside_points[0];
+		let (p2, t) = vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[0]);
+        let t2 = t * (outside_tex[0] - inside_tex[0]) + inside_tex[0];
+        let (p3, t) = vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[1]);
+        let t3 = t * (outside_tex[1] - inside_tex[0]) + inside_tex[0];
         let out_tri = Triangle2D {
-            p1: p1t.xy().map(|x| x as i16),
-            p2: p2t.xy().map(|x| x as i16),
-            p3: p3t.xy().map(|x| x as i16),
-			z: [p1t.z as f16, p2t.z as f16, p3t.z as f16],
+            p1: p1.xy().map(|x| x as i16),
+            p2: p2.xy().map(|x| x as i16),
+            p3: p3.xy().map(|x| x as i16),
+            t1: *inside_tex[0],
+            t2,
+            t3,
+			z: [p1.z as f16, p2.z as f16, p3.z as f16],
             texture_id: in_tri.texture_id,
             light: in_tri.light,
         };
@@ -289,24 +312,32 @@ pub fn triangle_clip_against_line(
     }
 
     if n_inside_point_count == 2 && n_outside_point_count == 1 {
-		let p1t = inside_points[0];
-		let p2t = inside_points[1];
-		let p3t = vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[0]);
+		let p1 = inside_points[0];
+		let p2 = inside_points[1];
+		let (p3, t) = vector_intersect_line(line_p, &line_n, inside_points[0], outside_points[0]);
+        let t3 = t * (outside_tex[1] - inside_tex[0]) + inside_tex[0];
         let out_tri1 = Triangle2D {
-            p1: p1t.xy().map(|x| x as i16),
-            p2: p2t.xy().map(|x| x as i16),
-            p3: p3t.xy().map(|x| x as i16),
-			z: [p1t.z as f16, p2t.z as f16, p3t.z as f16],
+            p1: p1.xy().map(|x| x as i16),
+            p2: p2.xy().map(|x| x as i16),
+            p3: p3.xy().map(|x| x as i16),
+            t1: *inside_tex[0],
+            t2: *inside_tex[1],
+            t3,
+			z: [p1.z as f16, p2.z as f16, p3.z as f16],
             texture_id: in_tri.texture_id,
             light: in_tri.light,
         };
 
-		let pt = vector_intersect_line(line_p, &line_n, inside_points[1], outside_points[0]);
+		let (p3, t) = vector_intersect_line(line_p, &line_n, inside_points[1], outside_points[0]);
+        let t3 = t * (outside_tex[1] - inside_tex[0]) + inside_tex[0];
         let out_tri2 = Triangle2D {
-            p1: p2t.xy().map(|x| x as i16),
+            p1: p2.xy().map(|x| x as i16),
             p2: out_tri1.p3,
-            p3: pt.xy().map(|x| x as i16),
-			z: [p2t.z as f16, out_tri1.z[2], pt.z as f16],
+            p3: p3.xy().map(|x| x as i16),
+            t1: *inside_tex[1],
+            t2: out_tri1.t3,
+            t3,
+			z: [p2.z as f16, out_tri1.z[2], p3.z as f16],
             texture_id: in_tri.texture_id,
             light: in_tri.light,
         };
@@ -326,11 +357,17 @@ pub fn triangle_clip_against_plane(
         plane_n.x * p.x + plane_n.y * p.y + plane_n.z * p.z - plane_n.dot(plane_p)
     };
 
-    let binding = Default::default();
-    let mut inside_points: [&Vector3<f32>; 3] = [&binding; 3];
+    let default = Default::default();
+    let mut inside_points: [&Vector3<f32>; 3] = [&default; 3];
     let mut n_inside_point_count = 0;
-    let mut outside_points: [&Vector3<f32>; 3] = [&binding; 3];
+    let mut outside_points: [&Vector3<f32>; 3] = [&default; 3];
     let mut n_outside_point_count = 0;
+
+    let default = Default::default();
+    let mut inside_tex: [&Vector2<f32>; 3] = [&default; 3];
+    let mut n_inside_tex_count = 0;
+    let mut outside_tex: [&Vector2<f32>; 3] = [&default; 3];
+    let mut n_outside_tex_count = 0;
 
     let d0 = dist(in_tri.p1);
     let d1 = dist(in_tri.p2);
@@ -338,23 +375,35 @@ pub fn triangle_clip_against_plane(
 
     if d0 >= 0.0 {
         inside_points[n_inside_point_count] = &in_tri.p1;
+        inside_tex[n_inside_tex_count] = &in_tri.t1;
+        n_inside_tex_count += 1;
         n_inside_point_count += 1;
     } else {
         outside_points[n_outside_point_count] = &in_tri.p1;
+        outside_tex[n_outside_tex_count] = &in_tri.t1;
+        n_outside_tex_count += 1;
         n_outside_point_count += 1;
     }
     if d1 >= 0.0 {
         inside_points[n_inside_point_count] = &in_tri.p2;
+        inside_tex[n_inside_tex_count] = &in_tri.t2;
+        n_inside_tex_count += 1;
         n_inside_point_count += 1;
     } else {
         outside_points[n_outside_point_count] = &in_tri.p2;
+        outside_tex[n_outside_tex_count] = &in_tri.t2;
+        n_outside_tex_count += 1;
         n_outside_point_count += 1;
     }
     if d2 >= 0.0 {
         inside_points[n_inside_point_count] = &in_tri.p3;
+        inside_tex[n_inside_tex_count] = &in_tri.t3;
+        n_inside_tex_count += 1;
         n_inside_point_count += 1;
     } else {
         outside_points[n_outside_point_count] = &in_tri.p3;
+        outside_tex[n_outside_tex_count] = &in_tri.t3;
+        n_outside_tex_count += 1;
         n_outside_point_count += 1;
     }
 
@@ -367,10 +416,17 @@ pub fn triangle_clip_against_plane(
     }
 
     if n_inside_point_count == 1 && n_outside_point_count == 2 {
+        let (p2, t) = vector_intersect_plane(plane_p, &plane_n, inside_points[0], outside_points[0]);
+        let t2 = t * (outside_tex[0] - inside_tex[0]) + inside_tex[0];
+        let (p3, t) = vector_intersect_plane(plane_p, &plane_n, inside_points[0], outside_points[1]);
+        let t3 = t * (outside_tex[1] - inside_tex[0]) + inside_tex[0];
         let out_tri = Triangle {
             p1: *inside_points[0],
-            p2: vector_intersect_plane(plane_p, &plane_n, inside_points[0], outside_points[0]),
-            p3: vector_intersect_plane(plane_p, &plane_n, inside_points[0], outside_points[1]),
+            p2,
+            p3,
+            t1: *inside_tex[0],
+            t2,
+            t3,
             texture_id: in_tri.texture_id,
             light: in_tri.light,
         };
@@ -379,18 +435,28 @@ pub fn triangle_clip_against_plane(
     }
 
     if n_inside_point_count == 2 && n_outside_point_count == 1 {
+        let (p3, t) = vector_intersect_plane(plane_p, &plane_n, inside_points[0], outside_points[0]);
+        let t3 = t * (outside_tex[1] - inside_tex[0]) + inside_tex[0];
         let out_tri1 = Triangle {
             p1: *inside_points[0],
             p2: *inside_points[1],
-            p3: vector_intersect_plane(plane_p, &plane_n, inside_points[0], outside_points[0]),
+            p3,
+            t1: *inside_tex[0],
+            t2: *inside_tex[1],
+            t3,
             texture_id: in_tri.texture_id,
             light: in_tri.light,
         };
 
+        let (p3, t) = vector_intersect_plane(plane_p, &plane_n, inside_points[1], outside_points[0]);
+        let t3 = t * (outside_tex[1] - inside_tex[0]) + inside_tex[0];
         let out_tri2 = Triangle {
             p1: *inside_points[1],
             p2: out_tri1.p3,
-            p3: vector_intersect_plane(plane_p, &plane_n, inside_points[1], outside_points[0]),
+            p3,
+            t1: *inside_tex[1],
+            t2: out_tri1.t3,
+            t3,
             texture_id: in_tri.texture_id,
             light: in_tri.light,
         };
@@ -456,6 +522,9 @@ impl Renderer {
                     p3: ((self.project_point(to_project.p3) + Vector2::new(1., 1.))
                         .component_mul(&HALF_SCREEN))
                     .map(|x| x as i16),
+                    t1: to_project.t1,
+                    t2: to_project.t2,
+                    t3: to_project.t3,
 					z: [to_project.p1.z as f16, to_project.p2.z as f16, to_project.p3.z as f16],
                     texture_id: to_project.texture_id,
                     light: to_project.light,
@@ -580,7 +649,7 @@ impl Renderer {
 
             let quads = chunk.get_mesh().get_reference_vec();
 
-            if need_sorting {
+            /*if need_sorting {
                 quads.sort_by(|a, b| -> Ordering {
                     let a_pos = a.get_pos().map(|x| x as isize) + chunk_blocks_pos;
                     let b_pos = b.get_pos().map(|x| x as isize) + chunk_blocks_pos;
@@ -600,7 +669,7 @@ impl Renderer {
                         .total_cmp(&avec.metric_distance(self.camera.get_pos()))
                         .reverse()
                 });
-            }
+            }*/
             for quad in quads {
                 self.add_quad_to_render(quad, &mat_view, chunk_blocks_pos);
             }
