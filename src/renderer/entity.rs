@@ -35,7 +35,7 @@ impl Renderer {
                 // Transform and project the point
                 let pos = entity.pos;
                 let transformed = (mat_view * Vector4::new(pos.x, pos.y, pos.z, 1.0)).xyz();
-                let projected = (self.project_point(transformed) + Vector2::new(1., 1.))
+                let projected = (self.project_point(transformed).xy() + Vector2::new(1., 1.))
                     .component_mul(&HALF_SCREEN);
 
                 let tile_offset = Vector2::new(

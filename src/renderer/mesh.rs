@@ -96,9 +96,9 @@ impl Quad {
                     p1: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
                     p2: Vector3::new(pos_x_plus_one, pos_y, pos_z),
                     p3: Vector3::new(pos_x, pos_y, pos_z),
-                    t1: Vector2::new(0.0, 0.0),
-                    t2: Vector2::new(1.0, 0.0),
-                    t3: Vector2::new(0.0, 1.0),
+                    t1: Vector2::new(2.0, 0.0),
+                    t2: Vector2::new(3.0, 0.0),
+                    t3: Vector2::new(2.0, 1.0),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -106,9 +106,9 @@ impl Quad {
                     p1: Vector3::new(pos_x, pos_y, pos_z),
                     p2: Vector3::new(pos_x, pos_y_plus_one, pos_z),
                     p3: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
-                    t1: Vector2::new(0.0, 0.0),
-                    t2: Vector2::new(1.0, 0.0),
-                    t3: Vector2::new(0.0, 1.0),
+                    t1: Vector2::new(2.0, 0.0),
+                    t2: Vector2::new(3.0, 0.0),
+                    t3: Vector2::new(2.0, 1.0),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -118,9 +118,9 @@ impl Quad {
                     p1: Vector3::new(pos_x, pos_y, pos_z_plus_one),
                     p2: Vector3::new(pos_x_plus_one, pos_y, pos_z_plus_one),
                     p3: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
-                    t1: Vector2::new(0.0, 0.0),
-                    t2: Vector2::new(1.0, 0.0),
-                    t3: Vector2::new(0.0, 1.0),
+                    t1: Vector2::new(2.0, 0.0),
+                    t2: Vector2::new(3.0, 1.0),
+                    t3: Vector2::new(2.0, 0.0),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -128,9 +128,9 @@ impl Quad {
                     p1: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
                     p2: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
                     p3: Vector3::new(pos_x, pos_y, pos_z_plus_one),
-                    t1: Vector2::new(0.0, 0.0),
-                    t2: Vector2::new(1.0, 0.0),
-                    t3: Vector2::new(0.0, 1.0),
+                    t1: Vector2::new(2.0, 0.0),
+                    t2: Vector2::new(3.0, 0.0),
+                    t3: Vector2::new(2.0, 1.0),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -140,9 +140,9 @@ impl Quad {
                     p1: Vector3::new(pos_x_plus_one, pos_y, pos_z),
                     p2: Vector3::new(pos_x_plus_one, pos_y, pos_z_plus_one),
                     p3: Vector3::new(pos_x, pos_y, pos_z_plus_one),
-                    t1: Vector2::new(0.0, 0.0),
-                    t2: Vector2::new(1.0, 0.0),
-                    t3: Vector2::new(0.0, 1.0),
+                    t1: Vector2::new(2.0, 0.0),
+                    t2: Vector2::new(3.0, 0.0),
+                    t3: Vector2::new(2.0, 1.0),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -150,9 +150,9 @@ impl Quad {
                     p1: Vector3::new(pos_x, pos_y, pos_z_plus_one),
                     p2: Vector3::new(pos_x, pos_y, pos_z),
                     p3: Vector3::new(pos_x_plus_one, pos_y, pos_z),
-                    t1: Vector2::new(0.0, 0.0),
-                    t2: Vector2::new(1.0, 0.0),
-                    t3: Vector2::new(0.0, 1.0),
+                    t1: Vector2::new(2.0, 0.0),
+                    t2: Vector2::new(3.0, 0.0),
+                    t3: Vector2::new(2.0, 1.0),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -162,9 +162,9 @@ impl Quad {
                     p1: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
                     p2: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
                     p3: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
-                    t1: Vector2::new(0.0, 0.0),
-                    t2: Vector2::new(1.0, 0.0),
-                    t3: Vector2::new(0.0, 1.0),
+                    t1: Vector2::new(2.0, 0.0),
+                    t2: Vector2::new(3.0, 0.0),
+                    t3: Vector2::new(2.0, 1.0),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -172,9 +172,9 @@ impl Quad {
                     p1: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
                     p2: Vector3::new(pos_x, pos_y_plus_one, pos_z),
                     p3: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
-                    t1: Vector2::new(0.0, 0.0),
-                    t2: Vector2::new(1.0, 0.0),
-                    t3: Vector2::new(0.0, 1.0),
+                    t1: Vector2::new(2.0, 0.0),
+                    t2: Vector2::new(3.0, 0.0),
+                    t3: Vector2::new(2.0, 1.0),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -184,9 +184,9 @@ impl Quad {
                     p3: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
                     p2: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
                     p1: Vector3::new(pos_x_plus_one, pos_y, pos_z),
-                    t1: Vector2::new(0.0, 0.0),
-                    t2: Vector2::new(1.0, 0.0),
-                    t3: Vector2::new(0.0, 1.0),
+                    t1: Vector2::new(2.0, 0.0),
+                    t2: Vector2::new(3.0, 0.0),
+                    t3: Vector2::new(2.0, 1.0),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -194,9 +194,9 @@ impl Quad {
                     p3: Vector3::new(pos_x_plus_one, pos_y, pos_z),
                     p2: Vector3::new(pos_x_plus_one, pos_y, pos_z_plus_one),
                     p1: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
-                    t1: Vector2::new(0.0, 0.0),
-                    t2: Vector2::new(1.0, 0.0),
-                    t3: Vector2::new(0.0, 1.0),
+                    t1: Vector2::new(2.0, 0.0),
+                    t2: Vector2::new(3.0, 0.0),
+                    t3: Vector2::new(2.0, 1.0),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -206,9 +206,9 @@ impl Quad {
                     p1: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
                     p2: Vector3::new(pos_x, pos_y_plus_one, pos_z),
                     p3: Vector3::new(pos_x, pos_y, pos_z),
-                    t1: Vector2::new(0.0, 0.0),
-                    t2: Vector2::new(1.0, 0.0),
-                    t3: Vector2::new(0.0, 1.0),
+                    t1: Vector2::new(2.0, 0.0),
+                    t2: Vector2::new(3.0, 0.0),
+                    t3: Vector2::new(2.0, 1.0),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -216,9 +216,9 @@ impl Quad {
                     p1: Vector3::new(pos_x, pos_y, pos_z),
                     p2: Vector3::new(pos_x, pos_y, pos_z_plus_one),
                     p3: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
-                    t1: Vector2::new(0.0, 0.0),
-                    t2: Vector2::new(1.0, 0.0),
-                    t3: Vector2::new(0.0, 1.0),
+                    t1: Vector2::new(2.0, 0.0),
+                    t2: Vector2::new(3.0, 0.0),
+                    t3: Vector2::new(2.0, 1.0),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -244,10 +244,9 @@ pub struct Triangle2D {
     pub p1: Vector2<i16>,
     pub p2: Vector2<i16>,
     pub p3: Vector2<i16>,
-    pub t1: Vector2<f32>,
-    pub t2: Vector2<f32>,
-    pub t3: Vector2<f32>,
-	pub z: [f16; 3],
+    pub t1: Vector3<f32>,
+    pub t2: Vector3<f32>,
+    pub t3: Vector3<f32>,
     pub texture_id: u8,
     pub light: u8,
 }
@@ -269,9 +268,6 @@ impl Triangle2D {
             ((value >> 16) & 0xFF) as u8,
             ((value >> 8) & 0xFF) as u8,
             (value & 0xFF) as u8,
-			self.z[0],
-			self.z[1],
-			self.z[2]
         );
 
         SmallTriangle2D {
@@ -286,17 +282,16 @@ impl Triangle2D {
 }
 
 pub struct SmallTriangle2D {
-    pub pos: (u8, u8, u8, u8, u8, u8, u8, f16, f16, f16),
-    t1: Vector2<f16>,
-    t2: Vector2<f16>,
-    t3: Vector2<f16>,
+    pub pos: (u8, u8, u8, u8, u8, u8, u8),
+    t1: Vector3<f16>,
+    t2: Vector3<f16>,
+    t3: Vector3<f16>,
     pub texture_id: u8,
     pub light: u8,
 }
 
 impl SmallTriangle2D {
     pub fn to_tri_2d(&self) -> Triangle2D {
-        // Recompose le u64 à partir des 7 u8
         let value: u64 = ((self.pos.0 as u64) << 48)
             | ((self.pos.1 as u64) << 40)
             | ((self.pos.2 as u64) << 32)
@@ -305,7 +300,6 @@ impl SmallTriangle2D {
             | ((self.pos.5 as u64) << 8)
             | (self.pos.6 as u64);
 
-        // Extrait chaque coordonnée sur 9 bits
         let p1x = ((value >> 45) & 0x1FF) as i16;
         let p1y = ((value >> 36) & 0x1FF) as i16;
         let p2x = ((value >> 27) & 0x1FF) as i16;
@@ -320,7 +314,6 @@ impl SmallTriangle2D {
             t1: self.t1.map(|x| x as f32),
             t2: self.t2.map(|x| x as f32),
             t3: self.t3.map(|x| x as f32),
-			z: [self.pos.7, self.pos.8, self.pos.9],
             texture_id: self.texture_id,
             light: self.light,
         }
@@ -373,7 +366,7 @@ impl Mesh {
     }
 
     const fn get_light_level_from_dir(dir: QuadDir) -> u16 {
-        // Please not bellow 2 to avoid negative light. What is neagative light ?
+        // Please not bellow 2 to avoid negative light. What is negative light ?
         match dir {
             QuadDir::Front => 13,
             QuadDir::Back => 10,
