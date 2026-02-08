@@ -217,8 +217,7 @@ fn textured_triangle(
                     continue;
                 }
                 tex_coords = (1.0 - t) * tex_s + t * tex_e;
-                if tex_coords.z < depth_buffer[(i * SCREEN_TILE_WIDTH as i16 + j) as usize]
-                {
+                if tex_coords.z < depth_buffer[(i * SCREEN_TILE_WIDTH as i16 + j) as usize] {
                     let texture_pixel_index = ((((tex_coords.x / tex_coords.z) * 8.0) as usize)
                         + ((tex_coords.y / tex_coords.z * 8.0) as usize) * 128)
                         * 2;
@@ -237,11 +236,6 @@ fn textured_triangle(
 
     dpoint1 = point3 - point2;
     dtex1 = tex3 - tex2;
-
-    //dax_step = 0.0;
-    //dbx_step = 0.0;
-    //dtex1_step = Vector3::repeat(0.0);
-    //dtex2_step = Vector3::repeat(0.0);
 
     if dpoint1.y != 0 {
         dax_step = dpoint1.x as f32 / dpoint1.y.abs() as f32;
@@ -282,8 +276,7 @@ fn textured_triangle(
                     continue;
                 }
                 tex_coords = (1.0 - t) * tex_s + t * tex_e;
-                if tex_coords.z < depth_buffer[(i * SCREEN_TILE_WIDTH as i16 + j) as usize]
-                {
+                if tex_coords.z < depth_buffer[(i * SCREEN_TILE_WIDTH as i16 + j) as usize] {
                     let texture_pixel_index = ((((tex_coords.x / tex_coords.z) * 8.0) as usize)
                         + ((tex_coords.y / tex_coords.z * 8.0) as usize) * 128)
                         * 2;
@@ -320,8 +313,7 @@ pub fn draw_line(
     }
 }
 
-// Takes a Triangle2D and draw it as a filled triangle or lines depending of the texture_id
-pub fn draw_2d_triangle(
+fn draw_2d_triangles(
     tri: &Triangle2D,
     frame_buffer: &mut [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
     depth_buffer: &mut [f32; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
@@ -353,6 +345,70 @@ pub fn draw_2d_triangle(
             tri.t3,
             //get_quad_color_from_texture_id(tri.texture_id).apply_light(tri.light * 17),
         );
+        /*draw_line(
+            (tri.p1.x as isize, tri.p1.y as isize),
+            (tri.p2.x as isize, tri.p2.y as isize),
+            frame_buffer,
+            Color565::new(0b11111, 0b0, 0b0),
+        );
+        draw_line(
+            (tri.p2.x as isize, tri.p2.y as isize),
+            (tri.p3.x as isize, tri.p3.y as isize),
+            frame_buffer,
+            Color565::new(0b11111, 0b0, 0b0),
+        );
+        draw_line(
+            (tri.p3.x as isize, tri.p3.y as isize),
+            (tri.p1.x as isize, tri.p1.y as isize),
+            frame_buffer,
+            Color565::new(0b11111, 0b0, 0b0),
+        );*/
+    }
+}
+
+// Takes a Triangle2D and draw it as a filled triangle or lines depending of the texture_id
+pub fn clip_and_draw_2d_triangle(
+    tri: Triangle2D,
+    frame_buffer: &mut [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    depth_buffer: &mut [f32; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+) {
+    let mut clip_buffer: heapless::Deque<Triangle2D, 16> = heapless::Deque::new(); // 2^4
+
+    clip_buffer.push_back(tri).unwrap();
+    let mut new_tris = 1;
+
+    let mut clip_triangle = |line_p, line_n| {
+        while new_tris > 0 {
+            let test = clip_buffer.pop_front().unwrap();
+            new_tris -= 1;
+
+            let clipped = triangle_clip_against_line(&line_p, &line_n, &test);
+
+            if let Some(clipped_tri) = clipped.0 {
+                clip_buffer.push_back(clipped_tri).unwrap();
+            }
+            if let Some(clipped_tri) = clipped.1 {
+                clip_buffer.push_back(clipped_tri).unwrap();
+            }
+        }
+        new_tris = clip_buffer.len();
+    };
+
+    if tri.texture_id != 255 {
+        clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(0.0, 1.0));
+        clip_triangle(
+            Vector2::new(0.0, SCREEN_TILE_HEIGHT as f32),
+            Vector2::new(0.0, -1.0),
+        );
+        clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(1.0, 0.0));
+        clip_triangle(
+            Vector2::new(SCREEN_TILE_WIDTH as f32, 0.0),
+            Vector2::new(-1.0, 0.0),
+        );
+    }
+
+    for cliped_tri in clip_buffer {
+        draw_2d_triangles(&cliped_tri, frame_buffer, depth_buffer);
     }
 }
 
@@ -405,17 +461,17 @@ pub fn vector_intersect_plane(
 pub fn vector_intersect_line(
     line_p: &Vector2<f32>,
     line_n: &Vector2<f32>,
-    line_start: &Vector2<f32>,
-    line_end: &Vector2<f32>,
+    point_start: &Vector2<f32>,
+    point_end: &Vector2<f32>,
 ) -> (Vector2<i16>, f32) {
     let line_n = line_n.normalize();
     let line_d = -line_n.dot(line_p);
-    let ad = line_start.dot(&line_n);
-    let bd = line_end.dot(&line_n);
+    let ad = point_start.dot(&line_n);
+    let bd = point_end.dot(&line_n);
     let t = (-line_d - ad) / (bd - ad);
-    let line_start_to_end = line_end - line_start;
-    let line_to_intersect = line_start_to_end * t;
-    let coords = line_start + line_to_intersect;
+    let point_start_to_end = point_end - point_start;
+    let point_to_intersect = point_start_to_end * t;
+    let coords = point_start + point_to_intersect;
     (coords.map(|x| x as i16), t)
 }
 
@@ -498,8 +554,8 @@ pub fn triangle_clip_against_line(
         let t3 = t * (outside_tex[1] - inside_tex[0]) + inside_tex[0];
         let out_tri = Triangle2D {
             p1: p1.map(|x| x as i16),
-            p2: p2.map(|x| x as i16),
-            p3: p3.map(|x| x as i16),
+            p2,
+            p3,
             t1: *inside_tex[0],
             t2,
             t3,
@@ -518,7 +574,7 @@ pub fn triangle_clip_against_line(
         let out_tri1 = Triangle2D {
             p1: p1.map(|x| x as i16),
             p2: p2.map(|x| x as i16),
-            p3: p3.map(|x| x as i16),
+            p3,
             t1: *inside_tex[0],
             t2: *inside_tex[1],
             t3,
@@ -529,9 +585,9 @@ pub fn triangle_clip_against_line(
         let (p3, t) = vector_intersect_line(line_p, &line_n, inside_points[1], outside_points[0]);
         let t3 = t * (outside_tex[0] - inside_tex[1]) + inside_tex[1];
         let out_tri2 = Triangle2D {
-            p1: inside_points[1].map(|x| x as i16),
+            p1: inside_points[1].map(|x: f32| x as i16),
             p2: out_tri1.p3,
-            p3: p3.map(|x| x as i16),
+            p3,
             t1: *inside_tex[1],
             t2: out_tri1.t3,
             t3,
@@ -766,7 +822,7 @@ impl Renderer {
                     clip_triangle(Vector2::new(0.0, SCREEN_HEIGHTF), Vector2::new(0.0, -1.0));
                     clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(1.0, 0.0));
                     clip_triangle(
-                        Vector2::new(SCREEN_WIDTHF - 1.0, 0.0),
+                        Vector2::new(SCREEN_WIDTHF, 0.0),
                         Vector2::new(-1.0, 0.0),
                     );
                 }
@@ -778,6 +834,7 @@ impl Renderer {
                     }
                     self.triangles_to_render.push(tri.to_small()); // Do nothing if overflow
                 }
+
             };
 
             if let Some(clipped) = clipped_triangles.0 {
@@ -802,8 +859,8 @@ impl Renderer {
 
             tri_copy.p3 += tile_offset;
 
-            draw_2d_triangle(
-                &tri_copy,
+            clip_and_draw_2d_triangle(
+                tri_copy,
                 &mut self.tile_frame_buffer,
                 &mut self.tile_depth_buffer,
             );

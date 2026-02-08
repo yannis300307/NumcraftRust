@@ -3,7 +3,7 @@ calc_use!(alloc::vec::Vec);
 use nalgebra::{Vector2, Vector3};
 
 use crate::{
-    constants::{world::CHUNK_SIZE, BlockType},
+    constants::{BlockType, world::CHUNK_SIZE},
     world::{chunk::Chunk, chunk_manager::ChunksManager},
 };
 
@@ -89,6 +89,9 @@ impl Quad {
         let pos_z = (pos.z) as f32;
         let pos_z_plus_one = pos_z + 1.0;
 
+        let tex_x = (self.texture_id % 16) as f32;
+        let tex_y = (self.texture_id / 16) as f32;
+
         let light = self.get_light_level() as u8;
         match self.get_dir() {
             QuadDir::Front => (
@@ -96,9 +99,9 @@ impl Quad {
                     p1: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
                     p2: Vector3::new(pos_x_plus_one, pos_y, pos_z),
                     p3: Vector3::new(pos_x, pos_y, pos_z),
-                    t1: Vector2::new(2.0, 0.0),
-                    t2: Vector2::new(3.0, 0.0),
-                    t3: Vector2::new(2.0, 1.0),
+                    t1: Vector2::new(tex_x + 0.002, tex_y + -0.002), // That's a dame good workaround
+                    t2: Vector2::new(tex_x + 0.002, tex_y + 0.998),
+                    t3: Vector2::new(tex_x + 0.998, tex_y + 0.998),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -106,9 +109,9 @@ impl Quad {
                     p1: Vector3::new(pos_x, pos_y, pos_z),
                     p2: Vector3::new(pos_x, pos_y_plus_one, pos_z),
                     p3: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
-                    t1: Vector2::new(2.0, 0.0),
-                    t2: Vector2::new(3.0, 0.0),
-                    t3: Vector2::new(2.0, 1.0),
+                    t1: Vector2::new(tex_x + 0.998, tex_y + 0.998),
+                    t2: Vector2::new(tex_x + 0.998, tex_y + -0.002),
+                    t3: Vector2::new(tex_x + 0.002, tex_y + -0.002),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -118,9 +121,9 @@ impl Quad {
                     p1: Vector3::new(pos_x, pos_y, pos_z_plus_one),
                     p2: Vector3::new(pos_x_plus_one, pos_y, pos_z_plus_one),
                     p3: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
-                    t1: Vector2::new(2.0, 0.0),
-                    t2: Vector2::new(3.0, 1.0),
-                    t3: Vector2::new(2.0, 0.0),
+                    t1: Vector2::new(tex_x + 0.002, tex_y + 0.998),
+                    t2: Vector2::new(tex_x + 0.998, tex_y + 0.998),
+                    t3: Vector2::new(tex_x + 0.998, tex_y + -0.002),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -128,9 +131,9 @@ impl Quad {
                     p1: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
                     p2: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
                     p3: Vector3::new(pos_x, pos_y, pos_z_plus_one),
-                    t1: Vector2::new(2.0, 0.0),
-                    t2: Vector2::new(3.0, 0.0),
-                    t3: Vector2::new(2.0, 1.0),
+                    t1: Vector2::new(tex_x + 0.998, tex_y + -0.002),
+                    t2: Vector2::new(tex_x + 0.002, tex_y + -0.002),
+                    t3: Vector2::new(tex_x + 0.002, tex_y + 0.998),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -140,9 +143,9 @@ impl Quad {
                     p1: Vector3::new(pos_x_plus_one, pos_y, pos_z),
                     p2: Vector3::new(pos_x_plus_one, pos_y, pos_z_plus_one),
                     p3: Vector3::new(pos_x, pos_y, pos_z_plus_one),
-                    t1: Vector2::new(2.0, 0.0),
-                    t2: Vector2::new(3.0, 0.0),
-                    t3: Vector2::new(2.0, 1.0),
+                    t1: Vector2::new(tex_x + 0.002, tex_y + -0.002),
+                    t2: Vector2::new(tex_x + 0.002, tex_y + 0.998),
+                    t3: Vector2::new(tex_x + 0.998, tex_y + 0.998),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -150,9 +153,9 @@ impl Quad {
                     p1: Vector3::new(pos_x, pos_y, pos_z_plus_one),
                     p2: Vector3::new(pos_x, pos_y, pos_z),
                     p3: Vector3::new(pos_x_plus_one, pos_y, pos_z),
-                    t1: Vector2::new(2.0, 0.0),
-                    t2: Vector2::new(3.0, 0.0),
-                    t3: Vector2::new(2.0, 1.0),
+                    t1: Vector2::new(tex_x + 0.998, tex_y + 0.998),
+                    t2: Vector2::new(tex_x + 0.998, tex_y + -0.002),
+                    t3: Vector2::new(tex_x + 0.002, tex_y + -0.002),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -162,9 +165,9 @@ impl Quad {
                     p1: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
                     p2: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
                     p3: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
-                    t1: Vector2::new(2.0, 0.0),
-                    t2: Vector2::new(3.0, 0.0),
-                    t3: Vector2::new(2.0, 1.0),
+                    t1: Vector2::new(tex_x + 0.002, tex_y + -0.002),
+                    t2: Vector2::new(tex_x + 0.002, tex_y + 0.998),
+                    t3: Vector2::new(tex_x + 0.998, tex_y + 0.998),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -172,9 +175,9 @@ impl Quad {
                     p1: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
                     p2: Vector3::new(pos_x, pos_y_plus_one, pos_z),
                     p3: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
-                    t1: Vector2::new(2.0, 0.0),
-                    t2: Vector2::new(3.0, 0.0),
-                    t3: Vector2::new(2.0, 1.0),
+                    t1: Vector2::new(tex_x + 0.998, tex_y + 0.998),
+                    t2: Vector2::new(tex_x + 0.998, tex_y + -0.002),
+                    t3: Vector2::new(tex_x + 0.002, tex_y + -0.002),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -184,9 +187,9 @@ impl Quad {
                     p3: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
                     p2: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z),
                     p1: Vector3::new(pos_x_plus_one, pos_y, pos_z),
-                    t1: Vector2::new(2.0, 0.0),
-                    t2: Vector2::new(3.0, 0.0),
-                    t3: Vector2::new(2.0, 1.0),
+                    t1: Vector2::new(tex_x + 0.998, tex_y + 0.998),
+                    t2: Vector2::new(tex_x + 0.998, tex_y + -0.002),
+                    t3: Vector2::new(tex_x + 0.002, tex_y + -0.002),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -194,9 +197,9 @@ impl Quad {
                     p3: Vector3::new(pos_x_plus_one, pos_y, pos_z),
                     p2: Vector3::new(pos_x_plus_one, pos_y, pos_z_plus_one),
                     p1: Vector3::new(pos_x_plus_one, pos_y_plus_one, pos_z_plus_one),
-                    t1: Vector2::new(2.0, 0.0),
-                    t2: Vector2::new(3.0, 0.0),
-                    t3: Vector2::new(2.0, 1.0),
+                    t1: Vector2::new(tex_x + 0.002, tex_y + -0.002),
+                    t2: Vector2::new(tex_x + 0.002, tex_y + 0.998),
+                    t3: Vector2::new(tex_x + 0.998, tex_y + 0.998),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -206,9 +209,9 @@ impl Quad {
                     p1: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
                     p2: Vector3::new(pos_x, pos_y_plus_one, pos_z),
                     p3: Vector3::new(pos_x, pos_y, pos_z),
-                    t1: Vector2::new(2.0, 0.0),
-                    t2: Vector2::new(3.0, 0.0),
-                    t3: Vector2::new(2.0, 1.0),
+                    t1: Vector2::new(tex_x + 0.998, tex_y + -0.002),
+                    t2: Vector2::new(tex_x + 0.002, tex_y + -0.002),
+                    t3: Vector2::new(tex_x + 0.002, tex_y + 0.998),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -216,9 +219,9 @@ impl Quad {
                     p1: Vector3::new(pos_x, pos_y, pos_z),
                     p2: Vector3::new(pos_x, pos_y, pos_z_plus_one),
                     p3: Vector3::new(pos_x, pos_y_plus_one, pos_z_plus_one),
-                    t1: Vector2::new(2.0, 0.0),
-                    t2: Vector2::new(3.0, 0.0),
-                    t3: Vector2::new(2.0, 1.0),
+                    t1: Vector2::new(tex_x + 0.002, tex_y + 0.998),
+                    t2: Vector2::new(tex_x + 0.998, tex_y + 0.998),
+                    t3: Vector2::new(tex_x + 0.998, tex_y + -0.002),
                     texture_id: self.texture_id,
                     light,
                 },
@@ -389,8 +392,12 @@ impl Mesh {
 
                         let grid_additional_light = if (x + y + z) % 2 == 0 { 2 } else { 0 }; // Make one block/2 darker to increase visibility
 
-                        if get_block_in_chunk_or_world(Vector3::new(x, y, z - 1), chunks_manager, chunk)
-                            .is_some_and(|block| block.is_air())
+                        if get_block_in_chunk_or_world(
+                            Vector3::new(x, y, z - 1),
+                            chunks_manager,
+                            chunk,
+                        )
+                        .is_some_and(|block| block.is_air())
                         {
                             quads.push(Quad::new(
                                 bloc_pos,
@@ -401,8 +408,12 @@ impl Mesh {
                             ));
                         }
 
-                        if get_block_in_chunk_or_world(Vector3::new(x, y, z + 1), chunks_manager, chunk)
-                            .is_some_and(|block| block.is_air())
+                        if get_block_in_chunk_or_world(
+                            Vector3::new(x, y, z + 1),
+                            chunks_manager,
+                            chunk,
+                        )
+                        .is_some_and(|block| block.is_air())
                         {
                             quads.push(Quad::new(
                                 bloc_pos,
@@ -413,8 +424,12 @@ impl Mesh {
                             ));
                         }
 
-                        if get_block_in_chunk_or_world(Vector3::new(x - 1, y, z), chunks_manager, chunk)
-                            .is_some_and(|block| block.is_air())
+                        if get_block_in_chunk_or_world(
+                            Vector3::new(x - 1, y, z),
+                            chunks_manager,
+                            chunk,
+                        )
+                        .is_some_and(|block| block.is_air())
                         {
                             quads.push(Quad::new(
                                 bloc_pos,
@@ -424,8 +439,12 @@ impl Mesh {
                                     - grid_additional_light,
                             ));
                         }
-                        if get_block_in_chunk_or_world(Vector3::new(x + 1, y, z), chunks_manager, chunk)
-                            .is_some_and(|block| block.is_air())
+                        if get_block_in_chunk_or_world(
+                            Vector3::new(x + 1, y, z),
+                            chunks_manager,
+                            chunk,
+                        )
+                        .is_some_and(|block| block.is_air())
                         {
                             quads.push(Quad::new(
                                 bloc_pos,
@@ -436,8 +455,12 @@ impl Mesh {
                             ));
                         }
 
-                        if get_block_in_chunk_or_world(Vector3::new(x, y + 1, z), chunks_manager, chunk)
-                            .is_some_and(|block| block.is_air())
+                        if get_block_in_chunk_or_world(
+                            Vector3::new(x, y + 1, z),
+                            chunks_manager,
+                            chunk,
+                        )
+                        .is_some_and(|block| block.is_air())
                         {
                             quads.push(Quad::new(
                                 bloc_pos,
@@ -448,8 +471,12 @@ impl Mesh {
                             ));
                         }
 
-                        if get_block_in_chunk_or_world(Vector3::new(x, y - 1, z), chunks_manager, chunk)
-                            .is_some_and(|block| block.is_air())
+                        if get_block_in_chunk_or_world(
+                            Vector3::new(x, y - 1, z),
+                            chunks_manager,
+                            chunk,
+                        )
+                        .is_some_and(|block| block.is_air())
                         {
                             quads.push(Quad::new(
                                 bloc_pos,
