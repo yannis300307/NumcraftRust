@@ -141,7 +141,7 @@ pub fn fill_triangle(
 
 fn textured_triangle(
     frame_buffer: &mut [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
-    depth_buffer: &mut [f32; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    depth_buffer: &mut [f16; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
     mut point1: Vector2<i16>,
     mut tex1: Vector3<f32>,
     mut point2: Vector2<i16>,
@@ -207,27 +207,26 @@ fn textured_triangle(
                 swap(&mut tex_s, &mut tex_e);
             }
 
-            tex_coords = tex_s;
-
             let tstep = 1.0 / ((bx - ax) as f32);
             let mut t = 0.0;
 
             for j in ax..bx {
                 if j >= SCREEN_TILE_WIDTH as i16 || j < 0 {
-                    continue;
+                    break;
                 }
                 tex_coords = (1.0 - t) * tex_s + t * tex_e;
-                if tex_coords.z < depth_buffer[(i * SCREEN_TILE_WIDTH as i16 + j) as usize] {
-                    let texture_pixel_index = ((((tex_coords.x / tex_coords.z) * 8.0) as usize)
-                        + ((tex_coords.y / tex_coords.z * 8.0) as usize) * 128)
+                let index = (i * SCREEN_TILE_WIDTH as i16 + j) as usize;
+                let z_inv = 1.0 / tex_coords.z;
+                if tex_coords.z < depth_buffer[index] as f32 {
+                    let texture_pixel_index = ((((tex_coords.x * z_inv) * 8.0) as usize)
+                        + ((tex_coords.y * z_inv * 8.0) as usize) * 128)
                         * 2;
                     let pixel = u16::from_be_bytes([
-                        TILESET_DATA[texture_pixel_index],
-                        TILESET_DATA[texture_pixel_index + 1],
+                        *unsafe { TILESET_DATA.get_unchecked(texture_pixel_index) },
+                        *unsafe { TILESET_DATA.get_unchecked(texture_pixel_index + 1) },
                     ]);
-                    frame_buffer[(j + i * SCREEN_TILE_WIDTH as i16) as usize] =
-                        Color565 { value: pixel };
-                    depth_buffer[(i * SCREEN_TILE_WIDTH as i16 + j) as usize] = tex_coords.z;
+                    unsafe { *frame_buffer.get_unchecked_mut(index) = Color565 { value: pixel } };
+                    unsafe { *depth_buffer.get_unchecked_mut(index) = tex_coords.z as f16; };
                 }
                 t += tstep;
             }
@@ -266,28 +265,26 @@ fn textured_triangle(
                 swap(&mut tex_s, &mut tex_e);
             }
 
-            tex_coords = tex_s;
-
             let tstep = 1.0 / ((bx - ax) as f32);
             let mut t = 0.0;
 
             for j in ax..bx {
                 if j >= SCREEN_TILE_WIDTH as i16 || j < 0 {
-                    continue;
+                    break;
                 }
                 tex_coords = (1.0 - t) * tex_s + t * tex_e;
-                if tex_coords.z < depth_buffer[(i * SCREEN_TILE_WIDTH as i16 + j) as usize] {
-                    let texture_pixel_index = ((((tex_coords.x / tex_coords.z) * 8.0) as usize)
-                        + ((tex_coords.y / tex_coords.z * 8.0) as usize) * 128)
+                let index = (i * SCREEN_TILE_WIDTH as i16 + j) as usize;
+                let z_inv = 1.0 / tex_coords.z;
+                if tex_coords.z < depth_buffer[index] as f32 {
+                    let texture_pixel_index = ((((tex_coords.x * z_inv) * 8.0) as usize)
+                        + ((tex_coords.y * z_inv * 8.0) as usize) * 128)
                         * 2;
-                    //println!("{} - {}", tex_coords.x, tex_coords.y);
                     let pixel = u16::from_be_bytes([
-                        TILESET_DATA[texture_pixel_index],
-                        TILESET_DATA[texture_pixel_index + 1],
+                        *unsafe { TILESET_DATA.get_unchecked(texture_pixel_index) },
+                        *unsafe { TILESET_DATA.get_unchecked(texture_pixel_index + 1) },
                     ]);
-                    frame_buffer[(j + i * SCREEN_TILE_WIDTH as i16) as usize] =
-                        Color565 { value: pixel };
-                    depth_buffer[(i * SCREEN_TILE_WIDTH as i16 + j) as usize] = tex_coords.z;
+                    unsafe { *frame_buffer.get_unchecked_mut(index) = Color565 { value: pixel } };
+                    unsafe { *depth_buffer.get_unchecked_mut(index) = tex_coords.z as f16; };
                 }
                 t += tstep;
             }
@@ -316,7 +313,7 @@ pub fn draw_line(
 fn draw_2d_triangles(
     tri: &Triangle2D,
     frame_buffer: &mut [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
-    depth_buffer: &mut [f32; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    depth_buffer: &mut [f16; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 ) {
     if tri.texture_id == 255 {
         // Block marker
@@ -370,7 +367,7 @@ fn draw_2d_triangles(
 pub fn clip_and_draw_2d_triangle(
     tri: Triangle2D,
     frame_buffer: &mut [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
-    depth_buffer: &mut [f32; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+    depth_buffer: &mut [f16; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
 ) {
     let mut clip_buffer: heapless::Deque<Triangle2D, 16> = heapless::Deque::new(); // 2^4
 
@@ -821,10 +818,7 @@ impl Renderer {
                     clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(0.0, 1.0));
                     clip_triangle(Vector2::new(0.0, SCREEN_HEIGHTF), Vector2::new(0.0, -1.0));
                     clip_triangle(Vector2::new(0.0, 0.0), Vector2::new(1.0, 0.0));
-                    clip_triangle(
-                        Vector2::new(SCREEN_WIDTHF, 0.0),
-                        Vector2::new(-1.0, 0.0),
-                    );
+                    clip_triangle(Vector2::new(SCREEN_WIDTHF, 0.0), Vector2::new(-1.0, 0.0));
                 }
 
                 for tri in clip_buffer {
@@ -834,7 +828,6 @@ impl Renderer {
                     }
                     self.triangles_to_render.push(tri.to_small()); // Do nothing if overflow
                 }
-
             };
 
             if let Some(clipped) = clipped_triangles.0 {
@@ -949,7 +942,7 @@ impl Renderer {
             for y in 0..SCREEN_TILE_SUBDIVISION {
                 self.clear_screen(Color565::new(0b01110, 0b110110, 0b11111));
                 for i in 0..SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT {
-                    self.tile_depth_buffer[i] = f32::MAX;
+                    self.tile_depth_buffer[i] = f16::MAX;
                 }
                 self.draw_triangles(x, y);
                 self.draw_flat_model_entities(world, &mat_view, x, y, &frustum);

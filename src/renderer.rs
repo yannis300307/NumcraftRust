@@ -59,7 +59,7 @@ pub struct Renderer {
     pub camera: Camera,
     triangles_to_render: Vec<SmallTriangle2D>,
     tile_frame_buffer: [Color565; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
-	tile_depth_buffer: [f32; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
+	tile_depth_buffer: [f16; SCREEN_TILE_WIDTH * SCREEN_TILE_HEIGHT],
     projection_matrix: Perspective3<f32>,
     pub enable_vsync: bool,
 }
