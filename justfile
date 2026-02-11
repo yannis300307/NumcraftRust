@@ -43,18 +43,18 @@ setup_target:
 
 [macos]
 run_nwb:
-    ./simulator/output/release/simulator/macos/epsilon.app/Contents/MacOS/Epsilon --nwb ./target/{{current_target}}/release/{{lib_file_name}}.dylib
+    ./simulator/output/release/simulator/macos/epsilon.app/Contents/MacOS/Epsilon --nwb ./target/{{current_target}}/debug/{{lib_file_name}}.dylib
 
 [linux]
 run_nwb:
-    ./simulator/output/release/simulator/linux/epsilon.bin --nwb ./target/{{current_target}}/release/{{lib_file_name}}.so
+    ./simulator/output/release/simulator/linux/epsilon.bin --nwb ./target/{{current_target}}/debug/{{lib_file_name}}.so
 
 sim jobs="1" features="": setup_target
     -git clone https://github.com/numworks/epsilon.git simulator -b version-20 # Broken with version 21. Nice!
     if [ -n "{{features}}"];then \
-        cargo build --release --target={{current_target}} --lib --features "epsilon" --no-default-features;\
+        cargo build --target={{current_target}} --lib --features "epsilon" --no-default-features;\
     else \
-        cargo build --release --target={{current_target}} --lib --features "{{features}} epsilon" --no-default-features;\
+        cargo build --target={{current_target}} --lib --features "{{features}} epsilon" --no-default-features;\
     fi
 
     if [ ! -f "target/simulator_patched" ]; then \

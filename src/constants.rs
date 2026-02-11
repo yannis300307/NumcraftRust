@@ -59,11 +59,15 @@ pub mod world {
 pub mod player {
     use core::f32::consts::PI;
 
+    use crate::constants::BlockType;
+
     pub const ROTATION_SPEED: f32 = PI / 3.0; // rad / sec
     pub const FLY_SPEED: f32 = 4.0;
     pub const WALK_FORCE: f32 = 20.0;
     pub const MAX_WALKING_VELOCITY: f32 = 4.;
     pub const JUMP_FORCE: f32 = 5.;
+
+    pub const INTERFACE_BLOCKS: [BlockType; 1] = [BlockType::CraftingTable];
 }
 
 pub mod physic {
@@ -110,6 +114,11 @@ pub enum BlockType {
     Log = 7,
     Leaves = 8,
     Planks = 9,
+    CoalOre = 10,
+    IronOre = 11,
+    DiamondOre = 12,
+    CraftingTable = 13,
+    Chest = 14,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -126,6 +135,11 @@ pub enum ItemType {
     LogBlock = 7,
     LeavesBlock = 8,
     PlanksBlock = 9,
+    CoalOreBlock = 10,
+    IronOreBlock = 11,
+    DiamondOreBlock = 12,
+    CraftingTableBlock = 13,
+    ChestBlock = 14,
 }
 
 impl ItemType {
@@ -140,8 +154,13 @@ impl ItemType {
             ItemType::CobblestoneBlock => 6,
             ItemType::BorderBlock => 7,
             ItemType::LogBlock => 8,
-            ItemType::LeavesBlock => 9,
-            ItemType::PlanksBlock => 10,
+            ItemType::LeavesBlock => 10,
+            ItemType::PlanksBlock => 11,
+            ItemType::CoalOreBlock => 12,
+            ItemType::IronOreBlock => 13,
+            ItemType::DiamondOreBlock => 14,
+            ItemType::CraftingTableBlock => 15,
+            ItemType::ChestBlock => 19,
         }
     }
 
@@ -158,6 +177,11 @@ impl ItemType {
             7 => Some(ItemType::LogBlock),
             8 => Some(ItemType::LeavesBlock),
             9 => Some(ItemType::PlanksBlock),
+            10 => Some(ItemType::CoalOreBlock),
+            11 => Some(ItemType::IronOreBlock),
+            12 => Some(ItemType::DiamondOreBlock),
+            13 => Some(ItemType::CraftingTableBlock),
+            14 => Some(ItemType::ChestBlock),
             _ => None,
         }
     }
@@ -174,6 +198,11 @@ impl ItemType {
             ItemType::LogBlock => 64,
             ItemType::LeavesBlock => 64,
             ItemType::PlanksBlock => 64,
+            ItemType::CoalOreBlock => 64,
+            ItemType::IronOreBlock => 64,
+            ItemType::DiamondOreBlock => 64,
+            ItemType::CraftingTableBlock => 64,
+            ItemType::ChestBlock => 64,
         }
     }
 
@@ -189,6 +218,11 @@ impl ItemType {
             ItemType::LogBlock => Some(BlockType::Log),
             ItemType::LeavesBlock => Some(BlockType::Leaves),
             ItemType::PlanksBlock => Some(BlockType::Planks),
+            ItemType::CoalOreBlock => Some(BlockType::CoalOre),
+            ItemType::IronOreBlock => Some(BlockType::IronOre),
+            ItemType::DiamondOreBlock => Some(BlockType::DiamondOre),
+            ItemType::CraftingTableBlock => Some(BlockType::CraftingTable),
+            ItemType::ChestBlock => Some(BlockType::Chest),
         }
     }
 }
@@ -205,11 +239,9 @@ impl BlockType {
             BlockType::Grass => {
                 if dir == QuadDir::Top {
                     2
-                } else if dir == QuadDir::Bottom
-                {
+                } else if dir == QuadDir::Bottom {
                     3
-                }
-                else {
+                } else {
                     4
                 }
             }
@@ -217,9 +249,36 @@ impl BlockType {
             BlockType::Sand => 5,
             BlockType::Cobblestone => 6,
             BlockType::Border => 7,
-            BlockType::Log => 8,
-            BlockType::Leaves => 9,
-            BlockType::Planks => 10,
+            BlockType::Log => {
+                if dir == QuadDir::Top || dir == QuadDir::Bottom {
+                    9
+                } else {
+                    8
+                }
+            }
+            BlockType::Leaves => 10,
+            BlockType::Planks => 11,
+            BlockType::CoalOre => 12,
+            BlockType::IronOre => 13,
+            BlockType::DiamondOre => 14,
+            BlockType::Chest => {
+                if dir == QuadDir::Top || dir == QuadDir::Bottom {
+                    17
+                } else if dir == QuadDir::Front {
+                    19
+                } else {
+                    18
+                }
+            }
+            BlockType::CraftingTable => {
+                if dir == QuadDir::Top {
+                    16
+                } else if dir == QuadDir::Front || dir == QuadDir::Back { 
+                    15
+                } else {
+                    17
+                }
+            }
         }
     }
 
@@ -235,6 +294,11 @@ impl BlockType {
             7 => Some(BlockType::Log),
             8 => Some(BlockType::Leaves),
             9 => Some(BlockType::Planks),
+            10 => Some(BlockType::CoalOre),
+            11 => Some(BlockType::IronOre),
+            12 => Some(BlockType::DiamondOre),
+            13 => Some(BlockType::CraftingTable),
+            14 => Some(BlockType::Chest),
             _ => None,
         }
     }
@@ -251,6 +315,11 @@ impl BlockType {
             BlockType::Log => 1.5,
             BlockType::Leaves => 0.3,
             BlockType::Planks => 1.2,
+            BlockType::CoalOre => 3.0,
+            BlockType::IronOre => 5.0,
+            BlockType::DiamondOre => 10.0,
+            BlockType::CraftingTable => 1.5,
+            BlockType::Chest => 1.5,
         }
     }
 
@@ -266,6 +335,11 @@ impl BlockType {
             BlockType::Log => ItemType::LogBlock,
             BlockType::Leaves => ItemType::LeavesBlock,
             BlockType::Planks => ItemType::PlanksBlock,
+            BlockType::CoalOre => ItemType::CoalOreBlock,
+            BlockType::IronOre => ItemType::IronOreBlock,
+            BlockType::DiamondOre => ItemType::DiamondOreBlock,
+            BlockType::CraftingTable => ItemType::CraftingTableBlock,
+            BlockType::Chest => ItemType::ChestBlock,
         }
     }
 }

@@ -1,0 +1,14 @@
+{
+    "name": "chest",
+    "pattern" : [
+        "ppp",
+        "p p",
+        "ppp"
+    ],
+    "strict_shape": true,
+    "palette": {
+        "p": 9
+    },
+    "result": 14,
+    "result_amount": 1
+}

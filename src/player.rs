@@ -11,12 +11,12 @@ use crate::{
         BlockType, EntityType,
         player::{FLY_SPEED, JUMP_FORCE, MAX_WALKING_VELOCITY, WALK_FORCE},
     },
-    nadk,
     entity::{Entity, item::ItemEntityCustomData},
     game::GameMode,
     hud::Hud,
     input_manager::InputManager,
     inventory::{Inventory, ItemStack},
+    nadk,
     physic::PhysicEngine,
     renderer::mesh::{Mesh, Quad, QuadDir},
     settings::Settings,
@@ -52,6 +52,11 @@ impl Player {
         } else {
             (mesh, Vector3::repeat(0))
         }
+    }
+
+    pub fn get_raycast_result(&self) -> Option<RaycastResult>
+    {
+        return self.ray_cast_result;
     }
 
     pub fn get_block_breaking_progress(&self) -> Option<f32> {
@@ -96,7 +101,8 @@ impl Player {
 
         // Movements
         if (input_manager.is_keydown(nadk::keyboard::Key::Up) && settings.reverse_controls)
-            || (input_manager.is_keydown(nadk::keyboard::Key::Toolbox) && !settings.reverse_controls)
+            || (input_manager.is_keydown(nadk::keyboard::Key::Toolbox)
+                && !settings.reverse_controls)
         {
             // Forward
             let translation = sincosf(player_entity.rotation.y);
@@ -122,7 +128,8 @@ impl Player {
             }
         }
         if (input_manager.is_keydown(nadk::keyboard::Key::Left) && settings.reverse_controls)
-            || (input_manager.is_keydown(nadk::keyboard::Key::Imaginary) && !settings.reverse_controls)
+            || (input_manager.is_keydown(nadk::keyboard::Key::Imaginary)
+                && !settings.reverse_controls)
         {
             // Left
             let translation = sincosf(player_entity.rotation.y + PI / 2.0);
@@ -209,7 +216,7 @@ impl Player {
         }
 
         if input_manager.is_just_pressed(nadk::keyboard::Key::Ok) {
-            // Place Block
+            // Place or open block
             if let Some(result) = &self.ray_cast_result {
                 let block_pos = result.block_pos + result.face_dir.get_normal_vector();
                 if world
@@ -360,7 +367,8 @@ impl Player {
     }
 }
 
-struct RaycastResult {
+#[derive(Clone, Copy)]
+pub struct RaycastResult {
     pub block_pos: Vector3<isize>,
     pub face_dir: QuadDir,
     pub block_type: BlockType,

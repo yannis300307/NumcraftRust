@@ -354,7 +354,7 @@ impl Renderer {
         {
             nadk::display::draw_string(
                 format!("{}", element_id).as_str(),
-                Point { x: x + 2, y: y + 2 },
+                ScreenPoint { x: x + 2, y: y + 2 },
                 false,
                 Color565::from_rgb888(0, 0, 0),
                 Color565::from_rgb888(255, 255, 255),

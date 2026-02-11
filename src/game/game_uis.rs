@@ -1,5 +1,5 @@
 use crate::{
-    constants::ItemType,
+    constants::{BlockType, ItemType},
     game::*,
     game_ui::{ContainerNeighbors, GameUIElements, NeighborDirection},
     inventory::Inventory,
@@ -152,6 +152,26 @@ impl Game {
             8,
             ItemStack::new(crate::constants::ItemType::PlanksBlock, 1, true),
         );
+        creative_inventory.replace_slot_item_stack(
+            9,
+            ItemStack::new(crate::constants::ItemType::CoalOreBlock, 1, true),
+        );
+        creative_inventory.replace_slot_item_stack(
+            10,
+            ItemStack::new(crate::constants::ItemType::IronOreBlock, 1, true),
+        );
+        creative_inventory.replace_slot_item_stack(
+            11,
+            ItemStack::new(crate::constants::ItemType::DiamondOreBlock, 1, true),
+        );
+        creative_inventory.replace_slot_item_stack(
+            12,
+            ItemStack::new(crate::constants::ItemType::CraftingTableBlock, 1, true),
+        );
+        creative_inventory.replace_slot_item_stack(
+            13,
+            ItemStack::new(crate::constants::ItemType::ChestBlock, 1, true),
+        );
 
         let mut inventories = [&mut self.player.inventory, &mut creative_inventory];
 
@@ -183,6 +203,108 @@ impl Game {
             self.input_manager.update_timing(&self.timing_manager);
 
             if !ui.update(&self.input_manager, &mut inventories) {
+                break;
+            }
+
+            self.renderer.draw_game_ui(&mut ui);
+
+            nadk::display::wait_for_vblank();
+            nadk::time::wait_milliseconds(50);
+        }
+    }
+
+    pub fn block_interface_loop(&mut self, pos: Vector3<isize>) -> GameState {
+        if let Some(block) =  self.world.chunks_manager.get_block_in_world(pos) {
+            match block
+            {
+                BlockType::CraftingTable => self.player_crafting_table_loop(),
+                _ => ()
+            }
+        }
+
+        GameState::InGame
+    }
+
+    fn player_crafting_table_loop(&mut self) {
+        // Clear the hud
+        self.renderer
+            .draw_game(&mut self.world, &self.player, 0, &self.hud, false);
+
+        let inventories = [
+            &mut self.player.inventory,
+            &mut self.crafting_manager.crafting_inventory_3x3,
+        ];
+        let mut ui = GameUI::new(true)
+            .with_slot_grid(Vector2::new(65, 107), 6, 3, 0, 0, 6)
+            .with_slot_grid(Vector2::new(65, 205), 6, 1, 0, 18, 0)
+            .with_slot_grid(Vector2::new(82, 5), 3, 3, 1, 24, 0)
+            .with_element(
+                GameUIElements::create_one_way_slot_slot(1, 9),
+                Vector2::new(208, 37),
+                33,
+                ContainerNeighbors::default(),
+            )
+            .with_element(
+                GameUIElements::Arrow { filling: 0. },
+                Vector2::new(176, 37),
+                34,
+                ContainerNeighbors::default(),
+            )
+            .with_links(&[
+                (12, 18, NeighborDirection::Bottom),
+                (13, 19, NeighborDirection::Bottom),
+                (14, 20, NeighborDirection::Bottom),
+                (15, 21, NeighborDirection::Bottom),
+                (16, 22, NeighborDirection::Bottom),
+                (17, 23, NeighborDirection::Bottom),
+                (0, 30, NeighborDirection::Top),
+                (1, 31, NeighborDirection::Top),
+                (2, 31, NeighborDirection::Top),
+                (3, 32, NeighborDirection::Top),
+                (4, 33, NeighborDirection::Top),
+                (5, 33, NeighborDirection::Top),
+                (26, 33, NeighborDirection::Right),
+                (32, 33, NeighborDirection::Right),
+                (29, 33, NeighborDirection::Right),
+            ])
+            .sync(&inventories);
+
+        ui.selected_amount = None;
+
+        self.timing_manager.reset();
+
+        loop {
+            self.input_manager.update();
+            self.timing_manager.update();
+            self.input_manager.update_timing(&self.timing_manager);
+            self.crafting_manager.update_3x3();
+
+            let mut inventories = [
+                &mut self.player.inventory,
+                &mut self.crafting_manager.crafting_inventory_3x3,
+            ];
+
+            if !ui.update(&self.input_manager, &mut inventories) {
+                // Bring the items back in the inventory
+                for slot in 0..9 {
+                    let item_stack = inventories[1].get_all_slots()[slot].clone();
+                    if item_stack.get_item_type() != ItemType::Air {
+                        let remaining = inventories[0].add_item_stack(item_stack);
+                        if remaining != 0 {
+                            // Hum... wait?!
+                            // I have no choice... Spawn the item.
+                            // I should be carreful about duplication here...
+                            let pos = self.world.get_player_entity().pos;
+                            self.world.spawn_item_entity(
+                                pos,
+                                ItemStack::new(item_stack.get_item_type(), remaining, false),
+                            );
+                        }
+                    }
+                }
+
+                // Then clear the crafting inventory.
+                inventories[1].fill(ItemStack::void());
                 break;
             }
 

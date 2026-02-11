@@ -1,0 +1,14 @@
+{
+    "name": "crafting_table",
+    "pattern" : [
+        "pp ",
+        "pp ",
+        "   "
+    ],
+    "strict_shape": true,
+    "palette": {
+        "p": 9
+    },
+    "result": 13,
+    "result_amount": 1
+}

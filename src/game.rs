@@ -157,6 +157,11 @@ impl Game {
                 return GameState::GoMainMenu;
             }
             if self.input_manager.is_just_pressed(nadk::keyboard::Key::Var) {
+                if let Some(result) = self.player.get_raycast_result()
+                    && crate::constants::player::INTERFACE_BLOCKS.contains(&result.block_type)
+                {
+                    return GameState::OpenBlockInterface(result.block_pos);
+                }
                 if self.save_manager.get_game_mode() == GameMode::Creative {
                     return GameState::OpenPlayerInventory(game_uis::PlayerInventoryPage::Creative);
                 } else {
@@ -175,6 +180,7 @@ impl Game {
                 self.timing_manager.get_delta_time(),
                 &self.settings,
             );
+
             self.hud.update(&self.input_manager, &self.player);
             self.hud.sync(&self.player);
 
@@ -235,6 +241,7 @@ impl Game {
                 GameState::DeleteWorld(filename) => self.delete_world_menu_loop(&filename),
                 GameState::CreateWorld(file_name) => self.create_world_menu_loop(&file_name),
                 GameState::OpenPlayerInventory(page) => self.player_inventory_loop(page),
+                GameState::OpenBlockInterface(pos) => self.block_interface_loop(pos),
                 GameState::Quit => break,
             }
         }
@@ -247,6 +254,7 @@ pub enum GameState {
     GoSelectWorld,
     InGame,
     OpenPlayerInventory(game_uis::PlayerInventoryPage),
+    OpenBlockInterface(Vector3<isize>),
     LoadWorld(String, bool), // String: filename, String: world name
     CreateWorld(String),     // String: file_name
     DeleteWorld(String),

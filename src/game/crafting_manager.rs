@@ -148,10 +148,12 @@ impl Craft {
     }
 }
 
-const CRAFTS: [Craft; 3] = [
+const CRAFTS: [Craft; 5] = [
     Craft::new(include_bytes!("../../target/crafts/planks.bin")),
     Craft::new(include_bytes!("../../target/crafts/stone.bin")),
     Craft::new(include_bytes!("../../target/crafts/grass.bin")),
+    Craft::new(include_bytes!("../../target/crafts/crafting_table.bin")),
+    Craft::new(include_bytes!("../../target/crafts/chest.bin")),
 ];
 
 pub struct CraftingManager {
@@ -212,6 +214,52 @@ impl CraftingManager {
             if !found_craft {
                 self.crafting_inventory_2x2
                     .replace_slot_item_stack(4, ItemStack::void());
+                self.valid_craft = false;
+            }
+        }
+    }
+
+    pub fn update_3x3(&mut self) {
+        // Remove the recipies if the player picked up the item
+        if self.valid_craft
+            && self
+                .crafting_inventory_3x3
+                .get_item_type_at_slot_index(9)
+                .unwrap()
+                == ItemType::Air
+        {
+            for i in 0..=8 {
+                self.crafting_inventory_3x3.take_one(i);
+            }
+        }
+
+        let mut grid = [[ItemType::Air; 3]; 3];
+
+        // The inventory slots indexes must be from 0 to 3 included
+        for x in 0..3 {
+            for y in 0..3 {
+                grid[x][y] = self
+                    .crafting_inventory_3x3
+                    .get_item_type_at_slot_index(x + y * 3)
+                    .unwrap(); // If it fails, a cosmic particle just hit the calculators Ram! Incredible!
+            }
+        }
+
+        // Check for all crafts to match with our grid
+        if self.crafting_inventory_3x3.modified {
+            let mut found_craft = false;
+            for craft in CRAFTS {
+                if craft.matches(grid) {
+                    self.crafting_inventory_3x3
+                        .replace_slot_item_stack(9, craft.result);
+                    self.valid_craft = true;
+                    found_craft = true;
+                    break;
+                }
+            }
+            if !found_craft {
+                self.crafting_inventory_3x3
+                    .replace_slot_item_stack(9, ItemStack::void());
                 self.valid_craft = false;
             }
         }
