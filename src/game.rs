@@ -119,6 +119,7 @@ impl Game {
             let player_entity = self.world.get_player_entity_mut();
             player_entity.pos = self.save_manager.get_player_pos();
             player_entity.rotation = self.save_manager.get_player_rot();
+            player_entity.velocity = Vector3::repeat(0.0);
             self.renderer.camera.set_rotation(player_entity.rotation);
 
             self.player
@@ -133,6 +134,8 @@ impl Game {
 
         if self.save_manager.get_game_mode() == GameMode::Creative {
             self.world.get_player_entity_mut().gravity = false;
+        } else {
+            self.world.get_player_entity_mut().gravity = true;
         }
 
         // Show a warning message
