@@ -30,7 +30,7 @@ It can run on both Upsilon and Epsilon.
 ## Roadmap
 **Here is the current roadmap for the project :**
 - [X] Fix the raycaster
-- [ ] Textures
+- [ ] Textures (WIP)
 - [X] World deletion
 - [X] World creation settings
 - [X] Save system with compression
@@ -60,7 +60,6 @@ Good ideas but I will never have the time to do that :
 - Weird beahaviors in the negative coordinates
 - Rendering issues with the block selection marker
 - Can randomly crash on start on N0120. You have to reset your calculator before downloading a new version (I can't do anything about that, it's related to the OS)
-- Rendering issues and memory corruption if too many triangles are shown at the same time on the screen
 
 ## Setup the build environment
 
