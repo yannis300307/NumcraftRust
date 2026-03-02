@@ -85,6 +85,11 @@ impl Game {
             self.player.inventory.fill(ItemStack::void());
 
             self.world.get_player_entity_mut().pos = player_spawn_pos;
+            let player_entity = self.world.get_player_entity_mut();
+            player_entity.pos = player_spawn_pos;
+            player_entity.rotation = Vector3::repeat(0.0);
+            player_entity.velocity = Vector3::repeat(0.0);
+            self.renderer.camera.set_rotation(player_entity.rotation);
 
             self.hud.sync(&self.player);
         } else if let Err(error) = self.save_manager.load_from_file(file_name.as_str()) {
