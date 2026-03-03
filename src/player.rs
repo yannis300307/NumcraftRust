@@ -11,12 +11,12 @@ use crate::{
         BlockType, EntityType,
         player::{FLY_SPEED, JUMP_FORCE, MAX_WALKING_VELOCITY, WALK_FORCE},
     },
-    nadk,
     entity::{Entity, item::ItemEntityCustomData},
     game::GameMode,
     hud::Hud,
     input_manager::InputManager,
     inventory::{Inventory, ItemStack},
+    nadk,
     physic::PhysicEngine,
     renderer::mesh::{Mesh, Quad, QuadDir},
     settings::Settings,
@@ -96,7 +96,8 @@ impl Player {
 
         // Movements
         if (input_manager.is_keydown(nadk::keyboard::Key::Up) && settings.reverse_controls)
-            || (input_manager.is_keydown(nadk::keyboard::Key::Toolbox) && !settings.reverse_controls)
+            || (input_manager.is_keydown(nadk::keyboard::Key::Toolbox)
+                && !settings.reverse_controls)
         {
             // Forward
             let translation = sincosf(player_entity.rotation.y);
@@ -122,7 +123,8 @@ impl Player {
             }
         }
         if (input_manager.is_keydown(nadk::keyboard::Key::Left) && settings.reverse_controls)
-            || (input_manager.is_keydown(nadk::keyboard::Key::Imaginary) && !settings.reverse_controls)
+            || (input_manager.is_keydown(nadk::keyboard::Key::Imaginary)
+                && !settings.reverse_controls)
         {
             // Left
             let translation = sincosf(player_entity.rotation.y + PI / 2.0);
@@ -258,79 +260,78 @@ impl Player {
         }
     }
 
-    fn ray_cast(
-    camera: &Camera,
-    world: &World,
-    max_lenght: f32,
-) -> Option<RaycastResult> {
-    let cam_pos = camera.get_pos();
-    let dir = camera.get_forward_vector();
+    fn ray_cast(camera: &Camera, world: &World, max_lenght: f32) -> Option<RaycastResult> {
+        let cam_pos = camera.get_pos();
+        let dir = camera.get_forward_vector();
 
-    let pos_floor = Vector3::new(floorf(cam_pos.x), floorf(cam_pos.y), floorf(cam_pos.z));
-    let pos_frac = Vector3::new(
-        cam_pos.x - pos_floor.x,
-        cam_pos.y - pos_floor.y,
-        cam_pos.z - pos_floor.z,
-    );
-    let pos_floor = pos_floor.map(|x| x as isize);
+        let pos_floor = Vector3::new(floorf(cam_pos.x), floorf(cam_pos.y), floorf(cam_pos.z));
+        let pos_frac = Vector3::new(
+            cam_pos.x - pos_floor.x,
+            cam_pos.y - pos_floor.y,
+            cam_pos.z - pos_floor.z,
+        );
+        let pos_floor = pos_floor.map(|x| x as isize);
 
-    let v_ray_unit_step_size =
-        Vector3::new(1.0 / dir.x.abs(), 1.0 / dir.y.abs(), 1.0 / dir.z.abs());
+        let v_ray_unit_step_size =
+            Vector3::new(1.0 / dir.x.abs(), 1.0 / dir.y.abs(), 1.0 / dir.z.abs());
 
-    let mut v_map_check = pos_floor;
-    let mut v_ray_length: Vector3<f32> = Vector3::default();
-    let mut v_step: Vector3<isize> = Vector3::default();
+        let mut v_map_check = pos_floor;
+        let mut v_ray_length: Vector3<f32> = Vector3::default();
+        let mut v_step: Vector3<isize> = Vector3::default();
 
-    if dir.x < 0.0 {
-        v_step.x = -1;
-        v_ray_length.x = pos_frac.x * v_ray_unit_step_size.x;
-    } else {
-        v_step.x = 1;
-        v_ray_length.x = (1.0 - pos_frac.x) * v_ray_unit_step_size.x;
-    }
-
-    if dir.y < 0.0 {
-        v_step.y = -1;
-        v_ray_length.y = pos_frac.y * v_ray_unit_step_size.y;
-    } else {
-        v_step.y = 1;
-        v_ray_length.y = (1.0 - pos_frac.y) * v_ray_unit_step_size.y;
-    }
-
-    if dir.z < 0.0 {
-        v_step.z = -1;
-        v_ray_length.z = pos_frac.z * v_ray_unit_step_size.z;
-    } else {
-        v_step.z = 1;
-        v_ray_length.z = (1.0 - pos_frac.z) * v_ray_unit_step_size.z;
-    }
-
-    let f_max_distance = max_lenght;
-    let mut f_distance = 0.;
-
-    let mut step_dir: isize;
-
-    while f_distance < f_max_distance {
-        if v_ray_length.x < v_ray_length.y && v_ray_length.x < v_ray_length.z {
-            v_map_check.x += v_step.x;
-            f_distance = v_ray_length.x;
-            v_ray_length.x += v_ray_unit_step_size.x;
-            step_dir = 0;
-        } else if v_ray_length.y < v_ray_length.x && v_ray_length.y < v_ray_length.z {
-            v_map_check.y += v_step.y;
-            f_distance = v_ray_length.y;
-            v_ray_length.y += v_ray_unit_step_size.y;
-            step_dir = 1;
+        if dir.x < 0.0 {
+            v_step.x = -1;
+            v_ray_length.x = pos_frac.x * v_ray_unit_step_size.x;
         } else {
-            v_map_check.z += v_step.z;
-            f_distance = v_ray_length.z;
-            v_ray_length.z += v_ray_unit_step_size.z;
-            step_dir = 2;
+            v_step.x = 1;
+            v_ray_length.x = (1.0 - pos_frac.x) * v_ray_unit_step_size.x;
         }
 
-        if world.chunks_manager.get_block_in_world(v_map_check).is_some_and(|block| !block.is_air())
-        {
-            let voxel_normal = if step_dir == 0 {
+        if dir.y < 0.0 {
+            v_step.y = -1;
+            v_ray_length.y = pos_frac.y * v_ray_unit_step_size.y;
+        } else {
+            v_step.y = 1;
+            v_ray_length.y = (1.0 - pos_frac.y) * v_ray_unit_step_size.y;
+        }
+
+        if dir.z < 0.0 {
+            v_step.z = -1;
+            v_ray_length.z = pos_frac.z * v_ray_unit_step_size.z;
+        } else {
+            v_step.z = 1;
+            v_ray_length.z = (1.0 - pos_frac.z) * v_ray_unit_step_size.z;
+        }
+
+        let f_max_distance = max_lenght;
+        let mut f_distance = 0.;
+
+        let mut step_dir: isize;
+
+        while f_distance < f_max_distance {
+            if v_ray_length.x < v_ray_length.y && v_ray_length.x < v_ray_length.z {
+                v_map_check.x += v_step.x;
+                f_distance = v_ray_length.x;
+                v_ray_length.x += v_ray_unit_step_size.x;
+                step_dir = 0;
+            } else if v_ray_length.y < v_ray_length.x && v_ray_length.y < v_ray_length.z {
+                v_map_check.y += v_step.y;
+                f_distance = v_ray_length.y;
+                v_ray_length.y += v_ray_unit_step_size.y;
+                step_dir = 1;
+            } else {
+                v_map_check.z += v_step.z;
+                f_distance = v_ray_length.z;
+                v_ray_length.z += v_ray_unit_step_size.z;
+                step_dir = 2;
+            }
+
+            if world
+                .chunks_manager
+                .get_block_in_world(v_map_check)
+                .is_some_and(|block| !block.is_air())
+            {
+                let voxel_normal = if step_dir == 0 {
                     if dir.x < 0. {
                         QuadDir::Left
                     } else {
@@ -347,12 +348,19 @@ impl Player {
                 } else {
                     QuadDir::Front
                 };
-            return Some(RaycastResult {block_pos: v_map_check, face_dir: voxel_normal, block_type: world.chunks_manager.get_block_in_world(v_map_check).unwrap_or(BlockType::Air)});
+                return Some(RaycastResult {
+                    block_pos: v_map_check,
+                    face_dir: voxel_normal,
+                    block_type: world
+                        .chunks_manager
+                        .get_block_in_world(v_map_check)
+                        .unwrap_or(BlockType::Air),
+                });
+            }
         }
-    }
 
-    None
-}
+        None
+    }
 }
 
 #[derive(Debug)]
