@@ -3,18 +3,19 @@ use nalgebra::Vector3;
 
 use crate::{
     constants::{BlockType, world::CHUNK_SIZE},
-    misc::div_floor,
+    misc::{div_floor, mod_floor},
     renderer::mesh::Mesh,
     world::{CHUNK_SIZE_I, chunk::Chunk, world_generator::WorldGenerator},
 };
 
 calc_use!(alloc::vec::Vec);
+
 /// Convert the block position from world space to chunk space
 pub fn get_chunk_local_coords(pos: Vector3<isize>) -> Vector3<isize> {
     Vector3::new(
-        (pos.x % CHUNK_SIZE_I + CHUNK_SIZE_I) % CHUNK_SIZE_I,
-        (pos.y % CHUNK_SIZE_I + CHUNK_SIZE_I) % CHUNK_SIZE_I,
-        (pos.z % CHUNK_SIZE_I + CHUNK_SIZE_I) % CHUNK_SIZE_I,
+        mod_floor(pos.x, CHUNK_SIZE_I),
+        mod_floor(pos.y, CHUNK_SIZE_I),
+        mod_floor(pos.z, CHUNK_SIZE_I),
     )
 }
 
@@ -24,7 +25,7 @@ pub struct ChunksManager {
 
 impl ChunksManager {
     pub fn new() -> Self {
-        ChunksManager { chunks: Vec::with_capacity(4*4*4) }
+        ChunksManager { chunks: Vec::with_capacity(4 * 4 * 4) }
     }
 
     /// Return the chunk at the given position. Return an Option containing a MUTABLE reference to the chunk

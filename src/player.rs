@@ -360,6 +360,7 @@ impl Player {
     }
 }
 
+#[derive(Debug)]
 struct RaycastResult {
     pub block_pos: Vector3<isize>,
     pub face_dir: QuadDir,
