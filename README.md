@@ -6,7 +6,7 @@ Numcraft Rust is a (WIP) cube sandbox game running natively on Numworks calculat
 
 ## Screenshot
 
-<img width="470" height="378" alt="image" src="https://github.com/user-attachments/assets/e704a3fb-6b2d-4f88-a660-9e3f469bf65d" />
+<img width="456" height="350" alt="Screenshot_20260207_134349" src="https://github.com/user-attachments/assets/8771ed31-173a-40ed-86cc-6db6b1be55f3" />
 
 
 <img src="https://github.com/user-attachments/assets/f247677e-0f19-4170-92b9-51563961c862" width="512" alt="screenshot">
@@ -30,7 +30,7 @@ It can run on both Upsilon and Epsilon.
 ## Roadmap
 **Here is the current roadmap for the project :**
 - [X] Fix the raycaster
-- [ ] Textures
+- [ ] Textures (WIP)
 - [X] World deletion
 - [X] World creation settings
 - [X] Save system with compression
@@ -60,7 +60,6 @@ Good ideas but I will never have the time to do that :
 - Weird beahaviors in the negative coordinates
 - Rendering issues with the block selection marker
 - Can randomly crash on start on N0120. You have to reset your calculator before downloading a new version (I can't do anything about that, it's related to the OS)
-- Rendering issues and memory corruption if too many triangles are shown at the same time on the screen
 
 ## Setup the build environment
 

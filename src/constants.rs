@@ -102,7 +102,7 @@ pub enum EntityType {
     Item = 1,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum BlockType {
     Air = 0,
     Stone = 1,

@@ -1,6 +1,6 @@
 use core::f32::consts::PI;
 
-use libm::sincosf;
+use libm::{floorf, sincosf};
 
 #[allow(unused_imports)]
 use nalgebra::{ComplexField, Vector3};
@@ -92,7 +92,7 @@ impl Player {
         delta_time: f32,
         settings: &Settings,
     ) {
-        self.ray_cast_result = self.ray_cast(camera, world, 10);
+        self.ray_cast_result = Self::ray_cast(camera, world, 10.);
 
         let player_entity = world.get_player_entity_mut();
 
@@ -265,109 +265,110 @@ impl Player {
         }
     }
 
-    fn ray_cast(&self, camera: &Camera, world: &World, max_lenght: usize) -> Option<RaycastResult> {
-        let start_pos = *camera.get_pos();
-        let forward_vector = camera.get_forward_vector();
+    fn ray_cast(camera: &Camera, world: &World, max_lenght: f32) -> Option<RaycastResult> {
+        let cam_pos = camera.get_pos();
+        let dir = camera.get_forward_vector();
 
-        let end_pos = start_pos + forward_vector.normalize() * (max_lenght as f32);
+        let pos_floor = Vector3::new(floorf(cam_pos.x), floorf(cam_pos.y), floorf(cam_pos.z));
+        let pos_frac = Vector3::new(
+            cam_pos.x - pos_floor.x,
+            cam_pos.y - pos_floor.y,
+            cam_pos.z - pos_floor.z,
+        );
+        let pos_floor = pos_floor.map(|x| x as isize);
 
-        let mut current_voxel_pos = start_pos;
-        let mut step_dir = -1;
+        let v_ray_unit_step_size =
+            Vector3::new(1.0 / dir.x.abs(), 1.0 / dir.y.abs(), 1.0 / dir.z.abs());
 
-        let dx = (end_pos.x - start_pos.x).signum();
-        let delta_x = if dx != 0. {
-            (dx / (end_pos.x - start_pos.x)).min(10000000.0)
-        } else {
-            10000000.0
-        };
-        let mut max_x = if dx > 0. {
-            delta_x * (1.0 - start_pos.x.fract())
-        } else {
-            delta_x * start_pos.x.fract()
-        };
+        let mut v_map_check = pos_floor;
+        let mut v_ray_length: Vector3<f32> = Vector3::default();
+        let mut v_step: Vector3<isize> = Vector3::default();
 
-        let dy = (end_pos.y - start_pos.y).signum();
-        let delta_y = if dy != 0. {
-            (dy / (end_pos.y - start_pos.y)).min(10000000.0)
+        if dir.x < 0.0 {
+            v_step.x = -1;
+            v_ray_length.x = pos_frac.x * v_ray_unit_step_size.x;
         } else {
-            10000000.0
-        };
-        let mut max_y = if dy > 0. {
-            delta_y * (1.0 - start_pos.y.fract())
-        } else {
-            delta_y * start_pos.y.fract()
-        };
+            v_step.x = 1;
+            v_ray_length.x = (1.0 - pos_frac.x) * v_ray_unit_step_size.x;
+        }
 
-        let dz = (end_pos.z - start_pos.z).signum();
-        let delta_z = if dz != 0. {
-            (dz / (end_pos.z - start_pos.z)).min(10000000.0)
+        if dir.y < 0.0 {
+            v_step.y = -1;
+            v_ray_length.y = pos_frac.y * v_ray_unit_step_size.y;
         } else {
-            10000000.0
-        };
-        let mut max_z = if dz > 0. {
-            delta_z * (1.0 - start_pos.z.fract())
-        } else {
-            delta_z * start_pos.z.fract()
-        };
+            v_step.y = 1;
+            v_ray_length.y = (1.0 - pos_frac.y) * v_ray_unit_step_size.y;
+        }
 
-        while !(max_x > 1.0 && max_y > 1.0 && max_z > 1.0) {
-            let current_voxel_pos_isize = current_voxel_pos.map(|x| x as isize);
-            let result = world
+        if dir.z < 0.0 {
+            v_step.z = -1;
+            v_ray_length.z = pos_frac.z * v_ray_unit_step_size.z;
+        } else {
+            v_step.z = 1;
+            v_ray_length.z = (1.0 - pos_frac.z) * v_ray_unit_step_size.z;
+        }
+
+        let f_max_distance = max_lenght;
+        let mut f_distance = 0.;
+
+        let mut step_dir: isize;
+
+        while f_distance < f_max_distance {
+            if v_ray_length.x < v_ray_length.y && v_ray_length.x < v_ray_length.z {
+                v_map_check.x += v_step.x;
+                f_distance = v_ray_length.x;
+                v_ray_length.x += v_ray_unit_step_size.x;
+                step_dir = 0;
+            } else if v_ray_length.y < v_ray_length.x && v_ray_length.y < v_ray_length.z {
+                v_map_check.y += v_step.y;
+                f_distance = v_ray_length.y;
+                v_ray_length.y += v_ray_unit_step_size.y;
+                step_dir = 1;
+            } else {
+                v_map_check.z += v_step.z;
+                f_distance = v_ray_length.z;
+                v_ray_length.z += v_ray_unit_step_size.z;
+                step_dir = 2;
+            }
+
+            if world
                 .chunks_manager
-                .get_block_in_world(current_voxel_pos_isize);
-            if let Some(block_type) = result
-                && !block_type.is_air()
+                .get_block_in_world(v_map_check)
+                .is_some_and(|block| !block.is_air())
             {
                 let voxel_normal = if step_dir == 0 {
-                    if dx < 0. {
+                    if dir.x < 0. {
                         QuadDir::Left
                     } else {
                         QuadDir::Right
                     }
                 } else if step_dir == 1 {
-                    if dy < 0. {
+                    if dir.y < 0. {
                         QuadDir::Top
                     } else {
                         QuadDir::Bottom
                     }
-                } else if dz < 0. {
+                } else if dir.z < 0. {
                     QuadDir::Back
                 } else {
                     QuadDir::Front
                 };
-
                 return Some(RaycastResult {
-                    block_pos: current_voxel_pos_isize,
+                    block_pos: v_map_check,
                     face_dir: voxel_normal,
-                    block_type: block_type,
+                    block_type: world
+                        .chunks_manager
+                        .get_block_in_world(v_map_check)
+                        .unwrap_or(BlockType::Air),
                 });
             }
-
-            if max_x < max_y {
-                if max_x < max_z {
-                    current_voxel_pos.x += dx;
-                    max_x += delta_x;
-                    step_dir = 0;
-                } else {
-                    current_voxel_pos.z += dz;
-                    max_z += delta_z;
-                    step_dir = 2;
-                }
-            } else if max_y < max_z {
-                current_voxel_pos.y += dy;
-                max_y += delta_y;
-                step_dir = 1;
-            } else {
-                current_voxel_pos.z += dz;
-                max_z += delta_z;
-                step_dir = 2
-            }
         }
+
         None
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct RaycastResult {
     pub block_pos: Vector3<isize>,
     pub face_dir: QuadDir,
