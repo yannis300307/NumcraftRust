@@ -30,3 +30,4 @@ impl Structure {
 }
 
 pub const TREE1: Structure = Structure::new(include_bytes!("../../target/structs/tree1.bin"));
+pub const HOUSE1: Structure = Structure::new(include_bytes!("../../target/structs/house1.bin"));
