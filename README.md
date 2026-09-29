@@ -2,7 +2,10 @@
 
 # Numcraft Rust
 
-Numcraft Rust is a (WIP) cube sandbox game running natively on Numworks calculators on both Epsilon and Upsilon firmwares.
+Numcraft Rust is a cube sandbox game running natively on Numworks calculators on both Epsilon and Upsilon firmwares.
+
+## State of the project
+Numcraft will be partly rewritten using my new framework [CuteKit](https://github.com/yannis300307/CuteKit-Nw) soon. Updates will continue after the development of the framework is finished.
 
 ## Screenshot
 
@@ -115,6 +118,13 @@ You can speed up the simulator build by setting the job number.
 ```shell
 just sim 5
 ```
+
+## Use of the project
+Any use of the project has to follow the GPL3 license. This is the only legal requirement.
+According to the GPL3 (and that something that AI bros has still not understood), the codebase or the assets shall not be used for AI training unless the AI model is redistributed under the GPL3 license (but please don't at all).
+Additionally, I would like to add a few guidelines that I highly encourage you to follow:
+- Please to not bundle Numcraft with other apps (such as in a launcher)
+- Please do not use AI to create derivative work.
 
 ## Legal info
 NumWorks is a registered trademark.
