@@ -87,9 +87,13 @@ cargo install just # Similar to makefile
 
 ## Build the app
 ```shell
-just build
+just build-epsilon
 ```
-
+for Epsilon or
+```shell
+just build-upsilon
+```
+for Upsilon.
 ## Build and send the app to an actual calculator
 
 Connect the calculator to your computer and run
